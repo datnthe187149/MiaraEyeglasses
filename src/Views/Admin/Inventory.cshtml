@@ -2,9 +2,12 @@
 @{
     ViewData["Title"] = "Quản lý Tồn kho";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    int totalVariants = Model?.Count() ?? 0;
-    int lowStockCount = Model?.Count(v => v.StockQty > 0 && v.StockQty <= 3) ?? 0;
-    int outOfStockCount = Model?.Count(v => v.StockQty == 0) ?? 0;
+    var pagination = ViewBag.Pagination as MiaraEyeglasses.Models.ViewModels.PaginationModel;
+    string currentFilter = ViewBag.Filter as string ?? "all";
+    string searchKeyword = ViewBag.Search as string ?? "";
+    int allCount = ViewBag.AllCount as int? ?? Model?.Count() ?? 0;
+    int lowCount = ViewBag.LowCount as int? ?? 0;
+    int outCount = ViewBag.OutCount as int? ?? 0;
 }
 
 <div class="portal-card">
@@ -16,18 +19,18 @@
         </div>
         <div style="display:flex; gap:10px; align-items:center;">
             <span class="badge" style="background:#f1f5f9; color:#334155; padding:6px 12px; font-size:13px; font-weight:600;">
-                Tổng biến thể: @totalVariants
+                Tổng biến thể: @allCount
             </span>
-            @if (lowStockCount > 0)
+            @if (lowCount > 0)
             {
                 <span class="badge" style="background:#fef3c7; color:#92400e; padding:6px 12px; font-size:13px; font-weight:600;">
-                    ⚠ Sắp hết: @lowStockCount
+                    ⚠ Sắp hết: @lowCount
                 </span>
             }
-            @if (outOfStockCount > 0)
+            @if (outCount > 0)
             {
                 <span class="badge" style="background:#fee2e2; color:#dc2626; padding:6px 12px; font-size:13px; font-weight:600;">
-                    ✕ Hết hàng: @outOfStockCount
+                    ✕ Hết hàng: @outCount
                 </span>
             }
         </div>
@@ -46,20 +49,37 @@
         </div>
     }
 
-    <!-- Thanh tìm kiếm & Bộ lọc nhanh kho -->
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
-        <div style="display:flex; gap:8px; align-items:center; flex:1; max-width:400px;">
-            <input type="text" id="inventory-search" placeholder="Tìm theo tên mẫu kính, SKU, màu sắc..." style="width:100%; padding:8px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px;" onkeyup="filterInventoryTable()" />
+    <!-- THANH TÌM KIẾM & BỘ LỌC TỒN KHO -->
+    <form method="get" asp-controller="AdminInventory" asp-action="Index" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+        <div style="display:flex; gap:8px; align-items:center; flex:1; max-width:420px;">
+            <input type="text" name="search" value="@searchKeyword" placeholder="Tìm theo tên mẫu kính, SKU, màu sắc..." style="width:100%; height:36px; padding:0 14px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; box-sizing:border-box;" />
+            <input type="hidden" name="filter" value="@currentFilter" />
+            <button type="submit" class="admin-btn-action btn-primary-action" style="height:36px !important;">Tìm kiếm</button>
+            @if (!string.IsNullOrEmpty(searchKeyword) || currentFilter != "all")
+            {
+                <a asp-controller="AdminInventory" asp-action="Index" class="admin-btn-action" style="height:36px !important; text-decoration:none;" title="Đặt lại bộ lọc">↺ Đặt lại</a>
+            }
         </div>
-        <div style="display:flex; gap:8px; align-items:center;">
-            <button type="button" class="admin-btn-action" onclick="setInventoryFilter('all')" id="btn-filter-all" style="background:#286598 !important; color:#fff !important; border-color:#286598 !important;">Tất cả</button>
-            <button type="button" class="admin-btn-action" onclick="setInventoryFilter('low')" id="btn-filter-low">Sắp hết hàng (&le; 3)</button>
-            <button type="button" class="admin-btn-action" onclick="setInventoryFilter('out')" id="btn-filter-out">Hết hàng (0)</button>
+
+        <!-- Các tab lọc tình trạng -->
+        <div style="display:flex; gap:6px; align-items:center;">
+            <a asp-controller="AdminInventory" asp-action="Index" asp-route-search="@searchKeyword" asp-route-filter="all" 
+               class="admin-btn-action @(currentFilter == "all" || string.IsNullOrEmpty(currentFilter) ? "btn-primary-action" : "")">
+                Tất cả (@allCount)
+            </a>
+            <a asp-controller="AdminInventory" asp-action="Index" asp-route-search="@searchKeyword" asp-route-filter="low" 
+               class="admin-btn-action @(currentFilter == "low" ? "btn-primary-action" : "")">
+                Sắp hết hàng (&le; 3)
+            </a>
+            <a asp-controller="AdminInventory" asp-action="Index" asp-route-search="@searchKeyword" asp-route-filter="out" 
+               class="admin-btn-action @(currentFilter == "out" ? "btn-primary-action" : "")">
+                Hết hàng (0)
+            </a>
         </div>
-    </div>
+    </form>
 
     <div class="admin-table-wrap">
-        <table class="admin-table" id="inventory-table">
+        <table class="admin-table">
             <thead>
                 <tr>
                     <th style="width: 70px;">Ảnh</th>
@@ -82,9 +102,8 @@
                                   ?? "/images/products/p1.png";
                         bool isLow = v.StockQty > 0 && v.StockQty <= 3;
                         bool isOut = v.StockQty == 0;
-                        string stockStatusClass = isOut ? "out-of-stock" : (isLow ? "low-stock" : "in-stock");
 
-                        <tr class="inv-row @stockStatusClass" data-status="@(isOut ? "out" : (isLow ? "low" : "in"))">
+                        <tr>
                             <td>
                                 <img src="@img" alt="@v.Product?.ProductName" style="width: 48px; height: 48px; object-fit: contain; background: #fff; border-radius: 6px; border: 1px solid #e2e8f0;" />
                             </td>
@@ -132,50 +151,16 @@
                 else
                 {
                     <tr>
-                        <td colspan="7" class="empty-text">Chưa có dữ liệu tồn kho biến thể nào.</td>
+                        <td colspan="7" class="empty-text">Không tìm thấy dữ liệu tồn kho nào phù hợp.</td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
+
+    <!-- TÁI SỬ DỤNG FILE PHÂN TRANG DÙNG CHUNG (REUSABLE PAGINATION) -->
+    @if (pagination != null)
+    {
+        @await Html.PartialAsync("_Pagination", pagination)
+    }
 </div>
-
-<script>
-    var currentFilter = 'all';
-
-    function setInventoryFilter(filterType) {
-        currentFilter = filterType;
-        document.getElementById('btn-filter-all').style.background = filterType === 'all' ? '#286598' : '#fff';
-        document.getElementById('btn-filter-all').style.color = filterType === 'all' ? '#fff' : '#334155';
-        document.getElementById('btn-filter-all').style.borderColor = filterType === 'all' ? '#286598' : '#cbd5e1';
-
-        document.getElementById('btn-filter-low').style.background = filterType === 'low' ? '#286598' : '#fff';
-        document.getElementById('btn-filter-low').style.color = filterType === 'low' ? '#fff' : '#334155';
-        document.getElementById('btn-filter-low').style.borderColor = filterType === 'low' ? '#286598' : '#cbd5e1';
-
-        document.getElementById('btn-filter-out').style.background = filterType === 'out' ? '#286598' : '#fff';
-        document.getElementById('btn-filter-out').style.color = filterType === 'out' ? '#fff' : '#334155';
-        document.getElementById('btn-filter-out').style.borderColor = filterType === 'out' ? '#286598' : '#cbd5e1';
-
-        filterInventoryTable();
-    }
-
-    function filterInventoryTable() {
-        var query = document.getElementById('inventory-search').value.toLowerCase().trim();
-        var rows = document.querySelectorAll('#inventory-table tbody tr.inv-row');
-
-        rows.forEach(function(row) {
-            var rowText = row.innerText.toLowerCase();
-            var rowStatus = row.getAttribute('data-status');
-
-            var matchSearch = (query === '' || rowText.includes(query));
-            var matchFilter = (currentFilter === 'all' || rowStatus === currentFilter);
-
-            if (matchSearch && matchFilter) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-    }
-</script>

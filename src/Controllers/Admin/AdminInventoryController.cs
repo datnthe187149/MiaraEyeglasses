@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MiaraEyeglasses.Models.ViewModels;
 using MiaraEyeglasses.Services.Staff;
 
 namespace MiaraEyeglasses.Controllers.Admin
@@ -15,13 +16,38 @@ namespace MiaraEyeglasses.Controllers.Admin
             _inventoryService = inventoryService;
         }
 
-        // [GET] /Admin/Inventory: Hiển thị danh sách tồn kho các biến thể gọng kính
+        // [GET] /Admin/Inventory: Hiển thị danh sách tồn kho với Tìm kiếm, Lọc và Phân trang
         [HttpGet]
         [Route("Admin/Inventory")]
         [Route("AdminInventory")]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int page = 1, int pageSize = 10, string? search = null, string? filter = null)
         {
-            var variants = await _inventoryService.GetInventoryVariantsAsync();
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
+
+            var (variants, totalCount, totalPages, lowCount, outCount, allCount) = 
+                await _inventoryService.GetInventoryPagedAsync(page, pageSize, search, filter);
+
+            var pagination = new PaginationModel
+            {
+                CurrentPage = page,
+                PageSize = pageSize,
+                TotalItems = totalCount,
+                TotalPages = totalPages,
+                Controller = "AdminInventory",
+                Action = "Index"
+            };
+
+            if (!string.IsNullOrWhiteSpace(search)) pagination.RouteValues["search"] = search;
+            if (!string.IsNullOrWhiteSpace(filter)) pagination.RouteValues["filter"] = filter;
+
+            ViewBag.Pagination = pagination;
+            ViewBag.Search = search;
+            ViewBag.Filter = filter;
+            ViewBag.AllCount = allCount;
+            ViewBag.LowCount = lowCount;
+            ViewBag.OutCount = outCount;
+
             return View("~/Views/Admin/Inventory.cshtml", variants);
         }
 
