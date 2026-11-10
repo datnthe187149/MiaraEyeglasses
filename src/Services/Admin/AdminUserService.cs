@@ -6,6 +6,8 @@ namespace MiaraEyeglasses.Services.Admin
     public interface IAdminUserService
     {
         Task<IEnumerable<Models.Entities.User>> GetUsersAsync(int? roleId = null, string? search = null);
+        Task<(IEnumerable<Models.Entities.User> Users, int TotalCount, int TotalPages)> GetUsersPagedAsync(
+            int page, int pageSize, int? roleId = null, string? search = null);
         Task<IEnumerable<Role>> GetAllRolesAsync();
         Task<Models.Entities.User?> GetUserDetailsAsync(int userId);
         Task<(bool Success, string? ErrorMessage)> CreateUserAsync(string fullName, string email, string phone, string password, int roleId, string? gender, DateOnly? birthDate, bool isActive);
@@ -27,6 +29,19 @@ namespace MiaraEyeglasses.Services.Admin
         public async Task<IEnumerable<Models.Entities.User>> GetUsersAsync(int? roleId = null, string? search = null)
         {
             return await _userRepository.GetUsersAsync(roleId, search);
+        }
+
+        public async Task<(IEnumerable<Models.Entities.User> Users, int TotalCount, int TotalPages)> GetUsersPagedAsync(
+            int page, int pageSize, int? roleId = null, string? search = null)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
+
+            var (users, totalCount) = await _userRepository.GetUsersPagedAsync(page, pageSize, roleId, search);
+            int totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+            if (totalPages < 1) totalPages = 1;
+
+            return (users, totalCount, totalPages);
         }
 
         // Lấy danh sách tất cả các Role

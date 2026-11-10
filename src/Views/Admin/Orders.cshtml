@@ -3,6 +3,8 @@
     ViewData["Title"] = "Quản lý Đơn hàng";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     byte? selectedStatus = ViewBag.SelectedStatus as byte?;
+    string searchKeyword = ViewBag.Search as string ?? "";
+    var pagination = ViewBag.Pagination as MiaraEyeglasses.Models.ViewModels.PaginationModel;
 }
 
 @if (TempData["SuccessMessage"] != null)
@@ -27,17 +29,30 @@
         </div>
     </div>
 
-    <!-- Bộ lọc trạng thái đơn hàng (Chỉ 3 trạng thái: Đang thanh toán, Đã thanh toán, Đã hủy) -->
-    <form method="get" asp-controller="AdminOrder" asp-action="Index" class="admin-filter-row" asp-antiforgery="false">
-        <label>
-            <span>Lọc theo trạng thái</span>
-            <select name="status" onchange="this.form.submit()">
-                <option value="" selected="@(selectedStatus == null)">Tất cả trạng thái</option>
-                <option value="0" selected="@(selectedStatus == 0)">Đang thanh toán</option>
-                <option value="1" selected="@(selectedStatus == 1)">Đã thanh toán</option>
-                <option value="5" selected="@(selectedStatus == 5)">Đã hủy</option>
-            </select>
-        </label>
+    <!-- Bộ lọc trạng thái đơn hàng và tìm kiếm -->
+    <form method="get" asp-controller="AdminOrder" asp-action="Index" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin-bottom:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px;">
+            <div style="flex:1; min-width:280px; max-width:450px;">
+                <label style="display:block; font-size:12px; font-weight:600; color:#475569; margin-bottom:4px;">Tìm kiếm đơn hàng</label>
+                <input type="text" name="search" value="@searchKeyword" placeholder="Nhập mã đơn (#MR-...), tên khách, SĐT..." style="width:100%; height:36px; padding:0 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; box-sizing:border-box;" />
+            </div>
+            <div style="width:200px;">
+                <label style="display:block; font-size:12px; font-weight:600; color:#475569; margin-bottom:4px;">Lọc theo trạng thái</label>
+                <select name="status" style="width:100%; height:36px; padding:0 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; box-sizing:border-box;">
+                    <!option value="" @(selectedStatus == null ? "selected" : "")>Tất cả trạng thái</!option>
+                    <!option value="0" @(selectedStatus == 0 ? "selected" : "")>Đang thanh toán</!option>
+                    <!option value="1" @(selectedStatus == 1 ? "selected" : "")>Đã thanh toán</!option>
+                    <!option value="5" @(selectedStatus == 5 ? "selected" : "")>Đã hủy</!option>
+                </select>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button type="submit" class="admin-btn-action btn-primary-action" style="height:36px !important;">🔍 Lọc đơn</button>
+                @if (!string.IsNullOrEmpty(searchKeyword) || selectedStatus != null)
+                {
+                    <a asp-controller="AdminOrder" asp-action="Index" class="admin-btn-action" style="height:36px !important; text-decoration:none;" title="Đặt lại bộ lọc">↺ Đặt lại</a>
+                }
+            </div>
+        </div>
     </form>
 
     <div class="admin-table-wrap">
@@ -57,7 +72,6 @@
                 {
                     foreach (var o in Model)
                     {
-                        var payment = o.Payments?.FirstOrDefault();
                         var firstItem = o.Items?.FirstOrDefault();
 
                         string statusBadgeClass = "completed";
@@ -100,7 +114,7 @@
                                 }
                             </td>
                             <td>
-                                <strong style="color: #0284c7;">@o.TotalAmount.ToString("N0") ₫</strong>
+                                <strong style="color: #286598;">@o.TotalAmount.ToString("N0") ₫</strong>
                             </td>
                             <td>
                                 <span class="status-badge status-badge--@statusBadgeClass">@statusText</span>
@@ -116,10 +130,16 @@
                 else
                 {
                     <tr>
-                        <td colspan="6" style="text-align:center; padding:32px; color:#64748b;">Không có đơn hàng nào phù hợp với bộ lọc.</td>
+                        <td colspan="6" class="empty-text">Không có đơn hàng nào phù hợp với bộ lọc.</td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
+
+    <!-- TÁI SỬ DỤNG FILE PHÂN TRANG DÙNG CHUNG (REUSABLE PAGINATION) -->
+    @if (pagination != null)
+    {
+        @await Html.PartialAsync("_Pagination", pagination)
+    }
 </div>

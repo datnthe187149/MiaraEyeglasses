@@ -14,6 +14,8 @@ namespace MiaraEyeglasses.Repositories.Order
         Task<Models.Entities.Order?> GetOrderByCodeAsync(string orderCode);
         Task<IEnumerable<Models.Entities.Order>> GetOrdersByUserIdAsync(int userId);
         Task<IEnumerable<Models.Entities.Order>> GetAllOrdersForAdminAsync(byte? status = null);
+        Task<(IEnumerable<Models.Entities.Order> Orders, int TotalCount)> GetOrdersPagedForAdminAsync(
+            int page, int pageSize, byte? status = null, string? search = null);
         Task<int> CreateOrderViaProcedureAsync(
             int userId, string recipientName, string phone, string address,
             string? note, string? couponCode, decimal shippingFee, int windowMinutes = 15);
@@ -67,6 +69,36 @@ namespace MiaraEyeglasses.Repositories.Order
                 query = query.Where(o => o.Status == status.Value);
 
             return await query.OrderByDescending(o => o.CreatedAt).ToListAsync();
+        }
+
+        public async Task<(IEnumerable<Models.Entities.Order> Orders, int TotalCount)> GetOrdersPagedForAdminAsync(
+            int page, int pageSize, byte? status = null, string? search = null)
+        {
+            var query = _dbSet.Include(o => o.User)
+                              .Include(o => o.OrderStatus)
+                              .Include(o => o.Items)
+                              .AsQueryable();
+
+            if (status.HasValue)
+            {
+                query = query.Where(o => o.Status == status.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim().ToLower();
+                query = query.Where(o => o.OrderCode.ToLower().Contains(term)
+                                      || o.RecipientName.ToLower().Contains(term)
+                                      || o.Phone.Contains(term));
+            }
+
+            int totalCount = await query.CountAsync();
+            var orders = await query.OrderByDescending(o => o.CreatedAt)
+                                    .Skip((page - 1) * pageSize)
+                                    .Take(pageSize)
+                                    .ToListAsync();
+
+            return (orders, totalCount);
         }
 
         public async Task<int> CreateOrderViaProcedureAsync(

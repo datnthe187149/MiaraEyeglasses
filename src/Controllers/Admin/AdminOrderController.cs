@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MiaraEyeglasses.Models.ViewModels;
 using MiaraEyeglasses.Services.Admin;
 
 namespace MiaraEyeglasses.Controllers.Admin
@@ -17,14 +18,34 @@ namespace MiaraEyeglasses.Controllers.Admin
             _orderService = orderService;
         }
 
-        // [GET] /Admin/Orders: Hiển thị danh sách đơn hàng lọc theo 3 trạng thái
+        // [GET] /Admin/Orders: Hiển thị danh sách đơn hàng với Bộ lọc và Phân trang
         [HttpGet]
         [Route("Admin/Orders")]
         [Route("AdminOrder")]
-        public async Task<IActionResult> Index(byte? status = null)
+        public async Task<IActionResult> Index(int page = 1, int pageSize = 10, byte? status = null, string? search = null)
         {
-            var orders = await _orderService.GetAllOrdersAsync(status);
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
+
+            var (orders, totalCount, totalPages) = await _orderService.GetOrdersPagedAsync(page, pageSize, status, search);
+
+            var pagination = new PaginationModel
+            {
+                CurrentPage = page,
+                PageSize = pageSize,
+                TotalItems = totalCount,
+                TotalPages = totalPages,
+                Controller = "AdminOrder",
+                Action = "Index"
+            };
+
+            if (status.HasValue) pagination.RouteValues["status"] = status.Value.ToString();
+            if (!string.IsNullOrWhiteSpace(search)) pagination.RouteValues["search"] = search;
+
+            ViewBag.Pagination = pagination;
             ViewBag.SelectedStatus = status;
+            ViewBag.Search = search;
+
             return View("~/Views/Admin/Orders.cshtml", orders);
         }
 

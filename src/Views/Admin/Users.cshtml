@@ -3,6 +3,9 @@
     ViewData["Title"] = "Quản lý Tài khoản & Phân quyền";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     var roles = ViewBag.Roles as IEnumerable<MiaraEyeglasses.Models.Entities.Role> ?? Enumerable.Empty<MiaraEyeglasses.Models.Entities.Role>();
+    var pagination = ViewBag.Pagination as MiaraEyeglasses.Models.ViewModels.PaginationModel;
+    string searchKeyword = ViewBag.SearchTerm as string ?? "";
+    int? selectedRoleId = ViewBag.SelectedRoleId as int?;
 }
 
 @if (TempData["SuccessMessage"] != null)
@@ -23,35 +26,37 @@
         <div>
             <span class="eyebrow">Người dùng hệ thống · Users &amp; Roles</span>
             <h2>Quản lý Tài khoản &amp; Phân quyền</h2>
-            <p class="small muted">Quản lý toàn diện tài khoản Khách hàng, Nhân viên và Quản trị viên: Xem hồ sơ &amp; lịch sử đơn hàng, thêm mới, chỉnh sửa thông tin, khóa hoặc xóa tài khoản.</p>
+            <p class="small muted">Quản lý tài khoản Khách hàng, Nhân viên và Quản trị viên: Xem hồ sơ cá nhân &amp; lịch sử đơn hàng đã mua, tạo mới tài khoản nhân viên, khóa hoặc xóa tài khoản an toàn.</p>
         </div>
         <button type="button" class="button small-btn" data-toggle-form="form-create-user" onclick="toggleAdminForm('form-create-user')">+ Thêm tài khoản mới</button>
     </div>
 
-    <!-- Thanh tìm kiếm & bộ lọc Người dùng -->
-    <div class="admin-filter-row user-filter-bar">
-        <label>
-            <span>Tìm kiếm tài khoản</span>
-            <input type="search" id="user-search-input" placeholder="Tìm theo Họ tên, Email, Số điện thoại..." />
-        </label>
-        <label>
-            <span>Lọc theo Vai trò</span>
-            <select id="user-filter-role">
-                <option value="all">Tất cả vai trò</option>
-                <option value="Khách hàng">Khách hàng (Customer)</option>
-                <option value="Nhân viên">Nhân viên (Staff)</option>
-                <option value="Quản trị viên">Quản trị viên (Admin)</option>
-            </select>
-        </label>
-        <label>
-            <span>Lọc theo Trạng thái</span>
-            <select id="user-filter-status">
-                <option value="all">Tất cả trạng thái</option>
-                <option value="Hoạt động">Đang hoạt động</option>
-                <option value="Đã khóa">Đã bị khóa</option>
-            </select>
-        </label>
-    </div>
+    <!-- Thanh tìm kiếm & bộ lọc Người dùng Server-Side -->
+    <form method="get" asp-controller="AdminUser" asp-action="Index" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin-bottom:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px;">
+            <div style="flex:1; min-width:280px; max-width:450px;">
+                <label style="display:block; font-size:12px; font-weight:600; color:#475569; margin-bottom:4px;">Tìm kiếm tài khoản</label>
+                <input type="text" name="search" value="@searchKeyword" placeholder="Nhập họ tên, email, số điện thoại..." style="width:100%; height:36px; padding:0 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; box-sizing:border-box;" />
+            </div>
+            <div style="width:200px;">
+                <label style="display:block; font-size:12px; font-weight:600; color:#475569; margin-bottom:4px;">Lọc theo vai trò</label>
+                <select name="roleId" style="width:100%; height:36px; padding:0 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; box-sizing:border-box;">
+                    <!option value="" @(selectedRoleId == null ? "selected" : "")>Tất cả vai trò</!option>
+                    @foreach (var r in roles)
+                    {
+                        <!option value="@r.RoleId" @(selectedRoleId == r.RoleId ? "selected" : "")>@r.RoleName</!option>
+                    }
+                </select>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button type="submit" class="admin-btn-action btn-primary-action" style="height:36px !important;">🔍 Lọc tài khoản</button>
+                @if (!string.IsNullOrEmpty(searchKeyword) || selectedRoleId != null)
+                {
+                    <a asp-controller="AdminUser" asp-action="Index" class="admin-btn-action" style="height:36px !important; text-decoration:none;" title="Đặt lại bộ lọc">↺ Đặt lại</a>
+                }
+            </div>
+        </div>
+    </form>
 
     <!-- Form Thêm mới Tài khoản Người dùng -->
     <form class="customer-form sub-panel-form" id="form-create-user" hidden asp-controller="AdminUser" asp-action="Create" method="post">
@@ -206,10 +211,16 @@
                 else
                 {
                     <tr>
-                        <td colspan="6" style="text-align:center; padding:32px; color:#64748b;">Chưa có tài khoản nào.</td>
+                        <td colspan="6" style="text-align:center; padding:32px; color:#64748b;">Chưa có tài khoản nào phù hợp với bộ lọc.</td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
+
+    <!-- TÁI SỬ DỤNG FILE PHÂN TRANG DÙNG CHUNG (REUSABLE PAGINATION) -->
+    @if (pagination != null)
+    {
+        @await Html.PartialAsync("_Pagination", pagination)
+    }
 </div>

@@ -5,6 +5,8 @@ namespace MiaraEyeglasses.Repositories.Admin
     public interface IAdminOrderRepository
     {
         Task<IEnumerable<Models.Entities.Order>> GetAllOrdersAsync(byte? status = null);
+        Task<(IEnumerable<Models.Entities.Order> Orders, int TotalCount)> GetOrdersPagedForAdminAsync(
+            int page, int pageSize, byte? status = null, string? search = null);
         Task<Models.Entities.Order?> GetOrderDetailsAsync(int orderId);
     }
 
@@ -21,6 +23,12 @@ namespace MiaraEyeglasses.Repositories.Admin
         public async Task<IEnumerable<Models.Entities.Order>> GetAllOrdersAsync(byte? status = null)
         {
             return await _orderRepository.GetAllOrdersForAdminAsync(status);
+        }
+
+        public async Task<(IEnumerable<Models.Entities.Order> Orders, int TotalCount)> GetOrdersPagedForAdminAsync(
+            int page, int pageSize, byte? status = null, string? search = null)
+        {
+            return await _orderRepository.GetOrdersPagedForAdminAsync(page, pageSize, status, search);
         }
 
         // Lấy thông tin chi tiết một đơn hàng kèm sản phẩm, tròng kính và nhật ký giao dịch

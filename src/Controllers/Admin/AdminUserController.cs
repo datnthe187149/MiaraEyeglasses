@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MiaraEyeglasses.Models.ViewModels;
 using MiaraEyeglasses.Services.Admin;
 
 namespace MiaraEyeglasses.Controllers.Admin
@@ -16,18 +17,35 @@ namespace MiaraEyeglasses.Controllers.Admin
             _userService = userService;
         }
 
-        // [GET] /Admin/Users: Xem danh sách tài khoản theo vai trò hoặc tìm kiếm
+        // [GET] /Admin/Users: Xem danh sách tài khoản theo vai trò hoặc tìm kiếm với Phân trang
         [HttpGet]
         [Route("Admin/Users")]
         [Route("AdminUser")]
-        public async Task<IActionResult> Index(int? roleId = null, string? search = null)
+        public async Task<IActionResult> Index(int page = 1, int pageSize = 10, int? roleId = null, string? search = null)
         {
-            var users = await _userService.GetUsersAsync(roleId, search);
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
+
+            var (users, totalCount, totalPages) = await _userService.GetUsersPagedAsync(page, pageSize, roleId, search);
             var roles = await _userService.GetAllRolesAsync();
+
+            var pagination = new PaginationModel
+            {
+                CurrentPage = page,
+                PageSize = pageSize,
+                TotalItems = totalCount,
+                TotalPages = totalPages,
+                Controller = "AdminUser",
+                Action = "Index"
+            };
+
+            if (roleId.HasValue && roleId.Value > 0) pagination.RouteValues["roleId"] = roleId.Value.ToString();
+            if (!string.IsNullOrWhiteSpace(search)) pagination.RouteValues["search"] = search;
 
             ViewBag.Roles = roles;
             ViewBag.SelectedRoleId = roleId;
             ViewBag.SearchTerm = search;
+            ViewBag.Pagination = pagination;
 
             return View("~/Views/Admin/Users.cshtml", users);
         }

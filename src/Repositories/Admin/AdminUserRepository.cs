@@ -8,6 +8,8 @@ namespace MiaraEyeglasses.Repositories.Admin
     public interface IAdminUserRepository : IBaseRepository<Models.Entities.User>
     {
         Task<IEnumerable<Models.Entities.User>> GetUsersAsync(int? roleId = null, string? search = null);
+        Task<(IEnumerable<Models.Entities.User> Users, int TotalCount)> GetUsersPagedAsync(
+            int page, int pageSize, int? roleId = null, string? search = null);
         Task<IEnumerable<Role>> GetAllRolesAsync();
         Task<Models.Entities.User?> GetUserByIdWithFullDetailsAsync(int userId);
         Task<bool> EmailExistsAsync(string email, int excludeUserId = 0);
@@ -36,6 +38,33 @@ namespace MiaraEyeglasses.Repositories.Admin
             }
 
             return await query.OrderByDescending(u => u.CreatedAt).ToListAsync();
+        }
+
+        public async Task<(IEnumerable<Models.Entities.User> Users, int TotalCount)> GetUsersPagedAsync(
+            int page, int pageSize, int? roleId = null, string? search = null)
+        {
+            var query = _dbSet.Include(u => u.Role).AsQueryable();
+
+            if (roleId.HasValue && roleId.Value > 0)
+            {
+                query = query.Where(u => u.RoleId == roleId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim().ToLower();
+                query = query.Where(u => u.FullName.ToLower().Contains(term) 
+                                      || u.Email.ToLower().Contains(term) 
+                                      || (u.Phone != null && u.Phone.Contains(term)));
+            }
+
+            int totalCount = await query.CountAsync();
+            var users = await query.OrderByDescending(u => u.CreatedAt)
+                                   .Skip((page - 1) * pageSize)
+                                   .Take(pageSize)
+                                   .ToListAsync();
+
+            return (users, totalCount);
         }
 
         // Lấy danh sách tất cả vai trò trong hệ thống
