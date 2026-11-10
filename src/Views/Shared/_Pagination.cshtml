@@ -1,0 +1,124 @@
+@model MiaraEyeglasses.Models.ViewModels.PaginationModel
+
+@if (Model != null && Model.TotalPages > 0)
+{
+    <div class="pagination-wrapper" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+        <!-- Thông tin số bản ghi hiển thị -->
+        <div class="pagination-info" style="font-size: 13px; color: #64748b;">
+            @if (Model.TotalItems > 0)
+            {
+                <span>
+                    Hiển thị <strong>@Model.StartItemIndex - @Model.EndItemIndex</strong> trong tổng số <strong>@Model.TotalItems</strong> bản ghi
+                </span>
+            }
+            else
+            {
+                <span>Không có bản ghi nào</span>
+            }
+        </div>
+
+        <!-- Các nút chuyển trang -->
+        @if (Model.TotalPages > 1)
+        {
+            <nav class="pagination-nav" aria-label="Điều hướng phân trang" style="display: flex; gap: 6px; align-items: center;">
+                <!-- Nút Trang trước -->
+                @if (Model.HasPreviousPage)
+                {
+                    <a asp-controller="@Model.Controller" 
+                       asp-action="@Model.Action" 
+                       asp-all-route-data="@Model.GetRouteValuesForPage(Model.CurrentPage - 1)" 
+                       class="admin-btn-action" 
+                       style="padding: 0 10px; font-size: 12px;">
+                        &laquo; Trước
+                    </a>
+                }
+                else
+                {
+                    <span class="admin-btn-action" style="opacity: 0.4; cursor: not-allowed; padding: 0 10px; font-size: 12px;">
+                        &laquo; Trước
+                    </span>
+                }
+
+                <!-- Danh sách các số trang với giải thuật hiển thị rút gọn khi có nhiều trang -->
+                @{
+                    int startPage = Math.Max(1, Model.CurrentPage - 2);
+                    int endPage = Math.Min(Model.TotalPages, Model.CurrentPage + 2);
+
+                    if (Model.CurrentPage <= 3)
+                    {
+                        endPage = Math.Min(Model.TotalPages, 5);
+                    }
+                    if (Model.CurrentPage >= Model.TotalPages - 2)
+                    {
+                        startPage = Math.Max(1, Model.TotalPages - 4);
+                    }
+                }
+
+                @if (startPage > 1)
+                {
+                    <a asp-controller="@Model.Controller" 
+                       asp-action="@Model.Action" 
+                       asp-all-route-data="@Model.GetRouteValuesForPage(1)" 
+                       class="admin-btn-action" 
+                       style="min-width: 32px; padding: 0 6px;">1</a>
+                    @if (startPage > 2)
+                    {
+                        <span style="color: #94a3b8; font-size: 13px; padding: 0 2px;">&hellip;</span>
+                    }
+                }
+
+                @for (int p = startPage; p <= endPage; p++)
+                {
+                    if (p == Model.CurrentPage)
+                    {
+                        <span class="admin-btn-action btn-primary-action" 
+                              style="min-width: 32px; padding: 0 6px; font-weight: 700; cursor: default;">
+                            @p
+                        </span>
+                    }
+                    else
+                    {
+                        <a asp-controller="@Model.Controller" 
+                           asp-action="@Model.Action" 
+                           asp-all-route-data="@Model.GetRouteValuesForPage(p)" 
+                           class="admin-btn-action" 
+                           style="min-width: 32px; padding: 0 6px;">
+                            @p
+                        </a>
+                    }
+                }
+
+                @if (endPage < Model.TotalPages)
+                {
+                    @if (endPage < Model.TotalPages - 1)
+                    {
+                        <span style="color: #94a3b8; font-size: 13px; padding: 0 2px;">&hellip;</span>
+                    }
+                    <a asp-controller="@Model.Controller" 
+                       asp-action="@Model.Action" 
+                       asp-all-route-data="@Model.GetRouteValuesForPage(Model.TotalPages)" 
+                       class="admin-btn-action" 
+                       style="min-width: 32px; padding: 0 6px;">@Model.TotalPages</a>
+                }
+
+                <!-- Nút Trang sau -->
+                @if (Model.HasNextPage)
+                {
+                    <a asp-controller="@Model.Controller" 
+                       asp-action="@Model.Action" 
+                       asp-all-route-data="@Model.GetRouteValuesForPage(Model.CurrentPage + 1)" 
+                       class="admin-btn-action" 
+                       style="padding: 0 10px; font-size: 12px;">
+                        Sau &raquo;
+                    </a>
+                }
+                else
+                {
+                    <span class="admin-btn-action" style="opacity: 0.4; cursor: not-allowed; padding: 0 10px; font-size: 12px;">
+                        Sau &raquo;
+                    </span>
+                }
+            </nav>
+        }
+    </div>
+}

@@ -9,7 +9,7 @@ namespace MiaraEyeglasses.Repositories.Admin
     public interface IAdminProductRepository : IBaseRepository<ProductEntity>
     {
         Task<IEnumerable<ProductEntity>> GetAllProductsWithDetailsAsync();
-        Task<(IEnumerable<ProductEntity> Products, int TotalCount)> GetProductsPagedAsync(int page, int pageSize, string? search = null);
+        Task<(IEnumerable<ProductEntity> Products, int TotalCount)> GetProductsPagedAsync(int page, int pageSize, string? search = null, int? categoryId = null, int? brandId = null, bool? isActive = null);
         Task<ProductEntity?> GetProductByIdWithDetailsAsync(int productId);
         Task AddProductWithVariantAndImageAsync(ProductEntity product, ProductVariant variant, ProductImage image);
         Task AddProductWithVariantsAndImagesAsync(ProductEntity product, IEnumerable<ProductVariant> variants, IEnumerable<ProductImage> images);
@@ -37,7 +37,8 @@ namespace MiaraEyeglasses.Repositories.Admin
                 .ToListAsync();
         }
 
-        public async Task<(IEnumerable<ProductEntity> Products, int TotalCount)> GetProductsPagedAsync(int page, int pageSize, string? search = null)
+        public async Task<(IEnumerable<ProductEntity> Products, int TotalCount)> GetProductsPagedAsync(
+            int page, int pageSize, string? search = null, int? categoryId = null, int? brandId = null, bool? isActive = null)
         {
             var query = _dbSet
                 .Include(p => p.Category)
@@ -46,10 +47,29 @@ namespace MiaraEyeglasses.Repositories.Admin
                 .Include(p => p.Images)
                 .AsQueryable();
 
+            // 1. Lọc theo từ khóa tìm kiếm (Tên sản phẩm hoặc Mã SKU)
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var term = search.Trim().ToLower();
                 query = query.Where(p => p.ProductName.ToLower().Contains(term) || p.ProductCode.ToLower().Contains(term));
+            }
+
+            // 2. Lọc theo Danh mục
+            if (categoryId.HasValue && categoryId.Value > 0)
+            {
+                query = query.Where(p => p.CategoryId == categoryId.Value);
+            }
+
+            // 3. Lọc theo Thương hiệu
+            if (brandId.HasValue && brandId.Value > 0)
+            {
+                query = query.Where(p => p.BrandId == brandId.Value);
+            }
+
+            // 4. Lọc theo Trạng thái hiển thị / ẩn
+            if (isActive.HasValue)
+            {
+                query = query.Where(p => p.IsActive == isActive.Value);
             }
 
             var totalCount = await query.CountAsync();

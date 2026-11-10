@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MiaraEyeglasses.Models.ViewModels;
 using MiaraEyeglasses.Services.Admin;
 
 namespace MiaraEyeglasses.Controllers.Admin
@@ -22,26 +23,55 @@ namespace MiaraEyeglasses.Controllers.Admin
             _brandService = brandService;
         }
 
-        // [GET] /Admin/Products: Hiển thị danh sách sản phẩm với Tìm kiếm và Phân trang
+        // [GET] /Admin/Products: Hiển thị danh sách sản phẩm với Bộ lọc đa tiêu chí và Phân trang
         [HttpGet]
         [Route("Admin/Products")]
         [Route("AdminProduct")]
-        public async Task<IActionResult> Index(int page = 1, int pageSize = 10, string? search = null)
+        public async Task<IActionResult> Index(
+            int page = 1, int pageSize = 10, string? search = null,
+            int? categoryId = null, int? brandId = null, string? status = null)
         {
-            // Validate: Đảm bảo số trang và kích thước trang hợp lệ
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 10;
 
-            var (products, totalCount, totalPages) = await _productService.GetProductsPagedAsync(page, pageSize, search);
+            bool? isActive = null;
+            if (status == "active")
+            {
+                isActive = true;
+            }
+            else if (status == "inactive")
+            {
+                isActive = false;
+            }
+
+            var (products, totalCount, totalPages) = await _productService.GetProductsPagedAsync(
+                page, pageSize, search, categoryId, brandId, isActive);
+
             var categories = await _categoryService.GetAllCategoriesAsync();
             var brands = await _brandService.GetAllBrandsAsync();
 
+            // Khởi tạo PaginationModel dùng chung
+            var pagination = new PaginationModel
+            {
+                CurrentPage = page,
+                PageSize = pageSize,
+                TotalItems = totalCount,
+                TotalPages = totalPages,
+                Controller = "AdminProduct",
+                Action = "Index"
+            };
+
+            if (!string.IsNullOrWhiteSpace(search)) pagination.RouteValues["search"] = search;
+            if (categoryId.HasValue && categoryId.Value > 0) pagination.RouteValues["categoryId"] = categoryId.Value.ToString();
+            if (brandId.HasValue && brandId.Value > 0) pagination.RouteValues["brandId"] = brandId.Value.ToString();
+            if (!string.IsNullOrWhiteSpace(status)) pagination.RouteValues["status"] = status;
+
             ViewBag.Categories = categories.Where(c => c.IsActive);
             ViewBag.Brands = brands.Where(b => b.IsActive);
-            ViewBag.CurrentPage = page;
-            ViewBag.PageSize = pageSize;
-            ViewBag.TotalCount = totalCount;
-            ViewBag.TotalPages = totalPages;
+            ViewBag.Pagination = pagination;
+            ViewBag.SelectedCategoryId = categoryId;
+            ViewBag.SelectedBrandId = brandId;
+            ViewBag.SelectedStatus = status;
             ViewBag.Search = search;
 
             return View("~/Views/Admin/Products.cshtml", products);

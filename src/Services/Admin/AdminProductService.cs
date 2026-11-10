@@ -10,7 +10,8 @@ namespace MiaraEyeglasses.Services.Admin
     public interface IAdminProductService
     {
         Task<IEnumerable<ProductEntity>> GetAllProductsAsync();
-        Task<(IEnumerable<ProductEntity> Products, int TotalCount, int TotalPages)> GetProductsPagedAsync(int page, int pageSize, string? search = null);
+        Task<(IEnumerable<ProductEntity> Products, int TotalCount, int TotalPages)> GetProductsPagedAsync(
+            int page, int pageSize, string? search = null, int? categoryId = null, int? brandId = null, bool? isActive = null);
         Task<ProductEntity?> GetProductByIdAsync(int productId);
         Task<(bool Success, string? ErrorMessage)> CreateProductAsync(
             string productName, string productCode, int categoryId, int brandId, decimal price,
@@ -54,12 +55,13 @@ namespace MiaraEyeglasses.Services.Admin
             return await _productRepository.GetProductByIdWithDetailsAsync(productId);
         }
 
-        public async Task<(IEnumerable<ProductEntity> Products, int TotalCount, int TotalPages)> GetProductsPagedAsync(int page, int pageSize, string? search = null)
+        public async Task<(IEnumerable<ProductEntity> Products, int TotalCount, int TotalPages)> GetProductsPagedAsync(
+            int page, int pageSize, string? search = null, int? categoryId = null, int? brandId = null, bool? isActive = null)
         {
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 10;
 
-            var (products, totalCount) = await _productRepository.GetProductsPagedAsync(page, pageSize, search);
+            var (products, totalCount) = await _productRepository.GetProductsPagedAsync(page, pageSize, search, categoryId, brandId, isActive);
             int totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
             if (totalPages < 1) totalPages = 1;
 
