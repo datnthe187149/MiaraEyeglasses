@@ -7,190 +7,712 @@
     var primaryImg = Model.Images?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl 
                      ?? Model.Images?.FirstOrDefault()?.ImageUrl 
                      ?? "/images/products/p1.png";
+    var galleryImgs = Model.Images?.Where(i => !i.IsPrimary).OrderBy(i => i.SortOrder).ToList() ?? new List<MiaraEyeglasses.Models.Entities.ProductImage>();
+}
+
+@section Styles {
+<style>
+    /* Reset và layout chuyên dụng cho Admin Edit Product */
+    .admin-edit-layout {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 24px;
+        align-items: start;
+        margin-top: 20px;
+    }
+    @@media (max-width: 1024px) {
+        .admin-edit-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .edit-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .edit-card-title {
+        font-size: 17px;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 4px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .edit-card-desc {
+        font-size: 13px;
+        color: #64748b;
+        margin: 0 0 18px 0;
+    }
+
+    /* Form Fields */
+    .field-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+    .field-grid-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+    @@media (max-width: 640px) {
+        .field-grid-2, .field-grid-3 {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 16px;
+    }
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+    .form-group label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #334155;
+    }
+    .form-group label span.req {
+        color: #ef4444;
+    }
+    .form-control {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #0f172a;
+        font-size: 14px;
+        font-family: inherit;
+        outline: none;
+        transition: border-color .15s, box-shadow .15s;
+        box-sizing: border-box;
+        min-height: 42px;
+    }
+    .form-control:focus {
+        border-color: #286598;
+        box-shadow: 0 0 0 3px rgba(40, 101, 152, 0.15);
+    }
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    /* Modern Toggle Switch */
+    .switch-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 14px 16px;
+    }
+    .switch-info strong {
+        display: block;
+        font-size: 14px;
+        color: #0f172a;
+        margin-bottom: 2px;
+    }
+    .switch-info span {
+        font-size: 12px;
+        color: #64748b;
+    }
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 48px;
+        height: 26px;
+        flex-shrink: 0;
+        margin: 0;
+    }
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        position: absolute;
+    }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #cbd5e1;
+        transition: .3s;
+        border-radius: 26px;
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .switch input:checked + .slider {
+        background-color: #10b981;
+    }
+    .switch input:checked + .slider:before {
+        transform: translateX(22px);
+    }
+
+    /* Primary Image Box */
+    .primary-img-card {
+        text-align: center;
+        background: #f8fafc;
+        border: 1px dashed #cbd5e1;
+        border-radius: 10px;
+        padding: 16px;
+    }
+    .primary-img-preview {
+        width: 100%;
+        height: 180px;
+        object-fit: contain;
+        background: #ffffff;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 12px;
+    }
+
+    /* Gallery Upload Zone */
+    .dropzone-box {
+        border: 2px dashed #94a3b8;
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+        background: #f8fafc;
+        cursor: pointer;
+        transition: all .2s;
+    }
+    .dropzone-box:hover {
+        border-color: #286598;
+        background: #f1f5f9;
+    }
+    .dropzone-box input[type="file"] {
+        display: none;
+    }
+    .dropzone-icon {
+        font-size: 32px;
+        color: #286598;
+        margin-bottom: 8px;
+    }
+
+    /* Gallery Grid */
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 14px;
+        margin-top: 14px;
+    }
+    .gallery-item {
+        position: relative;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        background: #ffffff;
+        padding: 8px;
+        text-align: center;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    .gallery-item img {
+        width: 100%;
+        height: 100px;
+        object-fit: contain;
+        border-radius: 6px;
+        background: #f8fafc;
+    }
+    .gallery-item-footer {
+        margin-top: 6px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .gallery-delete-btn {
+        background: #fee2e2;
+        color: #dc2626;
+        border: none;
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background .15s;
+    }
+    .gallery-delete-btn:hover {
+        background: #fca5a5;
+    }
+
+    /* Preview Files Grid */
+    .preview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 10px;
+        margin-top: 14px;
+    }
+    .preview-card {
+        border: 1px solid #38bdf8;
+        background: #f0f9ff;
+        border-radius: 8px;
+        padding: 6px;
+        text-align: center;
+    }
+    .preview-card img {
+        width: 100%;
+        height: 75px;
+        object-fit: contain;
+        border-radius: 4px;
+        background: #fff;
+    }
+    .preview-card span {
+        display: block;
+        font-size: 11px;
+        color: #0369a1;
+        margin-top: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Table Variants */
+    .variant-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+    .variant-table th {
+        background: #f1f5f9;
+        color: #475569;
+        font-weight: 600;
+        padding: 10px 12px;
+        text-align: left;
+        border-bottom: 1px solid #cbd5e1;
+    }
+    .variant-table td {
+        padding: 12px;
+        border-bottom: 1px solid #e2e8f0;
+        vertical-align: middle;
+    }
+    .stock-input {
+        width: 110px !important;
+        min-height: 38px !important;
+        padding: 6px 10px !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 6px !important;
+        font-weight: 700;
+        color: #0f172a;
+    }
+</style>
 }
 
 @if (TempData["SuccessMessage"] != null)
 {
-    <div class="alert alert-success" style="margin-bottom: 20px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46;">
-        @TempData["SuccessMessage"]
+    <div class="alert alert-success" style="margin-bottom: 20px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46; display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 18px;">✓</span>
+        <span>@TempData["SuccessMessage"]</span>
     </div>
 }
 @if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert alert-danger" style="margin-bottom: 20px; padding: 12px 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; color: #991b1b;">
-        @TempData["ErrorMessage"]
+    <div class="alert alert-danger" style="margin-bottom: 20px; padding: 12px 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; color: #991b1b; display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 18px;">⚠</span>
+        <span>@TempData["ErrorMessage"]</span>
     </div>
 }
 
-<div class="portal-card">
-    <div class="portal-card-head">
+<!-- Header Điều hướng -->
+<div class="portal-card" style="padding: 20px 24px; margin-bottom: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
         <div>
-            <span class="eyebrow">QUẢN TRỊ KHO · CHỈNH SỬA SẢN PHẨM</span>
-            <h2>Chỉnh sửa thông tin sản phẩm: @Model.ProductName</h2>
-            <p class="small muted">Cập nhật thông tin chi tiết, giá bán, danh mục, thông số kỹ thuật và số lượng tồn kho biến thể.</p>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                <span class="eyebrow" style="margin: 0;">QUẢN TRỊ KHO · SẢN PHẨM &amp; BIẾN THỂ</span>
+                @if (Model.IsActive)
+                {
+                    <span style="background: #ecfdf5; color: #065f46; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 12px; border: 1px solid #a7f3d0;">
+                        ● Đang kinh doanh
+                    </span>
+                }
+                else
+                {
+                    <span style="background: #f1f5f9; color: #64748b; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 12px;">
+                        ○ Tạm ẩn
+                    </span>
+                }
+            </div>
+            <h2 style="font-size: 22px; font-weight: 700; margin: 0; color: #0f172a;">@Model.ProductName</h2>
+            <p class="small muted" style="margin: 2px 0 0 0;">Mã SKU chính: <code>@Model.ProductCode</code> &bull; ID: #@Model.ProductId</p>
         </div>
-        <div style="display: flex; gap: 10px;">
-            <a asp-controller="AdminInventory" asp-action="Index" class="button button-outline small-btn">← Quay lại Quản lý tồn kho</a>
-            <a asp-controller="AdminProduct" asp-action="Index" class="button button-outline small-btn">Danh sách sản phẩm</a>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <a asp-controller="Shop" asp-action="Detail" asp-route-id="@Model.ProductId" target="_blank" class="button button-outline small-btn">
+                ↗ Xem trên Shop
+            </a>
+            <a asp-controller="AdminInventory" asp-action="Index" class="button button-outline small-btn">
+                ← Quản lý Tồn kho
+            </a>
+            <a asp-controller="AdminProduct" asp-action="Index" class="button button-outline small-btn">
+                Danh sách sản phẩm
+            </a>
         </div>
     </div>
+</div>
 
-    <!-- Form Chỉnh sửa Sản phẩm -->
-    <form class="customer-form sub-panel-form" asp-controller="AdminProduct" asp-action="Edit" asp-route-id="@Model.ProductId" method="post" enctype="multipart/form-data" style="margin-top: 20px;">
-        @Html.AntiForgeryToken()
-        <input type="hidden" name="id" value="@Model.ProductId" />
+<!-- Form Chỉnh sửa Sản phẩm 2 Cột -->
+<form id="edit-product-form" asp-controller="AdminProduct" asp-action="Edit" asp-route-id="@Model.ProductId" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" value="@Model.ProductId" />
 
-        <div style="display: flex; gap: 24px; margin-bottom: 24px; align-items: flex-start; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
-            <div>
-                <img src="@primaryImg" alt="@Model.ProductName" style="width: 120px; height: 120px; object-fit: contain; background: #fff; border-radius: 6px; border: 1px solid #cbd5e1;" />
+    <div class="admin-edit-layout">
+        <!-- CỘT CHÍNH (BÊN TRÁI) -->
+        <div>
+            <!-- Card 1: Thông tin cơ bản -->
+            <div class="edit-card">
+                <h3 class="edit-card-title">📦 Thông tin cơ bản sản phẩm</h3>
+                <p class="edit-card-desc">Tên mẫu kính, mã nhận diện SKU, giá niêm yết và các thuộc tính gọng kính.</p>
+
+                <div class="field-grid-2">
+                    <div class="form-group">
+                        <label>Tên mẫu gọng kính <span class="req">*</span></label>
+                        <input type="text" name="productName" class="form-control" value="@Model.ProductName" required placeholder="VD: ALFIO RALDO 31200" />
+                    </div>
+                    <div class="form-group">
+                        <label>Mã sản phẩm / SKU <span class="req">*</span></label>
+                        <input type="text" name="productCode" class="form-control" value="@Model.ProductCode" required placeholder="VD: 31200-52017-146" />
+                    </div>
+                </div>
+
+                <div class="field-grid-2">
+                    <div class="form-group">
+                        <label>Giá bán niêm yết (VNĐ) <span class="req">*</span></label>
+                        <input type="number" name="price" class="form-control" value="@((long)Model.Price)" min="1000" step="1000" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Đối tượng / Giới tính</label>
+                        <select name="gender" class="form-control">
+                            <!option value="Unisex" @(Model.Gender == "Unisex" ? "selected" : "")>Unisex (Nam &amp; Nữ)</!option>
+                            <!option value="Nam" @(Model.Gender == "Nam" ? "selected" : "")>Nam</!option>
+                            <!option value="Nữ" @(Model.Gender == "Nữ" ? "selected" : "")>Nữ</!option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="field-grid-2">
+                    <div class="form-group">
+                        <label>Dáng gọng kính</label>
+                        <select name="frameShape" class="form-control">
+                            <!option value="Vuông" @(Model.FrameShape == "Vuông" ? "selected" : "")>Vuông</!option>
+                            <!option value="Tròn" @(Model.FrameShape == "Tròn" ? "selected" : "")>Tròn</!option>
+                            <!option value="Chữ nhật" @(Model.FrameShape == "Chữ nhật" ? "selected" : "")>Chữ nhật</!option>
+                            <!option value="Oval" @(Model.FrameShape == "Oval" ? "selected" : "")>Oval</!option>
+                            <!option value="Mắt mèo" @(Model.FrameShape == "Mắt mèo" ? "selected" : "")>Mắt mèo</!option>
+                            <!option value="Đa giác" @(Model.FrameShape == "Đa giác" ? "selected" : "")>Đa giác</!option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Chất liệu gọng kính</label>
+                        <select name="material" class="form-control">
+                            <!option value="Nhựa" @(Model.Material == "Nhựa" ? "selected" : "")>Nhựa Acetate / TR90</!option>
+                            <!option value="Kim loại" @(Model.Material == "Kim loại" ? "selected" : "")>Kim loại cao cấp</!option>
+                            <!option value="Titan" @(Model.Material == "Titan" ? "selected" : "")>Titan siêu nhẹ</!option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Mô tả chi tiết sản phẩm</label>
+                    <textarea name="description" class="form-control" rows="4" placeholder="Nhập mô tả về phong cách, độ bền, xuất xứ gọng kính...">@Model.Description</textarea>
+                </div>
             </div>
-            <div style="flex: 1;">
-                <h4 style="margin: 0 0 8px 0; color: #0f172a;">Ảnh đại diện hiện tại</h4>
-                <p class="small muted" style="margin-bottom: 12px;">Đang sử dụng ảnh: <code>@primaryImg</code>. Bạn có thể tải lên ảnh mới để thay thế ảnh đại diện này.</p>
-                <label style="margin: 0;">
-                    <span style="font-size: 13px; font-weight: 600; color: #475569;">Chọn ảnh đại diện mới (.jpg, .png, .webp):</span>
-                    <input type="file" name="primaryImageFile" accept="image/jpeg,image/png,image/webp" style="margin-top: 6px;" />
-                </label>
-            </div>
-        </div>
 
-        <div class="form-grid-2">
-            <label>
-                <span>Tên mẫu kính *</span>
-                <input type="text" name="productName" value="@Model.ProductName" required placeholder="VD: ALFIO RALDO 3114" />
-            </label>
-            <label>
-                <span>Mã sản phẩm (SKU) *</span>
-                <input type="text" name="productCode" value="@Model.ProductCode" required placeholder="VD: 3114-151O16-143" />
-            </label>
-            <label>
-                <span>Danh mục gọng kính *</span>
-                <select name="categoryId">
-                    @foreach (var c in categories)
-                    {
-                        if (c.CategoryId == Model.CategoryId)
+            <!-- Card 2: Quản lý Biến thể & Tồn kho -->
+            <div class="edit-card">
+                <h3 class="edit-card-title">🎨 Biến thể màu sắc &amp; Số lượng tồn kho</h3>
+                <p class="edit-card-desc">Cập nhật số lượng tồn kho từng màu của sản phẩm. Hệ thống sẽ tự động cập nhật cảnh báo khi hết hàng.</p>
+
+                <table class="variant-table">
+                    <thead>
+                        <tr>
+                            <th>Mã SKU biến thể</th>
+                            <th>Màu sắc</th>
+                            <th>Kích cỡ (Size)</th>
+                            <th style="width: 170px;">Số lượng tồn kho</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Variants != null && Model.Variants.Any())
                         {
-                            <option value="@c.CategoryId" selected>@c.CategoryName</option>
+                            foreach (var v in Model.Variants)
+                            {
+                                <tr>
+                                    <td><code>@v.Sku</code></td>
+                                    <td>
+                                        <strong>@v.ColorName</strong>
+                                        <input type="hidden" name="variantColor[@v.VariantId]" value="@v.ColorName" />
+                                    </td>
+                                    <td><span class="badge" style="background:#f1f5f9; color:#334155;">Size @v.SizeLabel</span></td>
+                                    <td>
+                                        <div style="display:flex; align-items:center; gap:8px;">
+                                            <input type="number" 
+                                                   name="variantStock[@v.VariantId]" 
+                                                   value="@v.StockQty" 
+                                                   min="0" 
+                                                   max="9999" 
+                                                   class="form-control stock-input" />
+                                            <span style="font-size:13px; color:#64748b;">chiếc</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
                         }
                         else
-                        {
-                            <option value="@c.CategoryId">@c.CategoryName</option>
-                        }
-                    }
-                </select>
-            </label>
-            <label>
-                <span>Thương hiệu *</span>
-                <select name="brandId">
-                    @foreach (var b in brands)
-                    {
-                        if (b.BrandId == Model.BrandId)
-                        {
-                            <option value="@b.BrandId" selected>@b.BrandName</option>
-                        }
-                        else
-                        {
-                            <option value="@b.BrandId">@b.BrandName</option>
-                        }
-                    }
-                </select>
-            </label>
-            <label>
-                <span>Giá niêm yết (VNĐ) *</span>
-                <input type="number" name="price" value="@((long)Model.Price)" required />
-            </label>
-            <label>
-                <span>Dáng gọng kính</span>
-                <select name="frameShape">
-                    <!option value="Vuông" @(Model.FrameShape == "Vuông" ? "selected" : "")>Vuông</!option>
-                    <!option value="Tròn" @(Model.FrameShape == "Tròn" ? "selected" : "")>Tròn</!option>
-                    <!option value="Chữ nhật" @(Model.FrameShape == "Chữ nhật" ? "selected" : "")>Chữ nhật</!option>
-                    <!option value="Oval" @(Model.FrameShape == "Oval" ? "selected" : "")>Oval</!option>
-                    <!option value="Mắt mèo" @(Model.FrameShape == "Mắt mèo" ? "selected" : "")>Mắt mèo</!option>
-                    <!option value="Đa giác" @(Model.FrameShape == "Đa giác" ? "selected" : "")>Đa giác</!option>
-                </select>
-            </label>
-            <label>
-                <span>Chất liệu gọng kính</span>
-                <select name="material">
-                    <!option value="Nhựa" @(Model.Material == "Nhựa" ? "selected" : "")>Nhựa</!option>
-                    <!option value="Kim loại" @(Model.Material == "Kim loại" ? "selected" : "")>Kim loại</!option>
-                    <!option value="Titan" @(Model.Material == "Titan" ? "selected" : "")>Titan</!option>
-                </select>
-            </label>
-            <label>
-                <span>Đối tượng / Giới tính</span>
-                <select name="gender">
-                    <!option value="Unisex" @(Model.Gender == "Unisex" ? "selected" : "")>Unisex (Nam &amp; Nữ)</!option>
-                    <!option value="Nam" @(Model.Gender == "Nam" ? "selected" : "")>Nam</!option>
-                    <!option value="Nữ" @(Model.Gender == "Nữ" ? "selected" : "")>Nữ</!option>
-                </select>
-            </label>
-        </div>
-
-        <label style="margin-top: 12px;">
-            <span>Mô tả chi tiết sản phẩm</span>
-            <textarea name="description" rows="4" style="width: 100%; padding: 10px; border: 1px solid var(--color-border); border-radius: 6px;">@Model.Description</textarea>
-        </label>
-
-        <div style="margin-top: 16px;">
-            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                <input type="checkbox" name="isActive" value="true" @(Model.IsActive ? "checked" : "") />
-                <span style="font-weight: 600;">Cho phép hiển thị và kinh doanh sản phẩm này ngoài cửa hàng</span>
-            </label>
-        </div>
-
-        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
-            <h3 style="margin-bottom: 8px;">Quản lý Biến thể &amp; Số lượng Tồn kho</h3>
-            <p class="small muted" style="margin-bottom: 16px;">Chỉnh sửa màu sắc và cập nhật số lượng tồn kho trực tiếp cho từng biến thể của sản phẩm.</p>
-
-            <table class="admin-table" style="margin-bottom: 16px;">
-                <thead>
-                    <tr>
-                        <th>Mã SKU biến thể</th>
-                        <th>Tên màu sắc</th>
-                        <th>Kích cỡ (Size)</th>
-                        <th>Số lượng tồn kho</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model.Variants != null && Model.Variants.Any())
-                    {
-                        foreach (var v in Model.Variants)
                         {
                             <tr>
-                                <td><code>@v.Sku</code></td>
-                                <td>
-                                    <strong>@v.ColorName</strong>
-                                    <input type="hidden" name="variantColor[@v.VariantId]" value="@v.ColorName" />
-                                </td>
-                                <td><span class="badge">Size @v.SizeLabel</span></td>
-                                <td>
-                                    <input type="number" name="variantStock[@v.VariantId]" value="@v.StockQty" min="0" max="9999" style="padding: 6px 10px; border: 1px solid var(--color-border); border-radius: 4px; width: 100px; font-weight: bold;" /> chiếc
+                                <td colspan="4" style="text-align: center; color: #64748b; padding: 20px;">
+                                    Sản phẩm chưa có biến thể màu sắc nào.
                                 </td>
                             </tr>
                         }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="4" style="text-align: center; color: #64748b; padding: 16px;">Sản phẩm chưa có biến thể màu sắc hoặc kích cỡ nào.</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Card 3: Thư viện ảnh phụ (Gallery) -->
+            <div class="edit-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <h3 class="edit-card-title" style="margin:0;">🖼️ Bộ sưu tập ảnh phụ (Gallery)</h3>
+                    <span style="font-size:13px; color:#286598; font-weight:600;">@galleryImgs.Count ảnh hiện có</span>
+                </div>
+                <p class="edit-card-desc">Quản lý các góc chụp chi tiết gọng kính (góc nghiêng, càng kính, ve đệm mũi, chụp mẫu đeo).</p>
+
+                <!-- Danh sách ảnh phụ hiện có -->
+                @if (galleryImgs.Any())
+                {
+                    <div style="margin-bottom: 20px;">
+                        <span style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 8px;">
+                            Ảnh phụ đang hiển thị trên trang sản phẩm:
+                        </span>
+                        <div class="gallery-grid">
+                            @foreach (var gImg in galleryImgs)
+                            {
+                                <div class="gallery-item" id="gallery-item-@gImg.ImageId">
+                                    <img src="@gImg.ImageUrl" alt="Ảnh phụ @Model.ProductName" />
+                                    <div class="gallery-item-footer">
+                                        <span style="font-size: 11px; color: #64748b;">#@gImg.SortOrder</span>
+                                        <button type="button" 
+                                                class="gallery-delete-btn" 
+                                                onclick="deleteGalleryImage(@gImg.ImageId, @Model.ProductId)">
+                                            ✕ Xóa
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 14px; text-align: center; color: #64748b; font-size: 13px; margin-bottom: 16px;">
+                        Sản phẩm này chưa có ảnh phụ nào trong bộ sưu tập gallery.
+                    </div>
+                }
+
+                <!-- Khu vực Upload nhiều ảnh phụ cùng lúc -->
+                <div>
+                    <span style="font-size: 13px; font-weight: 600; color: #334155; display: block; margin-bottom: 8px;">
+                        Tải lên thêm nhiều ảnh phụ mới (Chọn nhiều ảnh cùng lúc):
+                    </span>
+                    <div class="dropzone-box" onclick="document.getElementById('multi-gallery-input').click()">
+                        <div class="dropzone-icon">📁</div>
+                        <strong style="color: #0f172a; font-size: 14px; display: block; margin-bottom: 4px;">
+                            Nhấp vào đây hoặc kéo thả để chọn nhiều ảnh phụ
+                        </strong>
+                        <p style="font-size: 12px; color: #64748b; margin: 0;">
+                            Hỗ trợ chọn cùng lúc nhiều tệp .jpg, .png, .webp (Giữ phím <code>Ctrl</code> hoặc <code>Cmd</code> để chọn nhiều ảnh)
+                        </p>
+                        <input type="file" 
+                               id="multi-gallery-input" 
+                               name="galleryImageFiles" 
+                               multiple 
+                               accept="image/jpeg,image/png,image/webp" 
+                               onchange="handleGalleryPreview(this)" />
+                    </div>
+
+                    <!-- Khu vực xem trước (Live Preview) các ảnh phụ vừa chọn -->
+                    <div id="gallery-preview-container" style="display: none; margin-top: 14px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-size: 12px; font-weight: 600; color: #0369a1;" id="preview-count-label"></span>
+                            <button type="button" class="text-button danger-text" style="font-size: 12px;" onclick="clearGalleryPreview()">Xóa danh sách vừa chọn</button>
+                        </div>
+                        <div class="preview-grid" id="preview-grid"></div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div style="margin-top: 16px;">
-            <label>
-                <span>Tải lên thêm ảnh phụ cho bộ sưu tập gallery (.jpg, .png, .webp)</span>
-                <input type="file" name="galleryImageFiles" multiple accept="image/jpeg,image/png,image/webp" style="margin-top: 6px;" />
-            </label>
-        </div>
+        <!-- CỘT PHỤ (BÊN PHẢI) -->
+        <div>
+            <!-- Card 4: Trạng thái & Xuất bản -->
+            <div class="edit-card">
+                <h3 class="edit-card-title">⚙️ Trạng thái hiển thị</h3>
+                <p class="edit-card-desc">Bật/tắt kinh doanh sản phẩm ngoài cửa hàng.</p>
 
-        <div style="display:flex; gap:12px; margin-top:24px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
-            <button type="submit" class="button" style="padding: 10px 24px; font-weight: 600;">✓ Lưu cập nhật sản phẩm</button>
-            <a asp-controller="AdminProduct" asp-action="Index" class="button button-outline" style="padding: 10px 20px;">Hủy bỏ</a>
+                <div class="switch-container">
+                    <div class="switch-info">
+                        <strong>Kinh doanh ngoài shop</strong>
+                        <span>@(Model.IsActive ? "Đang cho phép khách đặt" : "Đang tạm ẩn sản phẩm")</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" name="isActive" value="true" @(Model.IsActive ? "checked" : "") />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Card 5: Ảnh đại diện chính (Primary Image) -->
+            <div class="edit-card">
+                <h3 class="edit-card-title">🌟 Ảnh đại diện chính</h3>
+                <p class="edit-card-desc">Ảnh hiển thị tại danh sách sản phẩm, trang chủ và giỏ hàng.</p>
+
+                <div class="primary-img-card">
+                    <img id="primary-img-view" src="@primaryImg" alt="@Model.ProductName" class="primary-img-preview" />
+                    <label class="button button-outline small-btn" style="display: inline-block; cursor: pointer; width: 100%; box-sizing: border-box; text-align: center; margin-top: 4px;">
+                        📷 Thay đổi ảnh đại diện
+                        <input type="file" 
+                               name="primaryImageFile" 
+                               accept="image/jpeg,image/png,image/webp" 
+                               style="display: none;" 
+                               onchange="handlePrimaryPreview(this)" />
+                    </label>
+                    <p style="font-size: 11px; color: #64748b; margin: 8px 0 0 0;">
+                        Tỷ lệ vuông 1:1, định dạng .jpg, .png hoặc .webp
+                    </p>
+                </div>
+            </div>
+
+            <!-- Card 6: Phân loại danh mục & thương hiệu -->
+            <div class="edit-card">
+                <h3 class="edit-card-title">🏷️ Phân loại sản phẩm</h3>
+                <p class="edit-card-desc">Gán danh mục và thương hiệu phân phối chính hãng.</p>
+
+                <div class="form-group">
+                    <label>Danh mục gọng kính <span class="req">*</span></label>
+                    <select name="categoryId" class="form-control" required>
+                        @foreach (var c in categories)
+                        {
+                            if (c.CategoryId == Model.CategoryId)
+                            {
+                                <option value="@c.CategoryId" selected>@c.CategoryName</option>
+                            }
+                            else
+                            {
+                                <option value="@c.CategoryId">@c.CategoryName</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Thương hiệu phân phối <span class="req">*</span></label>
+                    <select name="brandId" class="form-control" required>
+                        @foreach (var b in brands)
+                        {
+                            if (b.BrandId == Model.BrandId)
+                            {
+                                <option value="@b.BrandId" selected>@b.BrandName (@b.Country)</option>
+                            }
+                            else
+                            {
+                                <option value="@b.BrandId">@b.BrandName (@b.Country)</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <!-- Card 7: Thao tác Lưu & Hủy -->
+            <div class="edit-card" style="background: #f8fafc; border-color: #cbd5e1;">
+                <button type="submit" class="button" style="width: 100%; padding: 12px 20px; font-weight: 700; font-size: 15px; margin-bottom: 10px;">
+                    ✓ Lưu cập nhật sản phẩm
+                </button>
+                <a asp-controller="AdminInventory" asp-action="Index" class="button button-outline" style="width: 100%; text-align: center; box-sizing: border-box;">
+                    Hủy bỏ thay đổi
+                </a>
+            </div>
         </div>
-    </form>
-</div>
+    </div>
+</form>
+
+<!-- Form ẩn dùng để Xóa ảnh phụ qua POST -->
+<form id="delete-image-form" asp-controller="AdminProduct" asp-action="DeleteImage" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="imageId" id="delete-imageId" />
+    <input type="hidden" name="productId" id="delete-productId" />
+</form>
+
+@section Scripts {
+<script>
+    // 1. Xem trước ảnh đại diện chính khi người dùng chọn file
+    function handlePrimaryPreview(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('primary-img-view').src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // 2. Xem trước danh sách TẤT CẢ các ảnh phụ vừa chọn (hỗ trợ chọn nhiều file)
+    function handleGalleryPreview(input) {
+        var container = document.getElementById('gallery-preview-container');
+        var grid = document.getElementById('preview-grid');
+        var countLabel = document.getElementById('preview-count-label');
+
+        grid.innerHTML = '';
+        if (input.files && input.files.length > 0) {
+            countLabel.innerText = 'Đã chọn ' + input.files.length + ' ảnh phụ chuẩn bị tải lên:';
+            container.style.display = 'block';
+
+            Array.from(input.files).forEach(function(file) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var card = document.createElement('div');
+                    card.className = 'preview-card';
+                    card.innerHTML = '<img src="' + e.target.result + '" alt="preview" /><span>' + file.name + '</span>';
+                    grid.appendChild(card);
+                };
+                reader.readAsDataURL(file);
+            });
+        } else {
+            container.style.display = 'none';
+        }
+    }
+
+    // Xóa danh sách preview ảnh phụ vừa chọn
+    function clearGalleryPreview() {
+        var input = document.getElementById('multi-gallery-input');
+        input.value = '';
+        document.getElementById('gallery-preview-container').style.display = 'none';
+        document.getElementById('preview-grid').innerHTML = '';
+    }
+
+    // 3. Xóa một ảnh phụ hiện có
+    function deleteGalleryImage(imageId, productId) {
+        if (confirm('Bạn có chắc chắn muốn xóa ảnh phụ này khỏi sản phẩm?')) {
+            document.getElementById('delete-imageId').value = imageId;
+            document.getElementById('delete-productId').value = productId;
+            document.getElementById('delete-image-form').submit();
+        }
+    }
+</script>
+}

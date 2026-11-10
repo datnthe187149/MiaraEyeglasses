@@ -17,6 +17,7 @@ namespace MiaraEyeglasses.Repositories.Admin
         Task ToggleProductActiveAsync(int productId);
         Task<bool> ProductCodeExistsAsync(string productCode);
         Task<bool> ProductCodeExistsAsync(string productCode, int excludeProductId = 0);
+        Task<bool> DeleteProductImageAsync(int imageId);
         Task<Brand> GetOrCreateBrandAsync(string brandName);
         Task<Category> GetOrCreateCategoryAsync(string categoryName, string slug);
     }
@@ -152,6 +153,20 @@ namespace MiaraEyeglasses.Repositories.Admin
 
             // Lưu toàn bộ thay đổi của Product và các Variant đã được tracking
             await _context.SaveChangesAsync();
+        }
+
+        // Xóa một ảnh của sản phẩm (ảnh phụ)
+        public async Task<bool> DeleteProductImageAsync(int imageId)
+        {
+            var img = await _context.ProductImages.FindAsync(imageId);
+            if (img == null)
+            {
+                return false;
+            }
+
+            _context.ProductImages.Remove(img);
+            await _context.SaveChangesAsync();
+            return true;
         }
 
         public async Task<Brand> GetOrCreateBrandAsync(string brandName)

@@ -23,6 +23,7 @@ namespace MiaraEyeglasses.Services.Admin
             IFormFile? primaryImageFile, List<IFormFile>? galleryImageFiles,
             Dictionary<int, int>? variantStocks, Dictionary<int, string>? variantColors);
         Task ToggleProductActiveAsync(int productId);
+        Task<bool> DeleteProductImageAsync(int imageId);
         Task<(int ImportedCount, List<string> Messages)> ImportFromScraperFolderAsync(string scraperOutputDir);
     }
 
@@ -172,6 +173,12 @@ namespace MiaraEyeglasses.Services.Admin
         public async Task ToggleProductActiveAsync(int productId)
         {
             await _productRepository.ToggleProductActiveAsync(productId);
+        }
+
+        public async Task<bool> DeleteProductImageAsync(int imageId)
+        {
+            if (imageId <= 0) return false;
+            return await _productRepository.DeleteProductImageAsync(imageId);
         }
 
         // Cập nhật thông tin chi tiết của sản phẩm, giá bán, tồn kho các biến thể và gallery ảnh

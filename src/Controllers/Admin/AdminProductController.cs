@@ -362,5 +362,30 @@ namespace MiaraEyeglasses.Controllers.Admin
             TempData["SuccessMessage"] = "Đã cập nhật trạng thái hiển thị của sản phẩm.";
             return RedirectToAction("Index");
         }
+
+        // [POST] /Admin/Products/DeleteImage: Xóa một ảnh phụ của sản phẩm
+        [HttpPost]
+        [Route("Admin/Products/DeleteImage")]
+        [Route("AdminProduct/DeleteImage")]
+        public async Task<IActionResult> DeleteImage(int imageId, int productId)
+        {
+            if (imageId <= 0 || productId <= 0)
+            {
+                TempData["ErrorMessage"] = "Thông tin ảnh không hợp lệ.";
+                return RedirectToAction("Edit", new { id = productId });
+            }
+
+            bool deleted = await _productService.DeleteProductImageAsync(imageId);
+            if (deleted)
+            {
+                TempData["SuccessMessage"] = "Đã xóa ảnh phụ thành công.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Không thể xóa ảnh này hoặc ảnh không tồn tại.";
+            }
+
+            return RedirectToAction("Edit", new { id = productId });
+        }
     }
 }
