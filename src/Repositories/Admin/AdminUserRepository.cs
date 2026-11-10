@@ -11,7 +11,6 @@ namespace MiaraEyeglasses.Repositories.Admin
         Task<IEnumerable<Role>> GetAllRolesAsync();
         Task<Models.Entities.User?> GetUserByIdWithFullDetailsAsync(int userId);
         Task<bool> EmailExistsAsync(string email, int excludeUserId = 0);
-        Task UpdateUserAsync(Models.Entities.User user);
         Task<(bool Success, string Message)> DeleteUserAsync(int userId);
         Task ToggleActiveAsync(int userId);
     }
@@ -68,14 +67,6 @@ namespace MiaraEyeglasses.Repositories.Admin
                 return await _dbSet.AnyAsync(u => u.Email.ToLower() == cleanEmail && u.UserId != excludeUserId);
             }
             return await _dbSet.AnyAsync(u => u.Email.ToLower() == cleanEmail);
-        }
-
-        // Cập nhật thông tin người dùng
-        public async Task UpdateUserAsync(Models.Entities.User user)
-        {
-            user.UpdatedAt = DateTime.UtcNow;
-            _context.Users.Update(user);
-            await _context.SaveChangesAsync();
         }
 
         // Xóa người dùng: Nếu người dùng đã có đơn hàng thì khóa tài khoản để bảo toàn lịch sử; nếu chưa thì xóa khỏi CSDL

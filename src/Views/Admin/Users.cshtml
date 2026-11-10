@@ -175,7 +175,6 @@
                             <td>
                                 <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
                                     <a asp-controller="AdminUser" asp-action="Details" asp-route-id="@u.UserId" class="button button-outline small-btn" style="text-decoration:none; padding:4px 8px; font-size:12px;">Chi tiết</a>
-                                    <a asp-controller="AdminUser" asp-action="Edit" asp-route-id="@u.UserId" class="button button-outline small-btn" style="text-decoration:none; padding:4px 8px; font-size:12px;">Sửa</a>
                                     
                                     @if (roleNameStr != "Admin" && roleNameStr != "Quản trị viên")
                                     {

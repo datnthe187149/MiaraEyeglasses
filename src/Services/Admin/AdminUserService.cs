@@ -10,7 +10,6 @@ namespace MiaraEyeglasses.Services.Admin
         Task<Models.Entities.User?> GetUserDetailsAsync(int userId);
         Task<(bool Success, string? ErrorMessage)> CreateUserAsync(string fullName, string email, string phone, string password, int roleId, string? gender, DateOnly? birthDate, bool isActive);
         Task<(bool Success, string? ErrorMessage)> CreateStaffUserAsync(string fullName, string email, string phone, string password);
-        Task<(bool Success, string? ErrorMessage)> UpdateUserAsync(int userId, string fullName, string phone, int roleId, string? gender, DateOnly? birthDate, bool isActive, string? newPassword);
         Task<(bool Success, string Message)> DeleteUserAsync(int userId);
         Task ToggleUserActiveAsync(int userId);
     }
@@ -90,42 +89,6 @@ namespace MiaraEyeglasses.Services.Admin
         public async Task<(bool Success, string? ErrorMessage)> CreateStaffUserAsync(string fullName, string email, string phone, string password)
         {
             return await CreateUserAsync(fullName, email, phone, password, 2, "Nam", null, true);
-        }
-
-        // Chỉnh sửa thông tin tài khoản người dùng
-        public async Task<(bool Success, string? ErrorMessage)> UpdateUserAsync(
-            int userId, string fullName, string phone, int roleId, string? gender, DateOnly? birthDate, bool isActive, string? newPassword)
-        {
-            var user = await _userRepository.GetByIdAsync(userId);
-            if (user == null)
-            {
-                return (false, "Không tìm thấy tài khoản người dùng.");
-            }
-
-            if (roleId <= 0)
-            {
-                roleId = 1;
-            }
-
-            user.FullName = fullName.Trim();
-            user.Phone = phone.Trim();
-            user.RoleId = roleId;
-            user.IsActive = isActive;
-            user.BirthDate = birthDate;
-
-            if (!string.IsNullOrWhiteSpace(gender))
-            {
-                user.Gender = gender.Trim();
-            }
-
-            // Nếu người quản trị nhập mật khẩu mới để đổi mật khẩu cho user
-            if (!string.IsNullOrWhiteSpace(newPassword) && newPassword.Length >= 6)
-            {
-                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
-            }
-
-            await _userRepository.UpdateUserAsync(user);
-            return (true, null);
         }
 
         // Xóa hoặc khóa tài khoản an toàn

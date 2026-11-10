@@ -53,8 +53,7 @@
             <p class="small muted">Email: <strong>@Model.Email</strong> · Vai trò: <strong>@roleNameStr</strong> · Mã định danh: <code>#USER-@Model.UserId</code></p>
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
-            <a asp-controller="AdminUser" asp-action="Edit" asp-route-id="@Model.UserId" class="button small-btn">Chỉnh sửa tài khoản</a>
-            <a asp-controller="AdminUser" asp-action="Index" class="button button-outline small-btn">← Quay lại danh sách</a>
+            <a asp-controller="AdminUser" asp-action="Index" class="button button-outline small-btn">← Quay lại danh sách người dùng</a>
         </div>
     </div>
 
@@ -302,7 +301,7 @@
     <!-- Thanh thao tác nhanh -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
         <div style="display: flex; gap: 12px;">
-            <a asp-controller="AdminUser" asp-action="Edit" asp-route-id="@Model.UserId" class="button" style="text-decoration: none;">Chỉnh sửa tài khoản</a>
+            <a asp-controller="AdminUser" asp-action="Index" class="button button-outline" style="text-decoration: none;">← Quay lại danh sách</a>
             <form asp-controller="AdminUser" asp-action="ToggleActive" method="post" style="display: inline; margin: 0;">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="userId" value="@Model.UserId" />
