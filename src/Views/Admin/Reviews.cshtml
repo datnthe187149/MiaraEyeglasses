@@ -77,23 +77,23 @@
               }
             </td>
             <td>
-              <div style="display: flex; gap: 6px;">
+              <div class="admin-table-actions">
                 @if (r.Status != 1)
                 {
-                  <form asp-controller="AdminReview" asp-action="ModerateReview" method="post" style="display:inline;">
+                  <form asp-controller="AdminReview" asp-action="ModerateReview" method="post" style="display:inline; margin:0;">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="reviewId" value="@r.ReviewId" />
                     <input type="hidden" name="status" value="1" />
-                    <button type="submit" class="button small-btn">Duyệt hiển thị</button>
+                    <button type="submit" class="admin-btn-action btn-toggle-on">Duyệt hiển thị</button>
                   </form>
                 }
                 @if (r.Status != 2)
                 {
-                  <form asp-controller="AdminReview" asp-action="ModerateReview" method="post" style="display:inline;">
+                  <form asp-controller="AdminReview" asp-action="ModerateReview" method="post" style="display:inline; margin:0;">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="reviewId" value="@r.ReviewId" />
                     <input type="hidden" name="status" value="2" />
-                    <button type="submit" class="button button-outline small-btn">Ẩn đánh giá</button>
+                    <button type="submit" class="admin-btn-action btn-toggle-off">Ẩn đánh giá</button>
                   </form>
                 }
               </div>

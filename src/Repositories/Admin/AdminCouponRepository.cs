@@ -9,6 +9,7 @@ namespace MiaraEyeglasses.Repositories.Admin
     {
         Task<IEnumerable<Coupon>> GetAllCouponsAsync();
         Task ToggleActiveAsync(int couponId);
+        Task<bool> UpdateCouponAsync(int couponId, string code, string discountType, decimal discountValue, decimal minOrderAmount, DateOnly expireDate, int? usageLimit);
     }
 
     public class AdminCouponRepository : BaseRepository<Coupon>, IAdminCouponRepository
@@ -28,6 +29,25 @@ namespace MiaraEyeglasses.Repositories.Admin
                 c.IsActive = !c.IsActive;
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task<bool> UpdateCouponAsync(int couponId, string code, string discountType, decimal discountValue, decimal minOrderAmount, DateOnly expireDate, int? usageLimit)
+        {
+            var c = await _dbSet.FindAsync(couponId);
+            if (c == null)
+            {
+                return false;
+            }
+
+            c.CouponCode = code.Trim().ToUpper();
+            c.DiscountType = discountType.Trim().ToUpper();
+            c.DiscountValue = discountValue;
+            c.MinOrderAmount = minOrderAmount;
+            c.ExpireDate = expireDate;
+            c.UsageLimit = usageLimit;
+
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

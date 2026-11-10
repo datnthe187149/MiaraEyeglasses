@@ -106,7 +106,9 @@
                                 <span class="status-badge status-badge--@statusBadgeClass">@statusText</span>
                             </td>
                             <td>
-                                <a asp-controller="AdminOrder" asp-action="Detail" asp-route-id="@o.OrderId" class="button button-outline small-btn" style="text-decoration:none;">Xem chi tiết</a>
+                                <div class="admin-table-actions">
+                                    <a asp-controller="AdminOrder" asp-action="Detail" asp-route-id="@o.OrderId" class="admin-btn-action">Xem chi tiết</a>
+                                </div>
                             </td>
                         </tr>
                     }

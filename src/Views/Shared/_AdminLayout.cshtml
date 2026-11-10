@@ -7,6 +7,67 @@
     <link rel="icon" type="image/png" href="~/images/miara/logo.png" />
     <link rel="stylesheet" href="~/css/styles.css" />
     <title>@ViewData["Title"] — MIARA Backoffice</title>
+    <style>
+      /* Chuẩn hóa hệ thống nút thao tác đồng nhất toàn bộ Admin Portal */
+      .admin-table-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: nowrap;
+      }
+      .admin-btn-action {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        padding: 0 12px !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        border-radius: 6px !important;
+        border: 1px solid #cbd5e1 !important;
+        background: #ffffff !important;
+        color: #334155 !important;
+        text-decoration: none !important;
+        cursor: pointer !important;
+        transition: all .15s ease !important;
+        white-space: nowrap !important;
+        box-shadow: none !important;
+        line-height: 1 !important;
+        box-sizing: border-box !important;
+      }
+      .admin-btn-action:hover {
+        background: #f1f5f9 !important;
+        border-color: #94a3b8 !important;
+        color: #0f172a !important;
+      }
+      .admin-btn-action.btn-toggle-off {
+        border-color: #fca5a5 !important;
+        color: #dc2626 !important;
+        background: #ffffff !important;
+      }
+      .admin-btn-action.btn-toggle-off:hover {
+        background: #fef2f2 !important;
+        border-color: #f87171 !important;
+      }
+      .admin-btn-action.btn-toggle-on {
+        border-color: #a7f3d0 !important;
+        color: #059669 !important;
+        background: #ffffff !important;
+      }
+      .admin-btn-action.btn-toggle-on:hover {
+        background: #ecfdf5 !important;
+        border-color: #34d399 !important;
+      }
+      .admin-btn-action.btn-primary-action {
+        border-color: #286598 !important;
+        background: #286598 !important;
+        color: #ffffff !important;
+      }
+      .admin-btn-action.btn-primary-action:hover {
+        background: #1e4b70 !important;
+      }
+    </style>
     @await RenderSectionAsync("Styles", required: false)
   </head>
   <body class="bo-body">
@@ -52,9 +113,6 @@
           </a>
           <a asp-controller="AdminCoupon" asp-action="Index" class="account-nav-btn @(currentController == "AdminCoupon" ? "active" : "")">
             Mã giảm giá
-          </a>
-          <a asp-controller="AdminBanner" asp-action="Index" class="account-nav-btn @(currentController == "AdminBanner" ? "active" : "")">
-            Banner quảng cáo
           </a>
           <a asp-controller="AdminUser" asp-action="Index" class="account-nav-btn @(currentController == "AdminUser" ? "active" : "")">
             Tài khoản &amp; Phân quyền

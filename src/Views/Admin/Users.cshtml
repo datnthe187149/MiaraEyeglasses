@@ -173,15 +173,15 @@
                                 }
                             </td>
                             <td>
-                                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-                                    <a asp-controller="AdminUser" asp-action="Details" asp-route-id="@u.UserId" class="button button-outline small-btn" style="text-decoration:none; padding:4px 8px; font-size:12px;">Chi tiết</a>
+                                <div class="admin-table-actions">
+                                    <a asp-controller="AdminUser" asp-action="Details" asp-route-id="@u.UserId" class="admin-btn-action">Chi tiết</a>
                                     
                                     @if (roleNameStr != "Admin" && roleNameStr != "Quản trị viên")
                                     {
                                         <form asp-controller="AdminUser" asp-action="ToggleActive" method="post" style="display:inline; margin:0;">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="userId" value="@u.UserId" />
-                                            <button type="submit" class="text-button @(u.IsActive ? "danger-text" : "")" style="padding: 4px; font-size: 12px;">
+                                            <button type="submit" class="admin-btn-action @(u.IsActive ? "btn-toggle-off" : "btn-toggle-on")">
                                                 @(u.IsActive ? "Khóa" : "Mở")
                                             </button>
                                         </form>
@@ -189,7 +189,7 @@
                                         <form asp-controller="AdminUser" asp-action="Delete" method="post" onsubmit="return confirm('Bạn có chắc muốn xóa tài khoản này?');" style="display:inline; margin:0;">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="userId" value="@u.UserId" />
-                                            <button type="submit" class="text-button danger-text" style="padding: 4px; font-size: 12px;">
+                                            <button type="submit" class="admin-btn-action btn-toggle-off">
                                                 Xóa
                                             </button>
                                         </form>

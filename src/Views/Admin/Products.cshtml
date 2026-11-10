@@ -143,15 +143,16 @@
                                 @totalStock
                             </td>
                             <td>
-                                <a asp-controller="AdminProduct" asp-action="Edit" asp-route-id="@p.ProductId" class="button button-outline small-btn" style="text-decoration:none; padding:4px 8px; font-size:12px; margin-right:4px;">Chỉnh sửa</a>
-                                <a asp-controller="Shop" asp-action="Detail" asp-route-id="@p.ProductId" target="_blank" class="text-button" style="text-decoration:none; margin-right:6px;">Xem</a>
-                                <form asp-controller="AdminProduct" asp-action="ToggleActive" method="post" style="display:inline; margin:0;">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="productId" value="@p.ProductId" />
-                                    <button type="submit" class="text-button @(p.IsActive ? "danger-text" : "")">
-                                        @(p.IsActive ? "Ẩn" : "Hiện")
-                                    </button>
-                                </form>
+                                <div class="admin-table-actions">
+                                    <a asp-controller="AdminProduct" asp-action="Edit" asp-route-id="@p.ProductId" class="admin-btn-action">Chỉnh sửa</a>
+                                    <form asp-controller="AdminProduct" asp-action="ToggleActive" method="post" style="display:inline; margin:0;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="productId" value="@p.ProductId" />
+                                        <button type="submit" class="admin-btn-action @(p.IsActive ? "btn-toggle-off" : "btn-toggle-on")">
+                                            @(p.IsActive ? "Ẩn" : "Hiện")
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     }

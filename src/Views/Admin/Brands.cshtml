@@ -99,10 +99,9 @@
                                 }
                             </td>
                             <td>
-                                <div style="display: flex; gap: 8px; align-items: center;">
+                                <div class="admin-table-actions">
                                     <button type="button" 
-                                            class="button button-outline small-btn" 
-                                            style="padding: 4px 10px; font-size: 12px;"
+                                            class="admin-btn-action" 
                                             onclick="openEditBrandForm(@b.BrandId, '@Html.Raw(Html.Encode(b.BrandName))', '@Html.Raw(Html.Encode(country))')">
                                         Chỉnh sửa
                                     </button>
@@ -110,7 +109,7 @@
                                     <form asp-controller="AdminBrand" asp-action="ToggleActive" method="post" style="display:inline; margin:0;">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="brandId" value="@b.BrandId" />
-                                        <button type="submit" class="text-button @(b.IsActive ? "danger-text" : "")" style="padding: 4px 6px; font-size: 12px;">
+                                        <button type="submit" class="admin-btn-action @(b.IsActive ? "btn-toggle-off" : "btn-toggle-on")">
                                             @(b.IsActive ? "Dừng" : "Phân phối")
                                         </button>
                                     </form>

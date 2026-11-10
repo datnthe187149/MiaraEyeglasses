@@ -86,16 +86,16 @@
                                 }
                             </td>
                             <td>
-                                <div style="display:flex; gap:8px; align-items:center;">
+                                <div class="admin-table-actions">
                                     <button type="button" 
-                                            class="button button-outline small-btn" 
+                                            class="admin-btn-action" 
                                             onclick="editCategory(@c.CategoryId, '@(c.CategoryName.Replace("'", "\\'"))', '@(c.Slug?.Replace("'", "\\'") ?? "")')">
                                         Chỉnh sửa
                                     </button>
                                     <form asp-controller="AdminCategory" asp-action="ToggleActive" method="post" style="display:inline; margin:0;">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="categoryId" value="@c.CategoryId" />
-                                        <button type="submit" class="text-button @(c.IsActive ? "danger-text" : "")">
+                                        <button type="submit" class="admin-btn-action @(c.IsActive ? "btn-toggle-off" : "btn-toggle-on")">
                                             @(c.IsActive ? "Ẩn" : "Hiện")
                                         </button>
                                     </form>

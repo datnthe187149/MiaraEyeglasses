@@ -50,6 +50,46 @@ namespace MiaraEyeglasses.Controllers.Admin
             return RedirectToAction("Index");
         }
 
+        // [POST] /Admin/Lenses/Update: Cập nhật thông tin gói tròng kính
+        [HttpPost]
+        [Route("Admin/Lenses/Update")]
+        [Route("AdminLens/Update")]
+        public async Task<IActionResult> Update(
+            int lensOptionId, string? lensName, decimal refractiveIndex, decimal extraPrice, string? description, string? rxLimit)
+        {
+            if (lensOptionId <= 0)
+            {
+                TempData["ErrorMessage"] = "Mã gói tròng không hợp lệ.";
+                return RedirectToAction("Index");
+            }
+
+            if (string.IsNullOrWhiteSpace(lensName))
+            {
+                TempData["ErrorMessage"] = "Vui lòng nhập tên gói tròng kính.";
+                return RedirectToAction("Index");
+            }
+
+            if (extraPrice < 0)
+            {
+                TempData["ErrorMessage"] = "Đơn giá cộng thêm không được nhỏ hơn 0 ₫.";
+                return RedirectToAction("Index");
+            }
+
+            var (success, error) = await _lensService.UpdateLensAsync(
+                lensOptionId, lensName.Trim(), refractiveIndex, extraPrice, description?.Trim(), rxLimit?.Trim());
+
+            if (success)
+            {
+                TempData["SuccessMessage"] = $"Đã cập nhật gói tròng kính '{lensName.Trim()}' thành công!";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = error ?? "Cập nhật tròng kính thất bại.";
+            }
+
+            return RedirectToAction("Index");
+        }
+
         // [POST] Bật / Tắt trạng thái tròng kính
         [HttpPost]
         [Route("Admin/Lenses/ToggleActive")]

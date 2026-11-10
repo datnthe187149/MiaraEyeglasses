@@ -1,80 +1,184 @@
 @model IEnumerable<MiaraEyeglasses.Models.Entities.ProductVariant>
 @{
     ViewData["Title"] = "Quản lý Tồn kho & Cảnh báo";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    int totalVariants = Model?.Count() ?? 0;
+    int lowStockCount = Model?.Count(v => v.StockQty > 0 && v.StockQty <= 3) ?? 0;
+    int outOfStockCount = Model?.Count(v => v.StockQty == 0) ?? 0;
 }
 
 <div class="portal-card">
-  <div class="portal-card-head">
-    <div>
-      <span class="eyebrow">Kho vận &amp; Tồn kho · Realtime</span>
-      <h2>Quản lý Tồn kho &amp; Cảnh báo hết hàng</h2>
-      <p class="small muted">Kiểm tra số lượng tồn kho từng mẫu kính và màu sắc, tự động cảnh báo khi tồn kho dưới 3 chiếc và lưu cập nhật tức thì.</p>
+    <div class="portal-card-head">
+        <div>
+            <span class="eyebrow">Kho vận &amp; Tồn kho · Realtime</span>
+            <h2>Quản lý Tồn kho &amp; Cảnh báo hết hàng</h2>
+            <p class="small muted">Kiểm tra và cập nhật trực tiếp số lượng tồn kho theo từng biến thể màu sắc &amp; kích cỡ của mẫu kính.</p>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <span class="badge" style="background:#f1f5f9; color:#334155; padding:6px 12px; font-size:13px; font-weight:600;">
+                Tổng biến thể: @totalVariants
+            </span>
+            @if (lowStockCount > 0)
+            {
+                <span class="badge" style="background:#fef3c7; color:#92400e; padding:6px 12px; font-size:13px; font-weight:600;">
+                    ⚠ Sắp hết: @lowStockCount
+                </span>
+            }
+            @if (outOfStockCount > 0)
+            {
+                <span class="badge" style="background:#fee2e2; color:#dc2626; padding:6px 12px; font-size:13px; font-weight:600;">
+                    ✕ Hết hàng: @outOfStockCount
+                </span>
+            }
+        </div>
     </div>
-  </div>
 
-  @if (TempData["SuccessMessage"] != null)
-  {
-      <div class="alert alert-success" style="margin-bottom: 20px;">@TempData["SuccessMessage"]</div>
-  }
-  @if (TempData["ErrorMessage"] != null)
-  {
-      <div class="alert alert-danger" style="margin-bottom: 20px;">@TempData["ErrorMessage"]</div>
-  }
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success" style="margin-bottom: 20px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46;">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger" style="margin-bottom: 20px; padding: 12px 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; color: #991b1b;">
+            @TempData["ErrorMessage"]
+        </div>
+    }
 
-  <div class="admin-table-wrap">
-    <table class="admin-table">
-      <thead>
-        <tr>
-          <th>Ảnh</th>
-          <th>Mẫu gọng kính</th>
-          <th>Mã SKU</th>
-          <th>Biến thể màu sắc &amp; Size</th>
-          <th>Tồn kho</th>
-          <th>Tình trạng</th>
-          <th>Thao tác</th>
-        </tr>
-      </thead>
-      <tbody>
-        @foreach (var v in Model)
-        {
-          var img = v.Images?.FirstOrDefault()?.ImageUrl 
-                    ?? v.Product?.Images?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl 
-                    ?? v.Product?.Images?.FirstOrDefault()?.ImageUrl 
-                    ?? "/images/products/p1.png";
-          bool isLow = v.StockQty <= 3;
-          <tr>
-            <td><img src="@img" alt="@v.Product?.ProductName" class="table-thumb" /></td>
-            <td><strong>@(v.Product?.Brand?.BrandName ?? "MIARA") - @(v.Product?.ProductName ?? v.Product?.ProductCode)</strong></td>
-            <td><code>@v.Sku</code></td>
-            <td>@v.ColorName · Size @v.SizeLabel</td>
-            <td>
-              <form asp-controller="AdminInventory" asp-action="UpdateStock" method="post" style="display: flex; gap: 8px; align-items: center;">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="variantId" value="@v.VariantId" />
-                <input type="number" name="newStock" class="stock-input" value="@v.StockQty" min="0" style="width: 70px; padding: 4px 8px; border: 1px solid var(--color-border); border-radius: 4px;" />
-                <button type="submit" class="button small-btn btn-save-stock">Lưu</button>
-              </form>
-            </td>
-            <td>
-              @if (v.StockQty == 0)
-              {
-                <span class="status-badge status-badge--cancelled">Hết hàng</span>
-              }
-              else if (isLow)
-              {
-                <span class="status-badge status-badge--pending">Sắp hết hàng</span>
-              }
-              else
-              {
-                <span class="status-badge status-badge--completed">Còn hàng</span>
-              }
-            </td>
-            <td>
-              <a asp-controller="AdminProduct" asp-action="Edit" asp-route-id="@v.ProductId" class="button button-outline small-btn">Chỉnh sửa</a>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  </div>
+    <!-- Thanh tìm kiếm & Bộ lọc nhanh kho -->
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+        <div style="display:flex; gap:8px; align-items:center; flex:1; max-width:400px;">
+            <input type="text" id="inventory-search" placeholder="Tìm theo tên mẫu kính, SKU, màu sắc..." style="width:100%; padding:8px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px;" onkeyup="filterInventoryTable()" />
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <button type="button" class="admin-btn-action" onclick="setInventoryFilter('all')" id="btn-filter-all" style="background:#286598 !important; color:#fff !important; border-color:#286598 !important;">Tất cả</button>
+            <button type="button" class="admin-btn-action" onclick="setInventoryFilter('low')" id="btn-filter-low">Sắp hết hàng (&le; 3)</button>
+            <button type="button" class="admin-btn-action" onclick="setInventoryFilter('out')" id="btn-filter-out">Hết hàng (0)</button>
+        </div>
+    </div>
+
+    <div class="admin-table-wrap">
+        <table class="admin-table" id="inventory-table">
+            <thead>
+                <tr>
+                    <th style="width: 70px;">Ảnh</th>
+                    <th>Mẫu gọng kính</th>
+                    <th>Mã SKU</th>
+                    <th>Màu sắc &amp; Kích cỡ</th>
+                    <th style="width: 170px;">Số lượng tồn kho</th>
+                    <th>Tình trạng</th>
+                    <th style="width: 120px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var v in Model)
+                    {
+                        var img = v.Images?.FirstOrDefault()?.ImageUrl 
+                                  ?? v.Product?.Images?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl 
+                                  ?? v.Product?.Images?.FirstOrDefault()?.ImageUrl 
+                                  ?? "/images/products/p1.png";
+                        bool isLow = v.StockQty > 0 && v.StockQty <= 3;
+                        bool isOut = v.StockQty == 0;
+                        string stockStatusClass = isOut ? "out-of-stock" : (isLow ? "low-stock" : "in-stock");
+
+                        <tr class="inv-row @stockStatusClass" data-status="@(isOut ? "out" : (isLow ? "low" : "in"))">
+                            <td>
+                                <img src="@img" alt="@v.Product?.ProductName" style="width: 48px; height: 48px; object-fit: contain; background: #fff; border-radius: 6px; border: 1px solid #e2e8f0;" />
+                            </td>
+                            <td>
+                                <strong>@(v.Product?.Brand?.BrandName ?? "MIARA") - @(v.Product?.ProductName ?? v.Product?.ProductCode)</strong>
+                            </td>
+                            <td><code>@v.Sku</code></td>
+                            <td>
+                                <span>@v.ColorName</span> &bull; <span class="badge" style="background:#f1f5f9; color:#334155;">Size @v.SizeLabel</span>
+                            </td>
+                            <td>
+                                <form asp-controller="AdminInventory" asp-action="UpdateStock" method="post" class="admin-table-actions" style="margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="variantId" value="@v.VariantId" />
+                                    <input type="number" 
+                                           name="newStock" 
+                                           value="@v.StockQty" 
+                                           min="0" 
+                                           max="9999" 
+                                           style="width: 75px; height: 32px; padding: 0 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 700; font-size: 13px; text-align: center;" />
+                                    <button type="submit" class="admin-btn-action btn-primary-action" title="Lưu số lượng tồn kho mới">Lưu</button>
+                                </form>
+                            </td>
+                            <td>
+                                @if (isOut)
+                                {
+                                    <span class="status-badge status-badge--cancelled">Hết hàng</span>
+                                }
+                                else if (isLow)
+                                {
+                                    <span class="status-badge status-badge--pending">Sắp hết hàng</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-badge--completed">Còn hàng</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="admin-table-actions">
+                                    <a asp-controller="AdminProduct" asp-action="Edit" asp-route-id="@v.ProductId" class="admin-btn-action">
+                                        Chỉnh sửa
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="empty-text">Chưa có dữ liệu tồn kho biến thể nào.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
+
+<script>
+    var currentFilter = 'all';
+
+    function setInventoryFilter(filterType) {
+        currentFilter = filterType;
+        document.getElementById('btn-filter-all').style.background = filterType === 'all' ? '#286598' : '#fff';
+        document.getElementById('btn-filter-all').style.color = filterType === 'all' ? '#fff' : '#334155';
+        document.getElementById('btn-filter-all').style.borderColor = filterType === 'all' ? '#286598' : '#cbd5e1';
+
+        document.getElementById('btn-filter-low').style.background = filterType === 'low' ? '#286598' : '#fff';
+        document.getElementById('btn-filter-low').style.color = filterType === 'low' ? '#fff' : '#334155';
+        document.getElementById('btn-filter-low').style.borderColor = filterType === 'low' ? '#286598' : '#cbd5e1';
+
+        document.getElementById('btn-filter-out').style.background = filterType === 'out' ? '#286598' : '#fff';
+        document.getElementById('btn-filter-out').style.color = filterType === 'out' ? '#fff' : '#334155';
+        document.getElementById('btn-filter-out').style.borderColor = filterType === 'out' ? '#286598' : '#cbd5e1';
+
+        filterInventoryTable();
+    }
+
+    function filterInventoryTable() {
+        var query = document.getElementById('inventory-search').value.toLowerCase().trim();
+        var rows = document.querySelectorAll('#inventory-table tbody tr.inv-row');
+
+        rows.forEach(function(row) {
+            var rowText = row.innerText.toLowerCase();
+            var rowStatus = row.getAttribute('data-status');
+
+            var matchSearch = (query === '' || rowText.includes(query));
+            var matchFilter = (currentFilter === 'all' || rowStatus === currentFilter);
+
+            if (matchSearch && matchFilter) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+</script>

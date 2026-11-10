@@ -8,6 +8,7 @@ namespace MiaraEyeglasses.Services.Admin
         Task<IEnumerable<LensOption>> GetAllLensesAsync();
         Task<(bool Success, string? ErrorMessage)> CreateLensAsync(string lensName, decimal extraPrice, string? description, string? rxLimit);
         Task ToggleLensActiveAsync(int lensOptionId);
+        Task<(bool Success, string? ErrorMessage)> UpdateLensAsync(int lensOptionId, string lensName, decimal refractiveIndex, decimal extraPrice, string? description, string? rxLimit);
     }
 
     public class AdminLensService : IAdminLensService
@@ -44,6 +45,28 @@ namespace MiaraEyeglasses.Services.Admin
         public async Task ToggleLensActiveAsync(int lensOptionId)
         {
             await _lensRepository.ToggleActiveAsync(lensOptionId);
+        }
+
+        public async Task<(bool Success, string? ErrorMessage)> UpdateLensAsync(
+            int lensOptionId, string lensName, decimal refractiveIndex, decimal extraPrice, string? description, string? rxLimit)
+        {
+            if (string.IsNullOrWhiteSpace(lensName))
+            {
+                return (false, "Tên gói tròng kính không được để trống.");
+            }
+
+            if (extraPrice < 0)
+            {
+                return (false, "Giá phụ thu tròng kính không được âm.");
+            }
+
+            var updated = await _lensRepository.UpdateLensAsync(lensOptionId, lensName.Trim(), refractiveIndex, extraPrice, description, rxLimit);
+            if (!updated)
+            {
+                return (false, "Không tìm thấy gói tròng kính cần cập nhật.");
+            }
+
+            return (true, null);
         }
     }
 }

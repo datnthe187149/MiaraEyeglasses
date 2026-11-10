@@ -10,6 +10,9 @@ namespace MiaraEyeglasses.Services.Admin
             string code, decimal discountAmount, decimal minOrderAmount,
             DateTime startAt, DateTime expireAt, int usageLimit);
         Task ToggleCouponActiveAsync(int couponId);
+        Task<(bool Success, string? ErrorMessage)> UpdateCouponAsync(
+            int couponId, string code, string discountType, decimal discountValue, decimal minOrderAmount,
+            DateTime expireAt, int? usageLimit);
     }
 
     public class AdminCouponService : IAdminCouponService
@@ -51,6 +54,32 @@ namespace MiaraEyeglasses.Services.Admin
         public async Task ToggleCouponActiveAsync(int couponId)
         {
             await _couponRepository.ToggleActiveAsync(couponId);
+        }
+
+        public async Task<(bool Success, string? ErrorMessage)> UpdateCouponAsync(
+            int couponId, string code, string discountType, decimal discountValue, decimal minOrderAmount,
+            DateTime expireAt, int? usageLimit)
+        {
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                return (false, "Mã giảm giá không được để trống.");
+            }
+
+            if (discountValue <= 0)
+            {
+                return (false, "Mức giảm giá phải lớn hơn 0.");
+            }
+
+            var updated = await _couponRepository.UpdateCouponAsync(
+                couponId, code.Trim().ToUpper(), discountType, discountValue, minOrderAmount,
+                DateOnly.FromDateTime(expireAt), usageLimit);
+
+            if (!updated)
+            {
+                return (false, "Không tìm thấy mã giảm giá cần cập nhật.");
+            }
+
+            return (true, null);
         }
     }
 }

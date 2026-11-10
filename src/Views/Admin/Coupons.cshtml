@@ -24,37 +24,49 @@
             <h2>Quản lý Mã giảm giá (Coupons)</h2>
             <p class="small muted">Tạo và cấu hình mã coupon giảm giá (tiền mặt hoặc %), hạn sử dụng và điều kiện giá trị đơn hàng tối thiểu.</p>
         </div>
-        <button type="button" class="button small-btn" data-toggle-form="form-add-coupon" onclick="toggleAdminForm('form-add-coupon')">+ Thêm mã giảm giá mới</button>
+        <button type="button" class="button small-btn" onclick="openAddCouponForm()">+ Thêm mã giảm giá mới</button>
     </div>
 
     <!-- Form Thêm / Cập nhật Mã giảm giá -->
-    <form class="customer-form sub-panel-form" id="form-add-coupon" hidden asp-controller="AdminCoupon" asp-action="Add" method="post">
+    <form class="sub-panel-form" id="form-coupon-crud" hidden asp-controller="AdminCoupon" asp-action="Add" method="post" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-bottom:24px;">
         @Html.AntiForgeryToken()
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
-            <h3 style="margin:0">Thêm / Cập nhật Mã giảm giá</h3>
-            <button type="button" class="text-button" onclick="document.getElementById('form-add-coupon').setAttribute('hidden','')">✕ Đóng form</button>
+        <input type="hidden" name="couponId" id="crud-couponId" value="" />
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px">
+            <h3 style="margin:0; font-size:16px; font-weight:700; color:#0f172a;" id="crud-coupon-title">Thêm Mã Giảm Giá Mới</h3>
+            <button type="button" class="text-button" onclick="document.getElementById('form-coupon-crud').setAttribute('hidden','')">✕ Đóng form</button>
         </div>
-        <div class="form-grid-2">
-            <label>
+        <div class="form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:12px;">
+            <label style="display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:600;">
                 <span>Mã Code khuyến mãi *</span>
-                <input type="text" name="couponCode" required placeholder="VD: MIARA50K" />
+                <input type="text" name="code" id="crud-code" required placeholder="VD: MIARA50K" style="text-transform:uppercase; font-weight:bold; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px;" />
             </label>
-            <label>
-                <span>Mức giảm (VNĐ hoặc %) *</span>
-                <input type="text" name="discountValueInput" required placeholder="VD: 50000 hoặc 10%" />
+            <label style="display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:600;">
+                <span>Loại giảm giá *</span>
+                <select name="discountType" id="crud-discountType" style="padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px;">
+                    <option value="AMOUNT">Giảm tiền mặt trực tiếp (VNĐ)</option>
+                    <option value="PERCENT">Giảm theo tỷ lệ phần trăm (%)</option>
+                </select>
             </label>
-            <label>
-                <span>Đơn hàng tối thiểu (VNĐ) *</span>
-                <input type="number" name="minOrder" required value="300000" />
+            <label style="display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:600;">
+                <span>Mức giảm giá * (VNĐ hoặc %)</span>
+                <input type="number" name="discountValue" id="crud-discountValue" required value="50000" min="1" step="1000" style="padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px;" />
             </label>
-            <label>
-                <span>Ngày hết hạn *</span>
-                <input type="date" name="expireDate" required value="2026-12-31" />
+            <label style="display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:600;">
+                <span>Đơn hàng tối thiểu (VNĐ)</span>
+                <input type="number" name="minOrderAmount" id="crud-minOrderAmount" value="300000" min="0" step="50000" style="padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px;" />
+            </label>
+            <label style="display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:600;">
+                <span>Hạn sử dụng (Đến ngày) *</span>
+                <input type="date" name="expireAt" id="crud-expireAt" required value="@DateTime.Now.AddMonths(1).ToString("yyyy-MM-dd")" style="padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px;" />
+            </label>
+            <label style="display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:600;">
+                <span>Giới hạn số lượt dùng (0 = Không giới hạn)</span>
+                <input type="number" name="usageLimit" id="crud-usageLimit" value="100" min="0" style="padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px;" />
             </label>
         </div>
-        <div style="display:flex; gap:12px; margin-top:8px">
-            <button type="submit" class="button">Lưu mã giảm giá</button>
-            <button type="reset" class="button button-outline">Làm mới</button>
+        <div style="display:flex; gap:10px;">
+            <button type="submit" class="button small-btn" id="crud-coupon-btn">Lưu mã giảm giá</button>
+            <button type="button" class="button button-outline small-btn" onclick="openAddCouponForm()">Hủy chỉnh sửa</button>
         </div>
     </form>
 
@@ -73,32 +85,45 @@
             <tbody>
                 @if (Model != null && Model.Any())
                 {
-                    foreach (var c in Model)
+                    foreach (var cp in Model)
                     {
-                        string discountDisplay = c.DiscountType == "PERCENT" ? $"{c.DiscountValue:0}%" : $"{c.DiscountValue:N0} ₫";
+                        string discountDisplay = cp.DiscountType == "PERCENT" 
+                            ? $"{cp.DiscountValue:0.#}%" 
+                            : $"{cp.DiscountValue:N0} ₫";
+                        string minOrderDisplay = cp.MinOrderAmount > 0 
+                            ? $"{cp.MinOrderAmount:N0} ₫" 
+                            : "Không giới hạn";
+
                         <tr>
-                            <td><strong>@c.CouponCode</strong></td>
-                            <td>@discountDisplay</td>
-                            <td>@c.MinOrderAmount.ToString("N0") ₫</td>
-                            <td>@c.ExpireDate.ToString("dd/MM/yyyy")</td>
+                            <td><code>@cp.CouponCode</code></td>
+                            <td><strong style="color:#286598;">@discountDisplay</strong></td>
+                            <td>@minOrderDisplay</td>
+                            <td>@cp.ExpireDate.ToString("dd/MM/yyyy")</td>
                             <td>
-                                @if (c.IsActive && c.ExpireDate >= DateOnly.FromDateTime(DateTime.UtcNow))
+                                @if (cp.IsActive)
                                 {
                                     <span class="status-badge status-badge--completed">Đang áp dụng</span>
                                 }
                                 else
                                 {
-                                    <span class="status-badge status-badge--cancelled">Đã hết hạn / Tắt</span>
+                                    <span class="status-badge status-badge--cancelled">Đã tạm dừng</span>
                                 }
                             </td>
                             <td>
-                                <form asp-controller="AdminCoupon" asp-action="ToggleActive" method="post" style="display:inline; margin:0;">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="couponId" value="@c.CouponId" />
-                                    <button type="submit" class="text-button @(c.IsActive ? "danger-text" : "")">
-                                        @(c.IsActive ? "Tắt" : "Bật")
+                                <div class="admin-table-actions">
+                                    <button type="button" 
+                                            class="admin-btn-action" 
+                                            onclick="editCoupon(@cp.CouponId, '@cp.CouponCode', '@cp.DiscountType', @((long)cp.DiscountValue), @((long)cp.MinOrderAmount), '@cp.ExpireDate.ToString("yyyy-MM-dd")', @(cp.UsageLimit ?? 0))">
+                                        Chỉnh sửa
                                     </button>
-                                </form>
+                                    <form asp-controller="AdminCoupon" asp-action="ToggleActive" method="post" style="display:inline; margin:0;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="couponId" value="@cp.CouponId" />
+                                        <button type="submit" class="admin-btn-action @(cp.IsActive ? "btn-toggle-off" : "btn-toggle-on")">
+                                            @(cp.IsActive ? "Tắt" : "Bật")
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     }
@@ -106,10 +131,45 @@
                 else
                 {
                     <tr>
-                        <td colspan="6" style="text-align:center; padding:32px; color:#64748b;">Chưa có mã giảm giá nào.</td>
+                        <td colspan="6" class="empty-text">Chưa có mã giảm giá nào trong hệ thống.</td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
 </div>
+
+<script>
+    function openAddCouponForm() {
+        var form = document.getElementById('form-coupon-crud');
+        form.action = '/Admin/Coupons/Add';
+        document.getElementById('crud-coupon-title').innerText = 'Thêm Mã Giảm Giá Mới';
+        document.getElementById('crud-coupon-btn').innerText = 'Lưu mã giảm giá mới';
+        document.getElementById('crud-couponId').value = '';
+        document.getElementById('crud-code').value = '';
+        document.getElementById('crud-discountType').value = 'AMOUNT';
+        document.getElementById('crud-discountValue').value = '50000';
+        document.getElementById('crud-minOrderAmount').value = '300000';
+        document.getElementById('crud-usageLimit').value = '100';
+        form.removeAttribute('hidden');
+        document.getElementById('crud-code').focus();
+        form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function editCoupon(id, code, type, value, minOrder, expireDate, limit) {
+        var form = document.getElementById('form-coupon-crud');
+        form.action = '/Admin/Coupons/Update';
+        document.getElementById('crud-coupon-title').innerText = 'Chỉnh sửa Mã Giảm Giá: ' + code;
+        document.getElementById('crud-coupon-btn').innerText = 'Cập nhật thay đổi';
+        document.getElementById('crud-couponId').value = id;
+        document.getElementById('crud-code').value = code;
+        document.getElementById('crud-discountType').value = type;
+        document.getElementById('crud-discountValue').value = value;
+        document.getElementById('crud-minOrderAmount').value = minOrder;
+        document.getElementById('crud-expireAt').value = expireDate;
+        document.getElementById('crud-usageLimit').value = limit;
+        form.removeAttribute('hidden');
+        document.getElementById('crud-code').focus();
+        form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+</script>

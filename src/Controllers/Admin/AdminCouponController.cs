@@ -63,6 +63,52 @@ namespace MiaraEyeglasses.Controllers.Admin
             return RedirectToAction("Index");
         }
 
+        // [POST] /Admin/Coupons/Update: Cập nhật thông tin mã giảm giá
+        [HttpPost]
+        [Route("Admin/Coupons/Update")]
+        [Route("AdminCoupon/Update")]
+        public async Task<IActionResult> Update(
+            int couponId, string? code, string? discountType, decimal discountValue, decimal minOrderAmount,
+            DateTime expireAt, int? usageLimit)
+        {
+            if (couponId <= 0)
+            {
+                TempData["ErrorMessage"] = "Mã coupon không hợp lệ.";
+                return RedirectToAction("Index");
+            }
+
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                TempData["ErrorMessage"] = "Vui lòng nhập ký hiệu mã voucher.";
+                return RedirectToAction("Index");
+            }
+
+            if (discountValue <= 0)
+            {
+                TempData["ErrorMessage"] = "Giá trị giảm giá phải lớn hơn 0.";
+                return RedirectToAction("Index");
+            }
+
+            if (string.IsNullOrWhiteSpace(discountType))
+            {
+                discountType = "AMOUNT";
+            }
+
+            var (success, error) = await _couponService.UpdateCouponAsync(
+                couponId, code.Trim().ToUpper(), discountType, discountValue, minOrderAmount, expireAt, usageLimit);
+
+            if (success)
+            {
+                TempData["SuccessMessage"] = $"Đã cập nhật mã giảm giá '{code.Trim().ToUpper()}' thành công!";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = error ?? "Cập nhật mã giảm giá thất bại.";
+            }
+
+            return RedirectToAction("Index");
+        }
+
         // [POST] Bật / Tắt trạng thái hoạt động của mã giảm giá
         [HttpPost]
         [Route("Admin/Coupons/ToggleActive")]
