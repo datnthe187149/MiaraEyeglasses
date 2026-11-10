@@ -52,7 +52,7 @@ namespace MiaraEyeglasses.Controllers.Order
             var checkoutModel = new CheckoutViewModel 
             { 
                 Cart = cart,
-                PaymentMethod = "COD" // Mặc định là COD (Thanh toán khi nhận hàng)
+                PaymentMethod = "VNPAY" // Tự động thanh toán qua VNPAY Sandbox
             };
 
             // TUYỆT ĐỐI KHÔNG tự động điền thông tin của Quản trị viên (Admin) hoặc Nhân viên (Staff)
@@ -132,26 +132,9 @@ namespace MiaraEyeglasses.Controllers.Order
             if (order == null)
                 return RedirectToAction("Success", new { id = orderId });
 
-            // Lựa chọn 1: Cổng thanh toán trực tuyến VNPAY (Sandbox)
-            if (model.PaymentMethod == "VNPAY")
-            {
-                var paymentUrl = _vnPayService.CreatePaymentUrl(order, HttpContext);
-                return Redirect(paymentUrl);
-            }
-
-            // Lựa chọn 2: Chuyển khoản trực tiếp / Quét mã QR (DIRECT)
-            if (model.PaymentMethod == "DIRECT")
-            {
-                await _orderService.AddPaymentRecordAsync(orderId, "DIRECT", order.TotalAmount, 1, order.OrderCode);
-                await _orderService.UpdateOrderStatusAsync(orderId, 1, 1); // 1: Đã thanh toán
-                TempData["SuccessMessage"] = "Đặt hàng thành công! Đơn hàng chuyển khoản trực tiếp đã được xác nhận thanh toán.";
-                return RedirectToAction("Success", new { id = orderId });
-            }
-
-            // Lựa chọn 3 (Mặc định): Thanh toán khi nhận hàng (COD / Tiền mặt)
-            await _orderService.AddPaymentRecordAsync(orderId, "COD", order.TotalAmount, 0, order.OrderCode);
-            TempData["SuccessMessage"] = "Đặt hàng thành công! MIARA đã tiếp nhận đơn hàng. Quý khách thanh toán tiền mặt khi nhận kính.";
-            return RedirectToAction("Success", new { id = orderId });
+            // Tự động chuyển hướng sang cổng thanh toán trực tuyến VNPAY (Sandbox)
+            var paymentUrl = _vnPayService.CreatePaymentUrl(order, HttpContext);
+            return Redirect(paymentUrl);
         }
 
         // [GET] Trang thông báo đặt hàng thành công

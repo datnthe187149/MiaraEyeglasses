@@ -1,7 +1,6 @@
 @model MiaraEyeglasses.Models.ViewModels.CheckoutViewModel
 @{
     ViewData["Title"] = "Thanh toán đơn hàng — MIARA";
-    string selectedPayment = Model.PaymentMethod ?? "COD";
 }
 
 @section Styles {
@@ -50,40 +49,58 @@
         margin-bottom: 24px !important;
     }
 
-    /* Option phương thức thanh toán linh hoạt */
-    .payment-option-card {
-        display: flex;
-        align-items: flex-start;
-        gap: 14px;
-        padding: 16px;
-        border: 1.5px solid #e2e8f0;
-        border-radius: 10px;
-        background: #ffffff;
-        cursor: pointer;
-        transition: all .2s ease;
-    }
-    .payment-option-card:hover {
-        border-color: #94a3b8;
+    /* Nút tăng giảm số lượng sản phẩm tại Checkout */
+    .qty-control-box {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
         background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        padding: 2px 4px;
     }
-    .payment-option-card.active {
-        border-color: #286598;
-        background: #f0f7ff;
-        box-shadow: 0 0 0 1px #286598;
-    }
-    .payment-option-card input[type="radio"] {
-        width: 18px;
-        height: 18px;
-        margin-top: 2px;
-        accent-color: #286598;
+    .btn-qty-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        background: #ffffff;
+        color: #0f172a;
+        font-size: 14px;
+        font-weight: 700;
         cursor: pointer;
+        transition: all .15s ease;
+        padding: 0;
+        line-height: 1;
+    }
+    .btn-qty-action:hover {
+        background: #286598;
+        border-color: #286598;
+        color: #ffffff;
+    }
+    .btn-delete-item {
+        border: none;
+        background: transparent;
+        color: #ef4444;
+        font-size: 12px;
+        cursor: pointer;
+        padding: 2px 4px;
+        margin-left: 6px;
+        text-decoration: underline;
+        transition: color .15s;
+    }
+    .btn-delete-item:hover {
+        color: #b91c1c;
     }
 </style>
 }
 
-<div class="view-section">
+<div class="view-section" style="padding-top: 16px;">
     <section class="container checkout-page">
-        <nav class="breadcrumb" aria-label="Đường dẫn">
+        <nav class="breadcrumb" aria-label="Đường dẫn" style="margin-bottom: 8px;">
             <a asp-controller="Home" asp-action="Index">Trang chủ</a>
             <span>/</span>
             <a asp-controller="Cart" asp-action="Index">Giỏ hàng</a>
@@ -91,10 +108,9 @@
             <span aria-current="page">Thanh toán</span>
         </nav>
 
-        <div class="page-intro" data-reveal style="margin-bottom: 24px;">
-            <span class="eyebrow">Xác nhận giao hàng · Orders / Payments</span>
-            <h1>Thanh toán đơn hàng.</h1>
-            <p>Vui lòng kiểm tra kỹ thông tin người nhận và lựa chọn phương thức thanh toán phù hợp.</p>
+        <!-- Tiêu đề tinh gọn, chữ bé, không chiếm nhiều dòng -->
+        <div style="margin-bottom: 18px;">
+            <h1 style="font-size: 22px; font-weight: 700; color: #0f172a; margin: 0;">Thanh toán đơn hàng</h1>
         </div>
 
         @if (TempData["ErrorMessage"] != null)
@@ -106,11 +122,15 @@
 
         <form asp-controller="Order" asp-action="PlaceOrder" method="post" id="checkout-form">
             @Html.AntiForgeryToken()
+            <!-- Tự động thanh toán qua VNPAY Sandbox -->
+            <input type="hidden" name="PaymentMethod" value="VNPAY" />
 
             <div class="checkout-layout" style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 32px; align-items: start;">
-                <!-- CỘT BÊN TRÁI: THÔNG TIN GIAO HÀNG & PHƯƠNG THỨC THANH TOÁN -->
-                <div class="portal-card" data-reveal style="background: #fff; padding: 28px; border-radius: 12px; border: 1px solid var(--color-border, #e2e8f0);">
-                    <h2 style="font-size: 20px; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">1. Thông tin nhận hàng</h2>
+                <!-- CỘT BÊN TRÁI: THÔNG TIN GIAO HÀNG -->
+                <div class="portal-card" data-reveal style="background: #fff; padding: 24px; border-radius: 12px; border: 1px solid var(--color-border, #e2e8f0);">
+                    <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; color: #0f172a;">
+                        1. Thông tin nhận hàng
+                    </h2>
                     <div asp-validation-summary="ModelOnly" class="text-danger" style="margin-bottom: 16px; color: #ef4444;"></div>
 
                     <div style="margin-bottom: 16px;">
@@ -131,64 +151,56 @@
                         <span asp-validation-for="ShippingAddress" style="color: #ef4444; font-size: 12px;"></span>
                     </div>
 
-                    <div style="margin-bottom: 24px;">
+                    <div style="margin-bottom: 16px;">
                         <label asp-for="OrderNote" style="display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; color: #334155;">Ghi chú đơn hàng (Tùy chọn)</label>
                         <textarea asp-for="OrderNote" rows="3" placeholder="Ví dụ: Giao giờ hành chính, gọi trước khi giao, dặn dò thợ kỹ thuật cắt tròng..." style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; box-sizing: border-box;"></textarea>
                     </div>
 
-                    <h2 style="font-size: 20px; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">2. Phương thức thanh toán</h2>
-                    <div class="payment-methods" style="display: flex; flex-direction: column; gap: 12px;">
-                        <!-- Lựa chọn 1: COD (Thanh toán khi nhận hàng) -->
-                        <label class="payment-option-card @(selectedPayment == "COD" ? "active" : "")" id="opt-cod" onclick="selectPaymentOption('COD')">
-                            <input type="radio" name="PaymentMethod" value="COD" @(selectedPayment == "COD" ? "checked" : "") onchange="updatePaymentCardStyles()" />
-                            <div style="flex: 1;">
-                                <strong style="font-size: 15px; color: #0f172a; display: block;">💵 Thanh toán tiền mặt khi nhận hàng (COD)</strong>
-                                <div style="color: #64748b; font-size: 13px; margin-top: 3px; line-height: 1.4;">
-                                    Quý khách kiểm tra kính mắt, thử độ vừa vặn và thanh toán tiền mặt trực tiếp cho nhân viên giao hàng.
-                                </div>
-                            </div>
-                        </label>
-
-                        <!-- Lựa chọn 2: Chuyển khoản trực tiếp / Quét mã QR -->
-                        <label class="payment-option-card @(selectedPayment == "DIRECT" ? "active" : "")" id="opt-direct" onclick="selectPaymentOption('DIRECT')">
-                            <input type="radio" name="PaymentMethod" value="DIRECT" @(selectedPayment == "DIRECT" ? "checked" : "") onchange="updatePaymentCardStyles()" />
-                            <div style="flex: 1;">
-                                <strong style="font-size: 15px; color: #0f172a; display: block;">🏦 Chuyển khoản ngân hàng / Xác nhận thanh toán ngay</strong>
-                                <div style="color: #64748b; font-size: 13px; margin-top: 3px; line-height: 1.4;">
-                                    Đơn hàng sẽ được xác nhận đã thanh toán thành công ngay lập tức để MIARA ưu tiên mài lắp tròng kính.
-                                </div>
-                            </div>
-                        </label>
-
-                        <!-- Lựa chọn 3: Cổng thanh toán trực tuyến VNPAY -->
-                        <label class="payment-option-card @(selectedPayment == "VNPAY" ? "active" : "")" id="opt-vnpay" onclick="selectPaymentOption('VNPAY')">
-                            <input type="radio" name="PaymentMethod" value="VNPAY" @(selectedPayment == "VNPAY" ? "checked" : "") onchange="updatePaymentCardStyles()" />
-                            <div style="flex: 1;">
-                                <strong style="font-size: 15px; color: #0f172a; display: block;">💳 Cổng thanh toán trực tuyến VNPAY (Sandbox)</strong>
-                                <div style="color: #64748b; font-size: 13px; margin-top: 3px; line-height: 1.4;">
-                                    Thanh toán trực tuyến qua ứng dụng ngân hàng, quét mã VNPAY-QR hoặc thẻ ATM / Visa thử nghiệm.
-                                </div>
-                            </div>
-                        </label>
+                    <div style="background: #f0f7ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #1e40af; display: flex; align-items: center; gap: 8px;">
+                        <span>💳</span>
+                        <span>Đơn hàng sẽ tự động chuyển tiếp tới cổng thanh toán trực tuyến <strong>VNPAY (Sandbox)</strong> để hoàn tất thanh toán.</span>
                     </div>
                 </div>
 
-                <!-- CỘT BÊN PHẢI: TÓM TẮT ĐƠN HÀNG (MỖI MỤC 1 DÒNG RIÊNG BIỆT DỄ ĐỌC) -->
+                <!-- CỘT BÊN PHẢI: TÓM TẮT ĐƠN HÀNG VÀ CHỈNH SỬA SỐ LƯỢNG SẢN PHẨM -->
                 <aside class="order-summary" data-reveal style="background: #fff; padding: 24px; border-radius: 12px; border: 1px solid var(--color-border, #e2e8f0);">
-                    <h2 style="font-size: 20px; margin-bottom: 16px;">3. Đơn hàng (@Model.Cart.Items.Count(i => i.IsSelected) món)</h2>
+                    <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0f172a;">
+                        2. Đơn hàng (@Model.Cart.Items.Count(i => i.IsSelected) món)
+                    </h2>
 
-                    <!-- Danh sách sản phẩm -->
-                    <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; width: 100%;">
+                    <!-- Danh sách sản phẩm (có nút chỉnh sửa số lượng [-] [qty] [+], về 0 tự động xóa) -->
+                    <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px; width: 100%;">
                         @foreach (var item in Model.Cart.Items.Where(i => i.IsSelected))
                         {
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; font-size: 14px; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9;">
-                                <div style="padding-right: 12px;">
-                                    <strong style="color: var(--navy, #1e293b); font-size: 14px; display: block;">@item.ProductName (x@(item.Quantity))</strong>
-                                    <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9; width: 100%;">
+                                <div style="flex: 1; padding-right: 12px;">
+                                    <strong style="color: var(--navy, #1e293b); font-size: 14px; display: block;">@item.ProductName</strong>
+                                    <div style="font-size: 12px; color: #64748b; margin: 3px 0 8px 0; line-height: 1.4;">
                                         Phân loại: @item.ColorName | Size @item.SizeLabel | @item.LensName
                                     </div>
+
+                                    <!-- Bộ điều khiển số lượng -->
+                                    <div style="display: flex; align-items: center;">
+                                        <div class="qty-control-box">
+                                            <button type="button" 
+                                                    class="btn-qty-action" 
+                                                    onclick="changeCheckoutQty(@item.CartItemId, @(item.Quantity - 1))" 
+                                                    title="Giảm số lượng (về 0 sẽ tự động xóa)">−</button>
+                                            <span style="min-width: 22px; text-align: center; font-size: 13px; font-weight: 700; color: #0f172a;">@item.Quantity</span>
+                                            <button type="button" 
+                                                    class="btn-qty-action" 
+                                                    onclick="changeCheckoutQty(@item.CartItemId, @(item.Quantity + 1))" 
+                                                    title="Tăng số lượng">+</button>
+                                        </div>
+                                        <button type="button" 
+                                                class="btn-delete-item" 
+                                                onclick="changeCheckoutQty(@item.CartItemId, 0)" 
+                                                title="Xóa sản phẩm này khỏi đơn hàng">
+                                            Xóa
+                                        </button>
+                                    </div>
                                 </div>
-                                <span style="font-weight: 700; color: #0f172a; white-space: nowrap;">@item.LineTotal.ToString("N0") ₫</span>
+                                <span style="font-weight: 700; color: #0f172a; font-size: 15px; white-space: nowrap;">@item.LineTotal.ToString("N0") ₫</span>
                             </div>
                         }
                     </div>
@@ -238,33 +250,37 @@
 
 @section Scripts {
 <script>
-    // Hàm cập nhật trạng thái active card khi chọn phương thức thanh toán
-    function selectPaymentOption(val) {
-        var radios = document.getElementsByName('PaymentMethod');
-        for (var i = 0; i < radios.length; i++) {
-            if (radios[i].value === val) {
-                radios[i].checked = true;
-                break;
+    // Hàm thay đổi số lượng sản phẩm ngay tại trang thanh toán (nếu về 0 thì tự động xóa)
+    function changeCheckoutQty(cartItemId, newQty) {
+        if (newQty <= 0) {
+            if (!confirm('Số lượng về 0, bạn có chắc chắn muốn xóa sản phẩm này khỏi đơn hàng?')) {
+                return;
             }
         }
-        updatePaymentCardStyles();
+
+        var formData = new FormData();
+        formData.append('cartItemId', cartItemId);
+        formData.append('quantity', newQty);
+
+        // Lấy verification token nếu có
+        var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+        if (tokenInput) {
+            formData.append('__RequestVerificationToken', tokenInput.value);
+        }
+
+        fetch('/Cart/UpdateQuantity', {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            // Tự động tải lại trang để cập nhật lại tóm tắt đơn hàng và tổng tiền
+            window.location.reload();
+        })
+        .catch(function(err) {
+            console.error('Lỗi khi cập nhật số lượng:', err);
+            window.location.reload();
+        });
     }
-
-    function updatePaymentCardStyles() {
-        var codCard = document.getElementById('opt-cod');
-        var directCard = document.getElementById('opt-direct');
-        var vnpayCard = document.getElementById('opt-vnpay');
-
-        var checkedRadio = document.querySelector('input[name="PaymentMethod"]:checked');
-        var val = checkedRadio ? checkedRadio.value : 'COD';
-
-        if (codCard) codCard.classList.toggle('active', val === 'COD');
-        if (directCard) directCard.classList.toggle('active', val === 'DIRECT');
-        if (vnpayCard) vnpayCard.classList.toggle('active', val === 'VNPAY');
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        updatePaymentCardStyles();
-    });
 </script>
 }
