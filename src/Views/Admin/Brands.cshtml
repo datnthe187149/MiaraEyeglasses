@@ -22,35 +22,35 @@
         <div>
             <span class="eyebrow">Đối tác phân phối · Brands</span>
             <h2>Quản lý Thương hiệu Gọng kính</h2>
-            <p class="small muted">Quản lý các nhãn hàng mắt kính trong nước và quốc tế có mặt tại hệ thống MIARA.</p>
+            <p class="small muted">Quản lý danh sách các nhãn hàng mắt kính, xuất xứ và quy mô mẫu kính phân phối tại MIARA.</p>
         </div>
-        <button type="button" class="button small-btn" data-toggle-form="form-add-brand" onclick="toggleAdminForm('form-add-brand')">+ Thêm thương hiệu mới</button>
+        <button type="button" class="button small-btn" id="btn-toggle-brand-form" onclick="openAddBrandForm()">+ Thêm thương hiệu mới</button>
     </div>
 
-    <!-- Form Thêm / Cập nhật Thương hiệu -->
-    <form class="customer-form sub-panel-form" id="form-add-brand" hidden asp-controller="AdminBrand" asp-action="Add" method="post">
+    <!-- Form Thêm mới / Cập nhật Thương hiệu -->
+    <form class="customer-form sub-panel-form" id="form-brand" hidden asp-controller="AdminBrand" asp-action="Add" method="post" style="margin-top: 16px;">
         @Html.AntiForgeryToken()
+        <input type="hidden" name="brandId" id="brand-input-id" value="0" />
+
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
-            <h3 style="margin:0">Thêm / Cập nhật Thương hiệu</h3>
-            <button type="button" class="text-button" onclick="document.getElementById('form-add-brand').setAttribute('hidden','')">✕ Đóng form</button>
+            <h3 style="margin:0" id="form-brand-title">Thêm thương hiệu mới</h3>
+            <button type="button" class="text-button" onclick="closeBrandForm()">✕ Đóng form</button>
         </div>
+
         <div class="form-grid-2">
             <label>
                 <span>Tên thương hiệu *</span>
-                <input type="text" name="brandName" required placeholder="VD: BOLON Eyewear" />
+                <input type="text" name="brandName" id="brand-input-name" required placeholder="VD: BOLON Eyewear" />
             </label>
             <label>
                 <span>Quốc gia xuất xứ *</span>
-                <input type="text" name="country" required placeholder="VD: Pháp, Ý, Hàn Quốc, Việt Nam" />
+                <input type="text" name="originCountry" id="brand-input-country" required placeholder="VD: Pháp, Ý, Hàn Quốc, Việt Nam" />
             </label>
         </div>
-        <label>
-            <span>Giới thiệu thương hiệu</span>
-            <input type="text" name="description" placeholder="Mô tả phong cách và chất liệu đặc trưng..." />
-        </label>
-        <div style="display:flex; gap:12px; margin-top:8px">
-            <button type="submit" class="button">Lưu thương hiệu</button>
-            <button type="reset" class="button button-outline">Làm mới</button>
+
+        <div style="display:flex; gap:12px; margin-top:16px">
+            <button type="submit" class="button" id="btn-brand-submit">✓ Lưu thương hiệu</button>
+            <button type="button" class="button button-outline" onclick="closeBrandForm()">Hủy bỏ</button>
         </div>
     </form>
 
@@ -59,8 +59,8 @@
             <thead>
                 <tr>
                     <th>Thương hiệu</th>
-                    <th>Xuất xứ</th>
-                    <th>Mô tả phong cách</th>
+                    <th>Quốc gia xuất xứ</th>
+                    <th>Số lượng mẫu kính</th>
                     <th>Trạng thái</th>
                     <th>Thao tác</th>
                 </tr>
@@ -70,10 +70,24 @@
                 {
                     foreach (var b in Model)
                     {
+                        int productCount = 0;
+                        if (b.Products != null)
+                        {
+                            productCount = b.Products.Count;
+                        }
+
+                        string country = "Quốc tế";
+                        if (!string.IsNullOrEmpty(b.Country))
+                        {
+                            country = b.Country;
+                        }
+
                         <tr>
                             <td><strong>@b.BrandName</strong></td>
-                            <td>@(string.IsNullOrEmpty(b.Country) ? "Quốc tế" : b.Country)</td>
-                            <td>@(string.IsNullOrEmpty(b.Description) ? "—" : b.Description)</td>
+                            <td>@country</td>
+                            <td>
+                                <strong>@productCount</strong> mẫu kính
+                            </td>
                             <td>
                                 @if (b.IsActive)
                                 {
@@ -85,13 +99,22 @@
                                 }
                             </td>
                             <td>
-                                <form asp-controller="AdminBrand" asp-action="ToggleActive" method="post" style="display:inline; margin:0;">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="brandId" value="@b.BrandId" />
-                                    <button type="submit" class="text-button @(b.IsActive ? "danger-text" : "")">
-                                        @(b.IsActive ? "Dừng" : "Phân phối")
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <button type="button" 
+                                            class="button button-outline small-btn" 
+                                            style="padding: 4px 10px; font-size: 12px;"
+                                            onclick="openEditBrandForm(@b.BrandId, '@Html.Raw(Html.Encode(b.BrandName))', '@Html.Raw(Html.Encode(country))')">
+                                        Chỉnh sửa
                                     </button>
-                                </form>
+
+                                    <form asp-controller="AdminBrand" asp-action="ToggleActive" method="post" style="display:inline; margin:0;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="brandId" value="@b.BrandId" />
+                                        <button type="submit" class="text-button @(b.IsActive ? "danger-text" : "")" style="padding: 4px 6px; font-size: 12px;">
+                                            @(b.IsActive ? "Dừng" : "Phân phối")
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     }
@@ -99,10 +122,58 @@
                 else
                 {
                     <tr>
-                        <td colspan="5" style="text-align:center; padding:32px; color:#64748b;">Chưa có thương hiệu nào.</td>
+                        <td colspan="5" style="text-align:center; padding:32px; color:#64748b;">Chưa có thương hiệu nào trong hệ thống.</td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
 </div>
+
+@section Scripts {
+<script>
+    function openAddBrandForm() {
+        var form = document.getElementById('form-brand');
+        var title = document.getElementById('form-brand-title');
+        var submitBtn = document.getElementById('btn-brand-submit');
+        var brandIdInput = document.getElementById('brand-input-id');
+        var nameInput = document.getElementById('brand-input-name');
+        var countryInput = document.getElementById('brand-input-country');
+
+        form.removeAttribute('hidden');
+        form.action = '/Admin/Brands/Add';
+        title.innerText = 'Thêm thương hiệu mới';
+        submitBtn.innerText = '✓ Lưu thương hiệu';
+        brandIdInput.value = '0';
+        nameInput.value = '';
+        countryInput.value = 'Quốc tế';
+        nameInput.focus();
+    }
+
+    function openEditBrandForm(id, name, country) {
+        var form = document.getElementById('form-brand');
+        var title = document.getElementById('form-brand-title');
+        var submitBtn = document.getElementById('btn-brand-submit');
+        var brandIdInput = document.getElementById('brand-input-id');
+        var nameInput = document.getElementById('brand-input-name');
+        var countryInput = document.getElementById('brand-input-country');
+
+        form.removeAttribute('hidden');
+        form.action = '/Admin/Brands/Update';
+        title.innerText = 'Chỉnh sửa thương hiệu: ' + name;
+        submitBtn.innerText = '✓ Lưu cập nhật';
+        brandIdInput.value = id;
+        nameInput.value = name;
+        countryInput.value = country;
+        nameInput.focus();
+
+        // Cuộn mượt lên form để người quản trị dễ nhìn thấy
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function closeBrandForm() {
+        var form = document.getElementById('form-brand');
+        form.setAttribute('hidden', '');
+    }
+</script>
+}

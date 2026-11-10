@@ -51,6 +51,41 @@ namespace MiaraEyeglasses.Controllers.Admin
             return RedirectToAction("Index");
         }
 
+        // [POST] /Admin/Brands/Update: Cập nhật thông tin thương hiệu
+        [HttpPost]
+        [Route("Admin/Brands/Update")]
+        [Route("AdminBrand/Update")]
+        public async Task<IActionResult> Update(int brandId, string? brandName, string? originCountry)
+        {
+            if (brandId <= 0)
+            {
+                TempData["ErrorMessage"] = "Mã thương hiệu không hợp lệ.";
+                return RedirectToAction("Index");
+            }
+
+            if (string.IsNullOrWhiteSpace(brandName))
+            {
+                TempData["ErrorMessage"] = "Tên thương hiệu không được để trống.";
+                return RedirectToAction("Index");
+            }
+
+            var (success, error) = await _brandService.UpdateBrandAsync(brandId, brandName.Trim(), originCountry?.Trim());
+            if (success)
+            {
+                TempData["SuccessMessage"] = $"Đã cập nhật thông tin thương hiệu '{brandName.Trim()}' thành công!";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = error;
+                if (string.IsNullOrEmpty(error))
+                {
+                    TempData["ErrorMessage"] = "Cập nhật thương hiệu thất bại.";
+                }
+            }
+
+            return RedirectToAction("Index");
+        }
+
         // [POST] Bật / Tắt trạng thái hoạt động của thương hiệu (Ẩn / Hiện)
         [HttpPost]
         [Route("Admin/Brands/ToggleActive")]

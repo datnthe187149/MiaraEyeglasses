@@ -51,6 +51,41 @@ namespace MiaraEyeglasses.Controllers.Admin
             return RedirectToAction("Index");
         }
 
+        // [POST] /Admin/Categories/Update: Cập nhật thông tin danh mục
+        [HttpPost]
+        [Route("Admin/Categories/Update")]
+        [Route("AdminCategory/Update")]
+        public async Task<IActionResult> Update(int categoryId, string? categoryName, string? slug)
+        {
+            if (categoryId <= 0)
+            {
+                TempData["ErrorMessage"] = "Mã danh mục không hợp lệ.";
+                return RedirectToAction("Index");
+            }
+
+            if (string.IsNullOrWhiteSpace(categoryName))
+            {
+                TempData["ErrorMessage"] = "Vui lòng nhập tên danh mục gọng kính.";
+                return RedirectToAction("Index");
+            }
+
+            if (categoryName.Trim().Length > 100)
+            {
+                TempData["ErrorMessage"] = "Tên danh mục không được vượt quá 100 ký tự.";
+                return RedirectToAction("Index");
+            }
+
+            var result = await _categoryService.UpdateCategoryAsync(categoryId, categoryName.Trim(), slug?.Trim());
+            if (!result.Success)
+            {
+                TempData["ErrorMessage"] = result.ErrorMessage;
+                return RedirectToAction("Index");
+            }
+
+            TempData["SuccessMessage"] = $"Cập nhật danh mục '{categoryName.Trim()}' thành công!";
+            return RedirectToAction("Index");
+        }
+
         // [POST] Kích hoạt hoặc Vô hiệu hóa một danh mục (Ẩn/Hiện trên trang bán hàng)
         [HttpPost]
         [Route("Admin/Categories/ToggleActive")]

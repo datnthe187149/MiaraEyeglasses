@@ -8,6 +8,7 @@ namespace MiaraEyeglasses.Services.Admin
         Task<IEnumerable<Category>> GetAllCategoriesAsync();
         Task<(bool Success, string? ErrorMessage)> CreateCategoryAsync(string categoryName, string? description);
         Task ToggleCategoryActiveAsync(int categoryId);
+        Task<(bool Success, string? ErrorMessage)> UpdateCategoryAsync(int categoryId, string categoryName, string? slug);
     }
 
     public class AdminCategoryService : IAdminCategoryService
@@ -42,6 +43,22 @@ namespace MiaraEyeglasses.Services.Admin
         public async Task ToggleCategoryActiveAsync(int categoryId)
         {
             await _categoryRepository.ToggleActiveAsync(categoryId);
+        }
+
+        public async Task<(bool Success, string? ErrorMessage)> UpdateCategoryAsync(int categoryId, string categoryName, string? slug)
+        {
+            if (string.IsNullOrWhiteSpace(categoryName))
+            {
+                return (false, "Tên danh mục không được để trống.");
+            }
+
+            var updated = await _categoryRepository.UpdateCategoryAsync(categoryId, categoryName, slug);
+            if (!updated)
+            {
+                return (false, "Không tìm thấy danh mục cần cập nhật.");
+            }
+
+            return (true, null);
         }
     }
 }
