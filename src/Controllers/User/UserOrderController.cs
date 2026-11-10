@@ -29,6 +29,7 @@ namespace MiaraEyeglasses.Controllers.User
         }
 
         [HttpGet]
+        [Route("UserOrder")]
         [Route("User/Orders")]
         [Route("Orders")]
         public async Task<IActionResult> Index()

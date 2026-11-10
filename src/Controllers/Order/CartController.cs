@@ -42,11 +42,9 @@ namespace MiaraEyeglasses.Controllers.Order
         }
 
         // [POST] Thêm một sản phẩm (gọng + tròng + thông số độ cận) vào giỏ hàng
-        // Hỗ trợ cả 2 dạng: JSON (AJAX) từ trang chi tiết hoặc Form POST truyền thống
         [HttpPost]
-        public async Task<IActionResult> AddToCart([FromBody] AddToCartRequest? jsonRequest, [FromForm] AddToCartRequest? formRequest)
+        public async Task<IActionResult> AddToCart(AddToCartRequest request)
         {
-            var request = jsonRequest ?? formRequest;
             if (request == null || !ModelState.IsValid)
             {
                 if (Request.Headers["Accept"].ToString().Contains("application/json"))

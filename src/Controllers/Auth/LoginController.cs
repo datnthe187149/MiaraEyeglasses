@@ -106,18 +106,7 @@ namespace MiaraEyeglasses.Controllers.Auth
         [Route("AccessDenied")]
         public IActionResult AccessDenied()
         {
-            if (User.IsInRole("Admin"))
-            {
-                TempData["ErrorMessage"] = "Tài khoản Quản trị viên (Admin) không thể thực hiện các thao tác mua sắm cá nhân của Khách hàng.";
-                return RedirectToAction("Index", "AdminDashboard");
-            }
-            if (User.IsInRole("Staff"))
-            {
-                TempData["ErrorMessage"] = "Tài khoản Nhân viên (Staff) không thể thực hiện các thao tác mua sắm cá nhân của Khách hàng.";
-                return RedirectToAction("Index", "StaffOrder");
-            }
-
-            TempData["ErrorMessage"] = "Bạn không có quyền truy cập vào khu vực quản trị này.";
+            TempData["ErrorMessage"] = "Bạn không có quyền truy cập vào chức năng này.";
             return RedirectToAction("Index", "Home");
         }
 
