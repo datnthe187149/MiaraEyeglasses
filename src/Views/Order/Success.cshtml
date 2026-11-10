@@ -1,0 +1,29 @@
+@model MiaraEyeglasses.Models.Entities.Order
+@{
+    ViewData["Title"] = "Đặt hàng thành công — MIARA";
+}
+
+<div class="view-section">
+    <div class="container" style="max-width: 640px; margin: 40px auto;">
+        <div class="portal-card" style="text-align: center; padding: 40px 24px; background: #fff; border-radius: 16px; border: 1px solid var(--color-border, #e2e8f0);">
+            <div style="width: 64px; height: 64px; background: #ecfdf5; border-radius: 50%; color: #10b981; font-size: 32px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">✓</div>
+            <h1 style="font-size: 26px; margin-bottom: 8px;">Đặt hàng thành công!</h1>
+            <p class="muted" style="margin-bottom: 24px;">Cảm ơn bạn đã tin tưởng và lựa chọn kính mắt tại MIARA.</p>
+
+            <div style="background: #f8fafc; border-radius: 12px; padding: 20px; text-align: left; margin-bottom: 24px; font-size: 14px; line-height: 1.8;">
+                <div>Mã đơn hàng: <strong style="color: var(--blue, #2563eb);">@Model.OrderCode</strong></div>
+                <div>Trạng thái đơn: <span class="badge" style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-size: 12px;">@(Model.OrderStatus?.StatusName ?? "Chờ xử lý")</span></div>
+                <div>Người nhận: <strong>@Model.RecipientName</strong> (@Model.Phone)</div>
+                <div>Địa chỉ giao hàng: <span>@Model.ShippingAddress</span></div>
+                <div style="border-top: 1px solid #e2e8f0; margin-top: 10px; padding-top: 10px; font-size: 16px;">
+                    Tổng thanh toán: <strong style="color: #dc2626;">@Model.TotalAmount.ToString("N0") ₫</strong>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <a asp-controller="UserOrder" asp-action="Index" class="button button-outline" style="text-decoration: none;">Xem đơn hàng của tôi</a>
+                <a asp-controller="Shop" asp-action="Index" class="button" style="text-decoration: none;">Tiếp tục mua sắm</a>
+            </div>
+        </div>
+    </div>
+</div>

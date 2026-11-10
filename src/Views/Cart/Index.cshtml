@@ -1,0 +1,148 @@
+@model MiaraEyeglasses.Models.ViewModels.CartViewModel
+@{
+    ViewData["Title"] = "Giỏ hàng của bạn — MIARA";
+}
+
+<div class="view-section">
+    <section class="container cart-page">
+        <nav class="breadcrumb" aria-label="Đường dẫn">
+            <a asp-controller="Home" asp-action="Index">Trang chủ</a>
+            <span>/</span>
+            <span aria-current="page">Giỏ hàng</span>
+        </nav>
+        <div class="page-intro" data-reveal>
+            <span class="eyebrow">Giỏ hàng của bạn · Carts / CartItems</span>
+            <h1>Kiểm tra giỏ hàng &amp; Thanh toán.</h1>
+            <p>Hệ thống tự động kiểm tra tồn kho trước khi chuyển sang cổng thanh toán trực tuyến.</p>
+        </div>
+
+        @if (Model.Items != null && Model.Items.Any())
+        {
+            <div class="cart-layout">
+                <div id="cart-items-container">
+                    <div class="cart-selection-bar" data-reveal style="margin-bottom: 16px; padding: 12px 16px; background: #fff; border-radius: 8px; border: 1px solid var(--color-border, #e2e8f0); display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 500;">Đã chọn @Model.Items.Count(i => i.IsSelected) / @Model.Items.Count sản phẩm</span>
+                        <span class="badge" style="background: #10b981; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12px;">Tồn kho hợp lệ ✓</span>
+                    </div>
+
+                    @foreach (var item in Model.Items)
+                    {
+                        <article class="cart-item @(item.IsSelected ? "is-selected" : "")" style="margin-bottom: 16px; background: #fff; border-radius: 12px; border: 1px solid var(--color-border, #e2e8f0); padding: 20px; display: flex; gap: 20px; align-items: flex-start;">
+                            <label class="cart-line-check" style="margin-top: 4px;">
+                                <input type="checkbox" checked="@item.IsSelected" onchange="toggleSelect(@item.CartItemId)" />
+                            </label>
+                            <a asp-controller="Shop" asp-action="Detail" asp-route-id="@item.ProductId">
+                                <img src="@item.ImageUrl" alt="@item.ProductName" style="width: 100px; height: 80px; object-fit: cover; border-radius: 8px; background: #f8fafc;" />
+                            </a>
+                            <div class="cart-item-copy" style="flex: 1;">
+                                <span class="product-brand" style="text-transform: uppercase; font-size: 12px; color: var(--muted, #64748b); font-weight: 600;">MIARA</span>
+                                <a asp-controller="Shop" asp-action="Detail" asp-route-id="@item.ProductId" style="text-decoration: none; color: inherit;">
+                                    <h2 style="font-size: 18px; margin: 4px 0 6px;">@item.ProductName</h2>
+                                </a>
+                                <p class="small muted" style="margin: 0 0 6px;">Màu: @item.ColorName · Size: @item.SizeLabel · SKU: @item.Sku</p>
+                                <p class="engraving-order" style="font-size: 13px; color: var(--blue, #2563eb); margin: 0 0 6px;">Tròng kính: <strong>@item.LensName (+@item.LensPrice.ToString("N0") ₫)</strong></p>
+                                @if (item.Prescription?.RightSph != null || item.Prescription?.LeftSph != null)
+                                {
+                                    <div class="cart-rx-badge" style="background: #f1f5f9; padding: 6px 10px; border-radius: 6px; font-size: 12px; margin-bottom: 8px;">
+                                        <span>Độ cận: OD (SPH @item.Prescription.RightSph, CYL @item.Prescription.RightCyl, AXIS @item.Prescription.RightAxis°) | OS (SPH @item.Prescription.LeftSph, CYL @item.Prescription.LeftCyl, AXIS @item.Prescription.LeftAxis°) | PD: @(item.Prescription.PD)mm</span>
+                                    </div>
+                                }
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
+                                    <div class="quantity-control" style="display: flex; align-items: center; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden;">
+                                        <button type="button" class="qty-dec" onclick="updateQty(@item.CartItemId, @(item.Quantity - 1))" style="border: none; background: #f8fafc; padding: 6px 12px; cursor: pointer;">−</button>
+                                        <span class="qty-val" style="min-width: 32px; text-align: center; font-weight: 600; font-size: 14px;">@item.Quantity</span>
+                                        <button type="button" class="qty-inc" onclick="updateQty(@item.CartItemId, @(item.Quantity + 1))" style="border: none; background: #f8fafc; padding: 6px 12px; cursor: pointer;">+</button>
+                                    </div>
+                                    <strong style="font-size: 17px; color: var(--navy, #1e293b);">@item.LineTotal.ToString("N0") ₫</strong>
+                                </div>
+                            </div>
+                            <div class="cart-line-total">
+                                <button type="button" class="icon-button cart-remove-btn" title="Xóa khỏi giỏ" onclick="removeItem(@item.CartItemId)" style="border: none; background: transparent; cursor: pointer; color: #ef4444;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                </button>
+                            </div>
+                        </article>
+                    }
+                    <a asp-controller="Shop" asp-action="Index" class="text-link" style="margin-top: 16px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; font-weight: 500;">← Tiếp tục chọn thêm kính</a>
+                </div>
+
+                <!-- Cột tổng tiền -->
+                <aside class="order-summary" data-reveal style="background: #fff; padding: 24px; border-radius: 12px; border: 1px solid var(--color-border, #e2e8f0); height: fit-content;">
+                    <h2 style="font-size: 20px; margin-bottom: 20px;">Thanh toán đơn hàng</h2>
+
+                    <!-- Áp mã giảm giá -->
+                    <div class="coupon-box" style="margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #f1f5f9;">
+                        <label for="coupon-code-input" class="small" style="display: block; font-weight: 600; margin-bottom: 6px;">Mã giảm giá (Voucher)</label>
+                        <div class="coupon-input-row" style="display: flex; gap: 8px;">
+                            <input type="text" id="coupon-code-input" value="@Model.AppliedCouponCode" placeholder="Nhập mã (VD: MIARA50K)" style="flex: 1; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px;" />
+                            <button type="button" class="button button-outline" onclick="applyCoupon()" style="padding: 8px 14px; white-space: nowrap;">Áp dụng</button>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.AppliedCouponCode))
+                        {
+                            <p class="small coupon-ok" style="color: #16a34a; margin-top: 6px; font-weight: 500;">Đã áp dụng mã @Model.AppliedCouponCode (-@Model.DiscountAmount.ToString("N0") ₫)</p>
+                        }
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px;">
+                        <span class="muted">Tạm tính (Gọng + Tròng)</span>
+                        <strong>@Model.Subtotal.ToString("N0") ₫</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px;">
+                        <span class="muted">Giảm giá mã khuyến mãi</span>
+                        <strong style="color: #ef4444;">-@Model.DiscountAmount.ToString("N0") ₫</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 16px; font-size: 14px;">
+                        <span class="muted">Phí vận chuyển toàn quốc</span>
+                        <strong>@(Model.ShippingFee == 0 ? "Miễn phí" : Model.ShippingFee.ToString("N0") + " ₫")</strong>
+                    </div>
+                    <div class="summary-total" style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 16px; margin-bottom: 20px;">
+                        <span style="font-weight: 600; font-size: 16px;">Tổng thanh toán</span>
+                        <strong style="color: #2563eb; font-size: 22px;">@Model.TotalAmount.ToString("N0") ₫</strong>
+                    </div>
+                    <a asp-controller="Order" asp-action="Checkout" class="button" style="width: 100%; text-align: center; text-decoration: none; display: block; padding: 14px;">
+                        Tiến hành đặt hàng →
+                    </a>
+                </aside>
+            </div>
+        }
+        else
+        {
+            <div class="portal-card" style="text-align: center; padding: 48px 24px; margin-top: 24px; background: #fff; border-radius: 12px; border: 1px solid var(--color-border, #e2e8f0);">
+                <p class="muted" style="font-size: 16px; margin-bottom: 16px;">Giỏ hàng của bạn đang trống.</p>
+                <a asp-controller="Shop" asp-action="Index" class="button" style="text-decoration: none;">Khám phá mẫu kính ngay</a>
+            </div>
+        }
+    </section>
+</div>
+
+@section Scripts {
+<script>
+    async function updateQty(id, qty) {
+        if (qty < 1) return removeItem(id);
+        await fetch(`/Cart/UpdateQuantity?cartItemId=${id}&quantity=${qty}`, { method: 'POST' });
+        location.reload();
+    }
+    async function toggleSelect(id) {
+        await fetch(`/Cart/ToggleSelect?cartItemId=${id}`, { method: 'POST' });
+        location.reload();
+    }
+    async function removeItem(id) {
+        if (confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ?')) {
+            await fetch(`/Cart/Remove?cartItemId=${id}`, { method: 'POST' });
+            location.reload();
+        }
+    }
+    async function applyCoupon() {
+        const code = document.getElementById('coupon-code-input').value.trim();
+        if (!code) return;
+        const res = await fetch('/Cart/ApplyCoupon', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(code)
+        });
+        const result = await res.json();
+        alert(result.message);
+        if (result.success) location.reload();
+    }
+</script>
+}

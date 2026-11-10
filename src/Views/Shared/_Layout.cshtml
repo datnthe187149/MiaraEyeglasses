@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#b6dcf4" />
+    <link rel="icon" type="image/png" href="~/images/miara/logo.png" />
+    <link rel="preload" href="~/images/miara/logo.png" as="image" />
+    <link rel="preload" href="~/fonts/be-vietnam-pro-400.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="stylesheet" href="~/css/styles.css" />
+    <title>@ViewData["Title"] — MIARA Eyeglasses</title>
+    @await RenderSectionAsync("Styles", required: false)
+  </head>
+  <body>
+    @{
+        string? currentUserRole = Context.Session.GetString("UserRole");
+        if (string.IsNullOrEmpty(currentUserRole) && User.Identity != null && User.Identity.IsAuthenticated)
+        {
+            currentUserRole = User.IsInRole("Admin") ? "Admin" : User.IsInRole("Staff") ? "Staff" : "Customer";
+        }
+    }
+
+    @if (currentUserRole == "Admin")
+    {
+        <div style="background: #0f172a; color: #f8fafc; font-size: 13px; padding: 8px 16px; text-align: center; border-bottom: 2px solid #3b82f6; position: sticky; top: 0; z-index: 1000;">
+            Bạn đang đăng nhập với tư cách <strong>QUẢN TRỊ VIÊN (ADMIN)</strong>. Các trang mua sắm cá nhân được khóa để bảo vệ dữ liệu.
+            <a asp-controller="Admin" asp-action="Index" style="color: #38bdf8; font-weight: 700; margin-left: 10px; text-decoration: underline;">Vào Admin Portal →</a>
+            <a asp-controller="Logout" asp-action="Index" style="color: #f87171; font-weight: 600; margin-left: 14px; text-decoration: underline;">Đăng xuất</a>
+        </div>
+    }
+    else if (currentUserRole == "Staff")
+    {
+        <div style="background: #1e1b4b; color: #f8fafc; font-size: 13px; padding: 8px 16px; text-align: center; border-bottom: 2px solid #8b5cf6; position: sticky; top: 0; z-index: 1000;">
+            Bạn đang đăng nhập với tư cách <strong>NHÂN VIÊN (STAFF)</strong>.
+            <a asp-controller="StaffOrder" asp-action="Index" style="color: #a78bfa; font-weight: 700; margin-left: 10px; text-decoration: underline;">Vào Staff Portal →</a>
+            <a asp-controller="Logout" asp-action="Index" style="color: #f87171; font-weight: 600; margin-left: 14px; text-decoration: underline;">Đăng xuất</a>
+        </div>
+    }
+
+    <div id="root">
+      <a href="#main" class="skip-link">Chuyển đến nội dung</a>
+
+      <!-- ==================== HEADER (Shared _Layout.cshtml) ==================== -->
+      <header>
+        <div class="header-bar">
+          <div class="announcement">
+            <span>SEE YOURSELF FROM A NEW ANGLE.</span>
+            <a asp-controller="Shop" asp-action="Index">
+              Khám phá MIARA
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+            </a>
+          </div>
+
+          <div class="header-wrap container">
+            <a asp-controller="Home" asp-action="Index" class="brand-logo" aria-label="MIARA — Trang chủ">
+              <img src="~/images/miara/logo.png" alt="MIARA" width="1269" height="703" />
+            </a>
+
+            @{
+                string currentCtrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+                string currentAct = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+            }
+
+            <nav class="desktop-nav" id="desktop-nav" aria-label="Điều hướng chính">
+              <a asp-controller="Home" asp-action="Index" class="@(currentCtrl == "Home" ? "active" : "")">Trang chủ</a>
+              <a asp-controller="Shop" asp-action="Index" class="@(currentCtrl == "Shop" && currentAct == "Index" ? "active" : "")">Gọng kính</a>
+              <a asp-controller="Lens" asp-action="Index" class="@(currentCtrl == "Lens" ? "active" : "")">Tròng kính &amp; Độ cận</a>
+              <a asp-controller="UserOrder" asp-action="Index" class="@(currentCtrl == "UserOrder" ? "active" : "")">Đơn hàng</a>
+              <span class="nav-indicator" id="nav-indicator" aria-hidden="true"></span>
+            </nav>
+
+            <div class="header-actions">
+              <button type="button" class="icon-button" id="search-toggle-btn" aria-label="Tìm kiếm" aria-expanded="false">
+                <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              </button>
+
+              <!-- Realtime Notification Bell (SignalR) -->
+              <div class="notif-dropdown-wrap">
+                <button type="button" class="icon-button" id="notif-toggle-btn" aria-label="Thông báo Realtime" aria-expanded="false">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                  <span class="count-dot" id="notif-count-dot">2</span>
+                </button>
+                <div class="notif-panel" id="notif-panel" hidden>
+                  <div class="notif-panel-head">
+                    <strong>Thông báo của bạn</strong>
+                    <button type="button" class="text-button" id="notif-mark-read-btn">Đánh dấu đã đọc</button>
+                  </div>
+                  <div class="notif-list" id="notif-list">
+                    <article class="notif-item is-unread">
+                      <div class="notif-item-head">
+                        <strong>Thanh toán VNPay thành công</strong>
+                        <time>Vừa xong</time>
+                      </div>
+                      <p>Đơn hàng của bạn đã được xác nhận thanh toán qua VNPay Sandbox.</p>
+                    </article>
+                    <article class="notif-item is-unread">
+                      <div class="notif-item-head">
+                        <strong>Đơn hàng đang xử lý</strong>
+                        <time>15 phút trước</time>
+                      </div>
+                      <p>Đơn kính cận của bạn đã chuyển sang trạng thái: Đang xử lý (Cắt lắp tròng kính).</p>
+                    </article>
+                  </div>
+                </div>
+              </div>
+
+              <a class="icon-button saved-link" asp-controller="Wishlist" asp-action="Index" id="header-fav-link" aria-label="Yêu thích">
+                <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+              </a>
+
+              <a class="icon-button" asp-controller="Cart" asp-action="Index" id="header-cart-link" aria-label="Giỏ hàng">
+                <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+              </a>
+
+              @if (currentUserRole == "Admin")
+              {
+                <a class="icon-button account-link" asp-controller="Admin" asp-action="Index" aria-label="Admin Portal" title="Vào trang Quản trị Admin" style="color: #2563eb; font-weight: 700;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+                  <span class="account-label" style="font-weight: 700; color: #2563eb;">Admin</span>
+                </a>
+              }
+              else if (currentUserRole == "Staff")
+              {
+                <a class="icon-button account-link" asp-controller="StaffOrder" asp-action="Index" aria-label="Staff Portal" title="Vào trang Nhân viên" style="color: #7c3aed; font-weight: 700;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                  <span class="account-label" style="font-weight: 700; color: #7c3aed;">Nhân viên</span>
+                </a>
+              }
+              else if (Context.Session.GetInt32("UserId").HasValue)
+              {
+                <a class="icon-button account-link" asp-controller="Profile" asp-action="Index" aria-label="Tài khoản của tôi" title="Tài khoản của tôi">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+                  <span class="account-label">@(Context.Session.GetString("UserName")?.Split(' ').LastOrDefault() ?? "Tài khoản")</span>
+                </a>
+              }
+              else
+              {
+                <a class="icon-button account-link" asp-controller="Login" asp-action="Index" aria-label="Đăng nhập" title="Đăng nhập">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+                  <span class="account-label">Đăng nhập</span>
+                </a>
+              }
+
+              <button type="button" class="icon-button mobile-menu-button" id="mobile-menu-btn" aria-label="Mở menu" aria-expanded="false">
+                <svg id="mobile-menu-icon-open" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+                <svg id="mobile-menu-icon-close" hidden xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Collapsible Search Bar -->
+        <search id="header-search-region" hidden>
+          <form class="search-panel container" id="header-search-form" asp-controller="Shop" asp-action="Index" method="get" asp-antiforgery="false">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <label class="sr-only" for="header-search">Tìm sản phẩm theo tên</label>
+            <input id="header-search" name="Search" type="search" placeholder="Nhập tên sản phẩm hoặc mã kính bạn muốn tìm..." />
+            <button class="button" type="submit">Tìm kiếm</button>
+            <button class="icon-button" type="button" id="header-search-close" aria-label="Đóng tìm kiếm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </form>
+        </search>
+
+        <!-- Collapsible Mobile Navigation -->
+        <nav class="mobile-nav" id="mobile-nav" aria-label="Điều hướng trên điện thoại" hidden>
+          <a asp-controller="Home" asp-action="Index">Trang chủ</a>
+          <a asp-controller="Shop" asp-action="Index">Tất cả gọng kính</a>
+          <a asp-controller="Lens" asp-action="Index">Chọn tròng &amp; Độ cận</a>
+          <a asp-controller="Wishlist" asp-action="Index">Kính yêu thích</a>
+          <a asp-controller="Cart" asp-action="Index">Giỏ hàng</a>
+          <a asp-controller="UserOrder" asp-action="Index">Đơn hàng của tôi</a>
+          <a asp-controller="Profile" asp-action="Index">Tài khoản &amp; Sổ địa chỉ</a>
+          <a asp-controller="Login" asp-action="Index">Đăng nhập / Đăng ký</a>
+        </nav>
+      </header>
+
+      <!-- Main Content -->
+      <main id="main">
+        <div class="main-decorations" id="main-decorations" aria-hidden="true"></div>
+        <div class="miara-main-region">
+          <div class="miara-page-content" id="page-content">
+            @RenderBody()
+          </div>
+        </div>
+      </main>
+
+      <!-- ==================== FOOTER (Shared _Layout.cshtml) ==================== -->
+      <footer class="site-footer">
+        <div class="footer-main container">
+          <div class="footer-brand">
+            <a asp-controller="Home" asp-action="Index" class="brand-logo" aria-label="MIARA — Trang chủ">
+              <img src="~/images/miara/logo.png" alt="MIARA" width="1269" height="703" loading="lazy" />
+            </a>
+            <p>Nhìn mình từ một góc mới.<br />Tự tin theo cách của bạn.</p>
+          </div>
+
+          <div>
+            <h3>Khám phá</h3>
+            <a asp-controller="Shop" asp-action="Index">Tất cả gọng kính</a>
+            <a asp-controller="Lens" asp-action="Index">Tròng kính &amp; Độ cận</a>
+            <a asp-controller="Wishlist" asp-action="Index">Kính yêu thích</a>
+            <a asp-controller="Cart" asp-action="Index">Giỏ hàng</a>
+          </div>
+
+          <div>
+            <h3>Tài khoản &amp; Đơn hàng</h3>
+            <a asp-controller="UserOrder" asp-action="Index">Đơn hàng của tôi</a>
+            <a asp-controller="Profile" asp-action="Index">Tài khoản &amp; Sổ địa chỉ</a>
+            <a asp-controller="Login" asp-action="Index">Đăng nhập</a>
+            <a asp-controller="Register" asp-action="Index">Đăng ký tài khoản</a>
+          </div>
+
+          <div>
+            <h3>Thông tin hỗ trợ</h3>
+            <a asp-controller="Home" asp-action="Index">Giao hàng &amp; đổi trả</a>
+            <a asp-controller="Home" asp-action="Index">Câu hỏi thường gặp</a>
+            <a asp-controller="Home" asp-action="Index">Chính sách bảo mật</a>
+            <a asp-controller="StaffOrder" asp-action="Index">Cổng Nhân viên (Staff)</a>
+            <a asp-controller="AdminDashboard" asp-action="Index">Cổng Quản trị (Admin)</a>
+          </div>
+        </div>
+
+        <div class="footer-bottom container">
+          <span>© 2026 MIARA. Giữ trọn cá tính, mở rộng góc nhìn.</span>
+          <span>Được thiết kế cho bạn, tại Việt Nam.</span>
+        </div>
+      </footer>
+
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </div>
+
+    <script src="~/js/common.js" defer></script>
+    <script src="~/js/product.js" defer></script>
+    <script src="~/js/cart.js" defer></script>
+    <script src="~/js/account.js" defer></script>
+    @await RenderSectionAsync("Scripts", required: false)
+  </body>
+</html>

@@ -1,0 +1,130 @@
+@model MiaraEyeglasses.Models.Entities.Order
+@{
+    ViewData["Title"] = $"Phiếu kỹ thuật cắt tròng #{Model.OrderCode}";
+}
+
+<div class="bo-main-wrap container section">
+    <div style="display: flex; gap: 24px; margin-bottom: 24px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
+        <a asp-action="Index" class="button" style="text-decoration: none;">← Quay lại danh sách đơn hàng</a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success" style="margin-bottom: 20px;">@TempData["SuccessMessage"]</div>
+    }
+
+    <div class="portal-card" style="background: #fff; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 20px;">
+            <div>
+                <span class="eyebrow" style="color: #2563eb; text-transform: uppercase; font-size: 13px; font-weight: 600;">Phiếu Kỹ Thuật Gia Công Kính</span>
+                <h1 style="margin: 4px 0;">Đơn hàng #@Model.OrderCode</h1>
+                <p class="small muted" style="margin: 0;">Ngày đặt hàng: @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss")</p>
+            </div>
+            <div>
+                <span class="badge" style="background: #2563eb; color: #fff; font-size: 16px; padding: 6px 14px; border-radius: 6px;">
+                    @Model.OrderStatus?.StatusName
+                </span>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+            <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <h3 style="margin-top: 0; font-size: 16px; color: #1e293b;">Thông tin khách hàng & Giao nhận</h3>
+                <p style="margin: 6px 0;">Họ tên: <strong>@Model.RecipientName</strong></p>
+                <p style="margin: 6px 0;">Số điện thoại: <strong>@Model.Phone</strong></p>
+                <p style="margin: 6px 0;">Địa chỉ nhận hàng: <strong>@Model.ShippingAddress</strong></p>
+                @if (!string.IsNullOrEmpty(Model.OrderNote))
+                {
+                    <p style="margin: 6px 0; color: #b45309; background: #fef3c7; padding: 8px; border-radius: 4px;">
+                        Ghi chú khách dặn: <em>@Model.OrderNote</em>
+                    </p>
+                }
+            </div>
+
+            <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <h3 style="margin-top: 0; font-size: 16px; color: #1e293b;">Thông tin thanh toán</h3>
+                <p style="margin: 6px 0;">Tạm tính gọng & tròng: <strong>@Model.Subtotal.ToString("N0") ₫</strong></p>
+                <p style="margin: 6px 0;">Giảm giá coupon: <strong>-@Model.DiscountAmount.ToString("N0") ₫</strong></p>
+                <p style="margin: 6px 0;">Phí vận chuyển: <strong>@Model.ShippingFee.ToString("N0") ₫</strong></p>
+                <p style="margin: 6px 0; font-size: 18px; color: #dc2626;">Tổng thanh toán: <strong>@Model.TotalAmount.ToString("N0") ₫</strong></p>
+            </div>
+        </div>
+
+        <h3 style="margin: 24px 0 16px; font-size: 18px;">Chi tiết sản phẩm & Thông số khúc xạ mài tròng kính</h3>
+        <div style="display: grid; gap: 20px;">
+            @foreach (var item in Model.Items)
+            {
+                <div style="border: 2px solid #bfdbfe; border-radius: 8px; padding: 20px; background: #fff;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <div>
+                            <h4 style="margin: 0; font-size: 18px; color: #1e293b;">@item.ProductName</h4>
+                            <p class="small muted" style="margin: 4px 0 0;">Mã SKU: <strong>@item.Sku</strong> | Màu sắc: <strong>@item.ColorName</strong> | Cỡ kính: <strong>@item.SizeLabel</strong> | Số lượng: <strong>@item.Quantity</strong></p>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="badge" style="background: #6366f1; color: #fff; padding: 6px 12px; border-radius: 4px; font-size: 14px;">Gói tròng: @item.LensName</span>
+                        </div>
+                    </div>
+
+                    @if (item.RightSph != null || item.LeftSph != null)
+                    {
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 16px;">
+                            <div>
+                                <h4 style="margin: 0 0 8px; color: #166534; font-size: 15px;">Mắt Phải (OD)</h4>
+                                <div style="font-size: 14px; line-height: 1.6;">
+                                    Độ cầu (SPH): <strong>@(item.RightSph?.ToString("+0.00;-0.00;0.00") ?? "0.00")</strong><br />
+                                    Độ loạn (CYL): <strong>@(item.RightCyl?.ToString("+0.00;-0.00;0.00") ?? "0.00")</strong><br />
+                                    Trục loạn (AXIS): <strong>@(item.RightAxis ?? 0)°</strong>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 style="margin: 0 0 8px; color: #166534; font-size: 15px;">Mắt Trái (OS)</h4>
+                                <div style="font-size: 14px; line-height: 1.6;">
+                                    Độ cầu (SPH): <strong>@(item.LeftSph?.ToString("+0.00;-0.00;0.00") ?? "0.00")</strong><br />
+                                    Độ loạn (CYL): <strong>@(item.LeftCyl?.ToString("+0.00;-0.00;0.00") ?? "0.00")</strong><br />
+                                    Trục loạn (AXIS): <strong>@(item.LeftAxis ?? 0)°</strong>
+                                </div>
+                            </div>
+                            <div style="grid-column: 1 / -1; border-top: 1px dashed #86efac; padding-top: 10px; margin-top: 6px;">
+                                Khoảng cách đồng tử (PD): <strong style="font-size: 16px; color: #166534;">@(item.PD?.ToString("0.0") ?? "62.0") mm</strong>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div style="padding: 12px; background: #f8fafc; border-radius: 6px; color: #64748b; font-size: 14px;">
+                            Khách hàng chọn mua kính gọng nguyên mẫu không lắp độ.
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e2e8f0; display: flex; gap: 12px;">
+            @if (Model.Status == 1)
+            {
+                <form asp-action="ProcessCutting" method="post" style="margin: 0;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="orderId" value="@Model.OrderId" />
+                    <button type="submit" class="button" style="background: #2563eb; color: #fff;">Tiếp nhận & Bắt đầu cắt tròng</button>
+                </form>
+            }
+            else if (Model.Status == 2)
+            {
+                <form asp-action="Ship" method="post" style="margin: 0;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="orderId" value="@Model.OrderId" />
+                    <button type="submit" class="button" style="background: #0284c7; color: #fff;">Hoàn tất cắt tròng & Bàn giao giao hàng</button>
+                </form>
+            }
+            else if (Model.Status == 3)
+            {
+                <form asp-action="Complete" method="post" style="margin: 0;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="orderId" value="@Model.OrderId" />
+                    <button type="submit" class="button" style="background: #059669; color: #fff;">Xác nhận đơn hàng đã giao thành công</button>
+                </form>
+            }
+        </div>
+    </div>
+</div>
+

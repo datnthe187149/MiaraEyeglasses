@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#286598" />
+    <link rel="icon" type="image/png" href="~/images/miara/logo.png" />
+    <link rel="stylesheet" href="~/css/styles.css" />
+    <title>@ViewData["Title"] — MIARA Staff Backoffice</title>
+    @await RenderSectionAsync("Styles", required: false)
+  </head>
+  <body class="bo-body">
+    <div class="bo-shell">
+      <!-- ==================== SIDEBAR ĐIỀU HƯỚNG NỘI BỘ ==================== -->
+      <aside class="bo-sidebar">
+        <div class="bo-brand">
+          <a asp-controller="Home" asp-action="Index" class="brand-logo" aria-label="MIARA Trang chủ">
+            <img src="~/images/miara/logo.png" alt="MIARA" width="1269" height="703" />
+          </a>
+          <span class="bo-role-badge">NHÂN VIÊN · STAFF PORTAL</span>
+        </div>
+
+        @{
+            string currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+            string currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+        }
+
+        <nav class="bo-nav" aria-label="Điều hướng hệ thống quản lý">
+          <a asp-controller="Staff" asp-action="Index" class="account-nav-btn @(currentAction == "Index" ? "active" : "")">
+            Quản lý Đơn hàng &amp; Cắt tròng
+          </a>
+          <a asp-controller="Staff" asp-action="Inventory" class="account-nav-btn @(currentAction == "Inventory" ? "active" : "")">
+            Quản lý Tồn kho
+          </a>
+          <a asp-controller="Staff" asp-action="Reviews" class="account-nav-btn @(currentAction == "Reviews" ? "active" : "")">
+            Kiểm duyệt Đánh giá
+          </a>
+        </nav>
+
+        <div class="bo-sidebar-foot">
+          <div class="account-user-card" style="margin-bottom:10px; padding-bottom:12px">
+            <div class="account-avatar">NV</div>
+            <div>
+              <strong>@(Context.Session.GetString("UserName") ?? "Kỹ thuật viên MIARA")</strong>
+              <p class="small muted">@(Context.Session.GetString("UserEmail") ?? "staff@miaraeyeglasses.com")</p>
+            </div>
+          </div>
+          <div class="bo-foot-links">
+            @if (Context.Session.GetString("UserRole") == "Admin" || User.IsInRole("Admin"))
+            {
+              <a asp-controller="AdminDashboard" asp-action="Index" class="account-nav-btn" style="background:#e0f2fe; color:#0369a1; font-weight:600;">← Quay lại Admin Portal</a>
+            }
+            <a asp-controller="Logout" asp-action="Index" class="account-nav-btn danger-text">Đăng xuất</a>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ==================== NỘI DUNG CHÍNH ==================== -->
+      <div class="bo-main">
+        <header class="bo-topbar">
+          <div class="bo-topbar-left">
+            <span class="eyebrow">NHÂN VIÊN · STAFF PORTAL</span>
+            <h1 class="bo-topbar-title">@ViewData["Title"]</h1>
+          </div>
+
+          <div class="bo-topbar-right">
+            <div class="bo-signalr-pill">
+              <span class="signalr-dot"></span>
+              <span>Dữ liệu: <strong>Kỹ thuật mài cắt tròng &amp; Quản trị kho</strong></span>
+            </div>
+          </div>
+        </header>
+
+        <main class="bo-content" id="main">
+          @RenderBody()
+        </main>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="~/js/common.js" defer></script>
+    <script src="~/js/staff.js" defer></script>
+    @await RenderSectionAsync("Scripts", required: false)
+  </body>
+</html>
+

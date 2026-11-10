@@ -1,0 +1,576 @@
+@model MiaraEyeglasses.Models.Entities.Product
+@{
+    ViewData["Title"] = Model.ProductName + " — MIARA";
+    var lenses = ViewBag.LensOptions as IEnumerable<MiaraEyeglasses.Models.Entities.LensOption> ?? new List<MiaraEyeglasses.Models.Entities.LensOption>();
+    var imagesList = Model.Images != null && Model.Images.Any() 
+                     ? Model.Images.OrderBy(i => i.SortOrder).ToList() 
+                     : new List<MiaraEyeglasses.Models.Entities.ProductImage> { new() { ImageUrl = "/images/products/249k/01-3114-151O16-143-C3/main.jpg", IsPrimary = true } };
+    int currentUserId = ViewBag.UserId is int uid ? uid : 0;
+    var savedPrescriptions = ViewBag.SavedPrescriptions as IEnumerable<MiaraEyeglasses.Models.Entities.CustomerPrescription> ?? Enumerable.Empty<MiaraEyeglasses.Models.Entities.CustomerPrescription>();
+    var availableCoupons = ViewBag.AvailableCoupons as IEnumerable<MiaraEyeglasses.Models.Entities.Coupon> ?? Enumerable.Empty<MiaraEyeglasses.Models.Entities.Coupon>();
+}
+
+<div class="view-section">
+    <div class="container product-page" id="product-detail-container">
+        <nav class="breadcrumb" aria-label="Đường dẫn">
+            <a asp-controller="Home" asp-action="Index">Trang chủ</a>
+            <span>/</span>
+            <a asp-controller="Shop" asp-action="Index">Gọng kính</a>
+            <span>/</span>
+            <span aria-current="page">@Model.ProductName</span>
+        </nav>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success" style="margin-bottom: 20px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46;">@TempData["SuccessMessage"]</div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger" style="margin-bottom: 20px; padding: 12px 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; color: #991b1b;">@TempData["ErrorMessage"]</div>
+        }
+
+        <div class="product-detail">
+            <!-- Gallery đa góc chụp chuẩn prototype -->
+            <div class="detail-gallery" data-reveal>
+                <div class="detail-image">
+                    <div class="gallery-track" id="detail-gallery-track" style="transform: translateX(0%)">
+                        @for (int i = 0; i < imagesList.Count; i++)
+                        {
+                            var img = imagesList[i];
+                            <img src="@img.ImageUrl" alt="@Model.ProductName (góc chụp @(i + 1))" fetchpriority="@(i == 0 ? "high" : "auto")" loading="@(i == 0 ? "eager" : "lazy")" />
+                        }
+                    </div>
+                    <span class="collection-tag" id="pd-category-tag">@(Model.Category?.CategoryName ?? "Gọng kính")</span>
+                    <button type="button" class="gallery-arrow prev" id="gallery-prev" aria-label="Ảnh trước">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+                    </button>
+                    <button type="button" class="gallery-arrow next" id="gallery-next" aria-label="Ảnh sau">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                    </button>
+                </div>
+                <div class="detail-thumbs" id="detail-thumbs" aria-label="Chọn ảnh các góc sản phẩm">
+                    @for (int i = 0; i < imagesList.Count; i++)
+                    {
+                        var img = imagesList[i];
+                        <button type="button" data-thumb-idx="@i" aria-label="Xem góc ảnh @(i + 1)" aria-pressed="@(i == 0 ? "true" : "false")">
+                            <img src="@img.ImageUrl" alt="@Model.ProductName" width="140" height="105" loading="lazy" />
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Detail Copy & Configuration Form -->
+            <div class="detail-copy" data-reveal>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <span class="eyebrow">@(Model.Category?.CategoryName ?? "Gọng kính thời trang")</span>
+                        <h1 style="margin: 8px 0; font-size: 32px;">@Model.ProductName</h1>
+                        <p class="detail-code" style="color: var(--muted, #64748b); font-size: 13px;">Mã sản phẩm: <strong>@Model.ProductCode</strong></p>
+                    </div>
+
+                    <!-- Nút Yêu thích -->
+                    <form asp-controller="Wishlist" asp-action="Toggle" method="post" style="margin: 0;">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="productId" value="@Model.ProductId" />
+                        <input type="hidden" name="returnUrl" value="@Url.Action("Detail", new { id = Model.ProductId })" />
+                        <button type="submit" class="icon-button" title="Thêm/Xóa khỏi yêu thích" style="border: 1px solid #e2e8f0; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #fff;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="detail-price-box" style="margin: 16px 0; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
+                        <div>
+                            <span style="font-size: 13px; color: #64748b; display: block;">Giá gọng kính niêm yết:</span>
+                            <strong id="display-price" style="font-size: 26px; color: #0f172a;">@Model.Price.ToString("N0") ₫</strong>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="font-size: 12px; color: #64748b; display: block;">Tổng tiền tạm tính:</span>
+                            <strong id="display-total-estimate" style="font-size: 26px; color: #286598; font-weight: 800;">@Model.Price.ToString("N0") ₫</strong>
+                        </div>
+                    </div>
+
+                    <!-- Khối Thử áp dụng Voucher -->
+                    <div style="margin-top: 14px; padding-top: 14px; border-top: 1px dashed #cbd5e1;">
+                        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #0f172a; margin-bottom: 6px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
+                            Nhập thử mã voucher để xem giá giảm:
+                        </label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="voucher-code-input" placeholder="Ví dụ: MIARA50K, MIARA10" style="flex: 1; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; text-transform: uppercase;" />
+                            <button type="button" id="btn-apply-voucher" class="button" style="padding: 8px 16px; font-size: 13px; white-space: nowrap;">Kiểm tra mã</button>
+                        </div>
+
+                        <!-- Gợi ý mã có sẵn -->
+                        @if (availableCoupons.Any())
+                        {
+                            <div style="margin-top: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                <span style="font-size: 11px; color: #64748b;">Mã gợi ý:</span>
+                                @foreach (var c in availableCoupons)
+                                {
+                                    <button type="button" class="badge-coupon" onclick="selectVoucherTag('@c.CouponCode')" style="cursor: pointer; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px;">
+                                        @c.CouponCode (@(c.DiscountType == "PERCENT" ? $"Giảm {c.DiscountValue:0}%" : $"Giảm {c.DiscountValue:N0}₫"))
+                                    </button>
+                                }
+                            </div>
+                        }
+
+                        <!-- Thông báo kết quả voucher -->
+                        <div id="voucher-result-msg" style="margin-top: 8px; font-size: 13px; display: none;"></div>
+                    </div>
+                </div>
+
+                <p class="detail-description" style="line-height: 1.7; color: var(--muted, #64748b); margin-bottom: 24px;">@Model.Description</p>
+
+                <!-- Configuration Form -->
+                <form asp-controller="Cart" asp-action="AddToCart" method="post" id="add-to-cart-form">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="CouponCode" id="applied-coupon-hidden" value="" />
+
+                    <!-- 1. Chọn biến thể Màu & Size -->
+                    <div class="variant-selector-group" style="margin-bottom: 20px;">
+                        <span class="variant-label" style="display: block; font-weight: 600; margin-bottom: 8px;">1. Chọn màu sắc & kích cỡ biến thể:</span>
+                        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                            @if (Model.Variants != null && Model.Variants.Any())
+                            {
+                                foreach (var v in Model.Variants)
+                                {
+                                    <label style="display: flex; align-items: center; gap: 8px; border: 1px solid #cbd5e1; padding: 8px 14px; border-radius: 8px; cursor: pointer; background: #fff; font-size: 14px;">
+                                        <input type="radio" name="VariantId" value="@v.VariantId" checked="@(v == Model.Variants.First())" />
+                                        <span>@v.ColorName (@v.SizeLabel) - Tồn: <strong>@v.StockQty</strong></span>
+                                    </label>
+                                }
+                            }
+                        </div>
+                    </div>
+
+                    <!-- 2. Chọn gói tròng kính -->
+                    <div class="variant-selector-group" style="margin-bottom: 20px;">
+                        <span class="variant-label" style="display: block; font-weight: 600; margin-bottom: 8px;">2. Chọn gói tròng kính (Lens Options):</span>
+                        <select name="LensOptionId" id="lens-select" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; background: #fff;">
+                            @foreach (var l in lenses)
+                            {
+                                <option value="@l.LensOptionId" data-price="@l.ExtraPrice">
+                                    @l.LensName (@(l.ExtraPrice > 0 ? $"+{l.ExtraPrice:N0} ₫" : "0 ₫")) — @l.RxLimit
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- 3. Số lượng -->
+                    <div class="variant-selector-group" style="margin-bottom: 20px;">
+                        <span class="variant-label" style="display: block; font-weight: 600; margin-bottom: 8px;">3. Số lượng:</span>
+                        <input type="number" name="Quantity" id="cart-quantity-input" value="1" min="1" max="20" style="width: 100px; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px;" />
+                    </div>
+
+                    <!-- 4. Quản lý Thông số độ cận (Rx) -->
+                    <div class="portal-card" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                            <label style="font-weight: 700; color: #0f172a; font-size: 14px;">4. Thông số độ cận cắt tròng (Rx):</label>
+                            @if (currentUserId > 0)
+                            {
+                                <span style="font-size: 12px; color: #16a34a; font-weight: 600;">✓ Đã đăng nhập: @(savedPrescriptions.Any() ? $"{savedPrescriptions.Count()} hồ sơ độ cận có sẵn" : "Chưa lưu hồ sơ")</span>
+                            }
+                        </div>
+
+                        <!-- Các chế độ chọn độ cận -->
+                        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px;">
+                            @if (savedPrescriptions.Any())
+                            {
+                                var defaultPrescription = savedPrescriptions.FirstOrDefault(p => p.IsDefault) ?? savedPrescriptions.First();
+                                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #2563eb; cursor: pointer;">
+                                    <input type="radio" name="rxMode" value="saved" checked onchange="toggleRxMode('saved')" />
+                                    <span>Sử dụng hồ sơ độ cận đã lưu của bạn:</span>
+                                </label>
+                                
+                                <div id="saved-rx-select-wrap" style="padding-left: 24px; margin-bottom: 6px;">
+                                    <select id="saved-rx-select" style="width: 100%; padding: 8px 12px; border: 1px solid #3b82f6; border-radius: 6px; font-size: 13px; background: #fff;" onchange="applySavedPrescription(this)">
+                                        @foreach (var sp in savedPrescriptions)
+                                        {
+                                            <option value="@sp.UserPrescriptionId"
+                                                    data-rsph="@sp.RightSph"
+                                                    data-rcyl="@sp.RightCyl"
+                                                    data-raxis="@sp.RightAxis"
+                                                    data-lsph="@sp.LeftSph"
+                                                    data-lcyl="@sp.LeftCyl"
+                                                    data-laxis="@sp.LeftAxis"
+                                                    data-pd="@sp.PD">
+                                                @sp.ProfileName — (OD: @sp.RightSph, OS: @sp.LeftSph, PD: @(sp.PD)mm)
+                                            </option>
+                                        }
+                                    </select>
+                                </div>
+                            }
+
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
+                                <input type="radio" name="rxMode" value="custom" checked="@(!savedPrescriptions.Any())" onchange="toggleRxMode('custom')" />
+                                <span>@(savedPrescriptions.Any() ? "Nhập thông số độ cận khác cho lần mua này:" : "Nhập thông số độ cận cắt tròng:")</span>
+                            </label>
+
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #64748b; cursor: pointer;">
+                                <input type="radio" name="rxMode" value="none" onchange="toggleRxMode('none')" />
+                                <span>Kính không độ (Chỉ đeo thời trang / gọng mẫu không cắt độ)</span>
+                            </label>
+                        </div>
+
+                        <!-- Form nhập thông số chi tiết -->
+                        <div id="rx-inputs-container" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                                <div>
+                                    <h4 style="margin: 0 0 8px; color: #2563eb; font-size: 13px; font-weight: 700;">Mắt Phải (OD)</h4>
+                                    <input type="number" step="0.25" placeholder="Cầu (SPH) VD: -2.00" name="Prescription.RightSph" id="rx-rsph" style="width: 100%; margin-bottom: 6px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;" />
+                                    <input type="number" step="0.25" placeholder="Loạn (CYL) VD: -0.50" name="Prescription.RightCyl" id="rx-rcyl" style="width: 100%; margin-bottom: 6px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;" />
+                                    <input type="number" step="1" placeholder="Trục (AXIS) VD: 180" name="Prescription.RightAxis" id="rx-raxis" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;" />
+                                </div>
+                                <div>
+                                    <h4 style="margin: 0 0 8px; color: #0284c7; font-size: 13px; font-weight: 700;">Mắt Trái (OS)</h4>
+                                    <input type="number" step="0.25" placeholder="Cầu (SPH) VD: -2.25" name="Prescription.LeftSph" id="rx-lsph" style="width: 100%; margin-bottom: 6px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;" />
+                                    <input type="number" step="0.25" placeholder="Loạn (CYL) VD: -0.50" name="Prescription.LeftCyl" id="rx-lcyl" style="width: 100%; margin-bottom: 6px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;" />
+                                    <input type="number" step="1" placeholder="Trục (AXIS) VD: 175" name="Prescription.LeftAxis" id="rx-laxis" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;" />
+                                </div>
+                            </div>
+                            <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
+                                <label style="font-size: 13px; font-weight: 600;">Khoảng cách đồng tử PD (mm):</label>
+                                <input type="number" step="0.5" placeholder="VD: 62" name="Prescription.PD" id="rx-pd" style="width: 110px; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cặp Nút Mua hàng & Thanh toán luôn -->
+                    <div style="display: flex; gap: 12px; margin-top: 20px;">
+                        <button type="submit" name="BuyNow" value="false" class="button button-outline" style="flex: 1; padding: 14px 18px; font-size: 15px; font-weight: 600; text-align: center; border-radius: 8px;">
+                            Thêm vào giỏ hàng
+                        </button>
+                        <button type="submit" name="BuyNow" value="true" class="button" style="flex: 1.2; padding: 14px 20px; font-size: 15px; font-weight: 700; background: #286598; border-color: #286598; color: #ffffff; text-align: center; border-radius: 8px;">
+                            Mua ngay
+                        </button>
+                    </div>
+                </form>
+
+                <div class="product-specs" style="margin-top: 32px; border-top: 1px solid #e2e8f0; padding-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
+                    <div>
+                        <span class="muted" style="display: block;">Dáng gọng</span>
+                        <strong>@Model.FrameShape</strong>
+                    </div>
+                    <div>
+                        <span class="muted" style="display: block;">Chất liệu</span>
+                        <strong>@Model.Material</strong>
+                    </div>
+                    <div>
+                        <span class="muted" style="display: block;">Phù hợp</span>
+                        <strong>@Model.Gender</strong>
+                    </div>
+                    <div>
+                        <span class="muted" style="display: block;">Thương hiệu</span>
+                        <strong>@(Model.Brand?.BrandName ?? "MIARA")</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Reviews Section -->
+        <section class="reviews-section" style="border-top: 1px solid #e2e8f0; padding-top: 40px; margin-top: 48px;">
+            <div style="margin-bottom: 24px;">
+                <span class="eyebrow">Trải nghiệm khách hàng</span>
+                <h2 style="margin: 4px 0 0;">Đánh giá & Nhận xét (@(Model.Reviews?.Count ?? 0))</h2>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 32px;">
+                <!-- Danh sách đánh giá -->
+                <div class="reviews-list">
+                    @if (Model.Reviews != null && Model.Reviews.Any())
+                    {
+                        foreach (var r in Model.Reviews.OrderByDescending(x => x.CreatedAt))
+                        {
+                            <article style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px; background: #fff;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <div>
+                                        <strong>@(r.User?.FullName ?? "Khách hàng MIARA")</strong>
+                                        <span class="badge" style="background: #10b981; color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 6px;">Đã mua hàng</span>
+                                    </div>
+                                    <div style="color: #f59e0b; font-size: 15px;">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            <span>@(i <= r.Rating ? "★" : "☆")</span>
+                                        }
+                                    </div>
+                                </div>
+                                <p style="margin: 8px 0; color: #334155; font-size: 14px;">@r.Comment</p>
+                                <span class="small muted">@r.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                            </article>
+                        }
+                    }
+                    else
+                    {
+                        <div style="padding: 24px; background: #f8fafc; border-radius: 8px; text-align: center;">
+                            <p class="muted" style="margin: 0;">Chưa có đánh giá nào cho mẫu kính này. Hãy là người đầu tiên chia sẻ cảm nhận!</p>
+                        </div>
+                    }
+                </div>
+
+                <!-- Form gửi đánh giá -->
+                <div class="review-submit-box" style="background: #fff; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0; height: fit-content;">
+                    <h3 style="margin-top: 0; font-size: 18px; margin-bottom: 12px;">Viết nhận xét của bạn</h3>
+                    @if (currentUserId > 0)
+                    {
+                        <form asp-controller="Review" asp-action="Submit" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="ProductId" value="@Model.ProductId" />
+
+                            <div style="margin-bottom: 14px;">
+                                <label style="display: block; font-weight: 500; margin-bottom: 6px;">Chọn số sao đánh giá:</label>
+                                <select name="Rating" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                                    <option value="5" selected>★★★★★ - Rất hài lòng (5 sao)</option>
+                                    <option value="4">★★★★☆ - Hài lòng (4 sao)</option>
+                                    <option value="3">★★★☆☆ - Bình thường (3 sao)</option>
+                                    <option value="2">★★☆☆☆ - Chưa hài lòng (2 sao)</option>
+                                    <option value="1">★☆☆☆☆ - Thất vọng (1 sao)</option>
+                                </select>
+                            </div>
+
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; font-weight: 500; margin-bottom: 6px;">Nội dung nhận xét:</label>
+                                <textarea name="Comment" required rows="4" placeholder="Chia sẻ cảm nhận về độ hoàn thiện gọng kính, độ trong của tròng kính..." style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;"></textarea>
+                            </div>
+
+                            <button type="submit" class="button" style="width: 100%; padding: 10px;">Gửi đánh giá</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <p class="small muted" style="margin-bottom: 12px;">Vui lòng đăng nhập để viết đánh giá cho sản phẩm này.</p>
+                        <a asp-controller="Login" asp-action="Index" asp-route-returnUrl="@Url.Action("Detail", "Shop", new { id = Model.ProductId })" class="button button-outline" style="width: 100%; display: block; text-align: center; text-decoration: none;">Đăng nhập ngay</a>
+                    }
+                </div>
+            </div>
+        </section>
+
+        <!-- Sản phẩm nổi bật / Gợi ý (Khớp chuẩn 100% mẫu giao diện MIARA) -->
+        @{
+            var similarProducts = ViewBag.SimilarProducts as IEnumerable<MiaraEyeglasses.Models.Entities.Product> 
+                                  ?? ViewBag.BestsellerProducts as IEnumerable<MiaraEyeglasses.Models.Entities.Product> 
+                                  ?? Enumerable.Empty<MiaraEyeglasses.Models.Entities.Product>();
+        }
+
+        @if (similarProducts.Any())
+        {
+            <section class="section" id="san-pham-noi-bat">
+                <div class="section-heading" data-reveal>
+                    <div>
+                        <span class="eyebrow">Tìm thấy điều hợp với bạn</span>
+                        <h2>Sản phẩm nổi bật.</h2>
+                        <p>Những thiết kế gọng kính tiêu biểu được yêu thích tại MIARA.</p>
+                    </div>
+                    <a asp-controller="Shop" asp-action="Index" class="text-link">
+                        Xem tất cả kính
+                        <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+                    </a>
+                </div>
+
+                <div class="product-grid" data-reveal-group>
+                    @foreach (var p in similarProducts.Take(8))
+                    {
+                        var pImg = p.Images?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl 
+                                   ?? p.Images?.FirstOrDefault()?.ImageUrl 
+                                   ?? "/images/products/p1.png";
+                        var firstVar = p.Variants?.FirstOrDefault();
+
+                        <article class="product-card" data-reveal>
+                            <div class="product-photo">
+                                <a asp-controller="Shop" asp-action="Detail" asp-route-id="@p.ProductId" tabindex="-1" aria-hidden="true">
+                                    <span class="miara-lazy-image miara-lazy-image--ready" aria-busy="false">
+                                        <img src="@pImg" alt="@p.ProductName" loading="lazy" decoding="async" width="600" height="750" />
+                                    </span>
+                                </a>
+                                <span class="collection-tag">@(p.Category?.CategoryName ?? "Gọng kính cận")</span>
+                                <span class="bestseller-badge">Bán chạy</span>
+                                <button type="button" class="favorite-button" data-favorite-btn="@p.ProductId" aria-label="Yêu thích @p.ProductName" aria-pressed="false">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                                </button>
+                                <a class="product-view" asp-controller="Shop" asp-action="Detail" asp-route-id="@p.ProductId">
+                                    Khám phá mẫu kính
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+                                </a>
+                            </div>
+                            <div class="product-card-info">
+                                <a class="product-name" asp-controller="Shop" asp-action="Detail" asp-route-id="@p.ProductId">@p.ProductName</a>
+                                <p class="product-card-description">@(p.FrameShape ?? "Chữ nhật") · @(p.Material ?? "Gọng nhựa") · Còn @(firstVar?.StockQty > 0 ? firstVar.StockQty : 8)</p>
+                                <div class="product-meta">
+                                    <span><i style="background:#282c30"></i>@(firstVar?.ColorName ?? "Tiêu chuẩn")</span>
+                                    <div class="product-price-wrap">
+                                        <strong>@p.Price.ToString("N0") ₫</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    }
+                </div>
+            </section>
+        }
+    </div>
+</div>
+
+<script>
+    const baseFramePrice = @Model.Price;
+    let currentDiscount = 0;
+    let appliedCouponCode = "";
+
+    function calculateTotal() {
+        const lensSelect = document.getElementById('lens-select');
+        const qtyInput = document.getElementById('cart-quantity-input');
+        const qty = parseInt(qtyInput ? qtyInput.value : 1) || 1;
+        
+        let lensExtraPrice = 0;
+        if (lensSelect && lensSelect.selectedOptions && lensSelect.selectedOptions[0]) {
+            lensExtraPrice = parseFloat(lensSelect.selectedOptions[0].getAttribute('data-price')) || 0;
+        }
+
+        const subtotal = (baseFramePrice + lensExtraPrice) * qty;
+        const finalPrice = Math.max(0, subtotal - currentDiscount);
+
+        const totalEl = document.getElementById('display-total-estimate');
+        if (totalEl) {
+            totalEl.textContent = new Intl.NumberFormat('vi-VN').format(finalPrice) + ' ₫';
+        }
+        return subtotal;
+    }
+
+    // Xử lý đổi gói tròng và số lượng
+    const lensSelectElem = document.getElementById('lens-select');
+    if (lensSelectElem) {
+        lensSelectElem.addEventListener('change', calculateTotal);
+    }
+    const qtyElem = document.getElementById('cart-quantity-input');
+    if (qtyElem) {
+        qtyElem.addEventListener('input', calculateTotal);
+        qtyElem.addEventListener('change', calculateTotal);
+    }
+
+    // Xử lý chọn mã voucher tag gợi ý
+    function selectVoucherTag(code) {
+        const input = document.getElementById('voucher-code-input');
+        if (input) {
+            input.value = code;
+            checkVoucher(code);
+        }
+    }
+
+    // Kiểm tra Voucher
+    async function checkVoucher(code) {
+        const subtotal = calculateTotal();
+        const msgBox = document.getElementById('voucher-result-msg');
+        const hiddenInput = document.getElementById('applied-coupon-hidden');
+
+        if (!code) {
+            if (msgBox) {
+                msgBox.style.display = 'block';
+                msgBox.style.color = '#ef4444';
+                msgBox.textContent = 'Vui lòng nhập mã voucher.';
+            }
+            return;
+        }
+
+        try {
+            const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            const token = tokenInput ? tokenInput.value : '';
+
+            const formData = new FormData();
+            formData.append('couponCode', code);
+            formData.append('totalAmount', subtotal);
+            formData.append('__RequestVerificationToken', token);
+
+            const res = await fetch('/Shop/CheckVoucher', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+            if (msgBox) {
+                msgBox.style.display = 'block';
+                if (data.success) {
+                    currentDiscount = data.discountAmount;
+                    appliedCouponCode = data.code;
+                    if (hiddenInput) hiddenInput.value = data.code;
+
+                    msgBox.style.color = '#16a34a';
+                    msgBox.innerHTML = `<strong>✓ Áp dụng thành công mã ${data.code}:</strong> Giảm <strong>-${new Intl.NumberFormat('vi-VN').format(data.discountAmount)} ₫</strong>. Giá phải trả chỉ còn: <strong style="font-size:15px; color:#286598;">${new Intl.NumberFormat('vi-VN').format(data.finalPrice)} ₫</strong>`;
+                    calculateTotal();
+                } else {
+                    currentDiscount = 0;
+                    appliedCouponCode = "";
+                    if (hiddenInput) hiddenInput.value = "";
+
+                    msgBox.style.color = '#ef4444';
+                    msgBox.textContent = data.message || 'Mã voucher không hợp lệ.';
+                    calculateTotal();
+                }
+            }
+        } catch (e) {
+            console.error('Lỗi kiểm tra voucher:', e);
+        }
+    }
+
+    const btnApplyVoucher = document.getElementById('btn-apply-voucher');
+    if (btnApplyVoucher) {
+        btnApplyVoucher.addEventListener('click', function () {
+            const input = document.getElementById('voucher-code-input');
+            if (input) checkVoucher(input.value.trim());
+        });
+    }
+
+    // Xử lý chế độ chọn thông số độ cận (Rx)
+    function toggleRxMode(mode) {
+        const rxContainer = document.getElementById('rx-inputs-container');
+        const savedWrap = document.getElementById('saved-rx-select-wrap');
+        const savedSelect = document.getElementById('saved-rx-select');
+
+        if (mode === 'saved') {
+            if (savedWrap) savedWrap.style.display = 'block';
+            if (rxContainer) rxContainer.style.display = 'block';
+            if (savedSelect) applySavedPrescription(savedSelect);
+        } else if (mode === 'custom') {
+            if (savedWrap) savedWrap.style.display = 'none';
+            if (rxContainer) rxContainer.style.display = 'block';
+            clearRxInputs();
+        } else if (mode === 'none') {
+            if (savedWrap) savedWrap.style.display = 'none';
+            if (rxContainer) rxContainer.style.display = 'none';
+            clearRxInputs();
+        }
+    }
+
+    function applySavedPrescription(selectElem) {
+        if (!selectElem || !selectElem.selectedOptions || !selectElem.selectedOptions[0]) return;
+        const opt = selectElem.selectedOptions[0];
+
+        const setVal = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.value = val !== undefined && val !== null ? val : '';
+        };
+
+        setVal('rx-rsph', opt.getAttribute('data-rsph'));
+        setVal('rx-rcyl', opt.getAttribute('data-rcyl'));
+        setVal('rx-raxis', opt.getAttribute('data-raxis'));
+        setVal('rx-lsph', opt.getAttribute('data-lsph'));
+        setVal('rx-lcyl', opt.getAttribute('data-lcyl'));
+        setVal('rx-laxis', opt.getAttribute('data-laxis'));
+        setVal('rx-pd', opt.getAttribute('data-pd'));
+    }
+
+    function clearRxInputs() {
+        ['rx-rsph', 'rx-rcyl', 'rx-raxis', 'rx-lsph', 'rx-lcyl', 'rx-laxis', 'rx-pd'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+    }
+
+    // Khởi tạo trạng thái ban đầu khi tải trang
+    document.addEventListener('DOMContentLoaded', function () {
+        calculateTotal();
+        const savedSelect = document.getElementById('saved-rx-select');
+        if (savedSelect) {
+            applySavedPrescription(savedSelect);
+        }
+    });
+</script>

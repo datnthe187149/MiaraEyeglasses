@@ -1,0 +1,117 @@
+@model IEnumerable<MiaraEyeglasses.Models.Entities.Banner>
+@{
+    ViewData["Title"] = "Quản lý Banner quảng cáo";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" style="margin-bottom: 20px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46;">
+        @TempData["SuccessMessage"]
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger" style="margin-bottom: 20px; padding: 12px 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; color: #991b1b;">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="portal-card">
+    <div class="portal-card-head">
+        <div>
+            <span class="eyebrow">Trang chủ &amp; Tiếp thị · Banners</span>
+            <h2>Quản lý Banner quảng cáo</h2>
+            <p class="small muted">Quản lý các banner trình chiếu nổi bật tại đầu trang chủ (Hero Slider), liên kết điều hướng và thứ tự hiển thị.</p>
+        </div>
+        <button type="button" class="button small-btn" data-toggle-form="form-add-banner" onclick="toggleAdminForm('form-add-banner')">+ Thêm banner mới</button>
+    </div>
+
+    <!-- Form Thêm / Cập nhật Banner -->
+    <form class="customer-form sub-panel-form" id="form-add-banner" hidden asp-controller="AdminBanner" asp-action="Add" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+            <h3 style="margin:0">Thêm / Cập nhật Banner Trang chủ</h3>
+            <button type="button" class="text-button" onclick="document.getElementById('form-add-banner').setAttribute('hidden','')">✕ Đóng form</button>
+        </div>
+        <div class="form-grid-2">
+            <label>
+                <span>Tiêu đề Banner *</span>
+                <input type="text" name="title" required placeholder="VD: Khám phá bản thân qua góc nhìn mới" />
+            </label>
+            <label>
+                <span>Liên kết điều hướng (URL) *</span>
+                <input type="text" name="linkUrl" required value="/Shop" />
+            </label>
+            <label>
+                <span>Tải ảnh Banner (.jpg, .png) *</span>
+                <input type="file" name="bannerImage" accept="image/jpeg,image/png,image/webp" />
+            </label>
+            <label>
+                <span>Trạng thái hiển thị</span>
+                <select name="isActive">
+                    <option value="true">Hiển thị công khai</option>
+                    <option value="false">Tạm ẩn</option>
+                </select>
+            </label>
+        </div>
+        <div style="display:flex; gap:12px; margin-top:8px">
+            <button type="submit" class="button">Lưu banner</button>
+            <button type="reset" class="button button-outline">Làm mới</button>
+        </div>
+    </form>
+
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Ảnh hiển thị</th>
+                    <th>Tiêu đề Banner</th>
+                    <th>Liên kết điều hướng</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var b in Model)
+                    {
+                        <tr>
+                            <td>
+                                <img src="@b.ImageUrl" alt="@b.Title" class="table-thumb" style="width: 80px; height: 45px; object-fit: cover;" />
+                            </td>
+                            <td><strong>@b.Title</strong></td>
+                            <td><code>@b.LinkUrl</code></td>
+                            <td>
+                                @if (b.IsActive)
+                                {
+                                    <span class="status-badge status-badge--completed">Đang hiển thị</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-badge--cancelled">Tạm ẩn</span>
+                                }
+                            </td>
+                            <td>
+                                <form asp-controller="AdminBanner" asp-action="ToggleActive" method="post" style="display:inline; margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="bannerId" value="@b.BannerId" />
+                                    <button type="submit" class="text-button @(b.IsActive ? "danger-text" : "")">
+                                        @(b.IsActive ? "Tắt" : "Bật")
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" style="text-align:center; padding:32px; color:#64748b;">Chưa có banner nào.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

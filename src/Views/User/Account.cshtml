@@ -1,0 +1,372 @@
+@model MiaraEyeglasses.Models.Entities.User
+@{
+    ViewData["Title"] = "Tài khoản của tôi";
+    string activeTab = ViewBag.ActiveTab as string ?? "profile";
+}
+
+<div class="view-section">
+    <section class="container shop-page account-dashboard">
+        <nav class="breadcrumb" aria-label="Đường dẫn">
+            <a asp-controller="Home" asp-action="Index">Trang chủ</a>
+            <span>/</span>
+            <span aria-current="page">Tài khoản của tôi</span>
+        </nav>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success" style="margin-bottom: 20px;">@TempData["SuccessMessage"]</div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger" style="margin-bottom: 20px;">@TempData["ErrorMessage"]</div>
+        }
+
+        <div class="account-portal-layout">
+            <!-- Sidebar Tài khoản -->
+            <aside class="account-sidebar">
+                <div class="account-user-card">
+                    <div class="account-avatar">@(Model.FullName.Length > 0 ? Model.FullName.Substring(0, 1).ToUpper() : "U")</div>
+                    <div>
+                        <strong>@Model.FullName</strong>
+                        <p class="small muted">@Model.Email</p>
+                        <span class="badge">@Model.Role?.RoleName</span>
+                    </div>
+                </div>
+
+                <nav class="account-nav-menu" aria-label="Menu tài khoản">
+                    <a asp-controller="Profile" asp-action="Index" asp-route-tab="profile" class="account-nav-btn @(activeTab == "profile" ? "active" : "")">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+                        Hồ sơ cá nhân
+                    </a>
+                    <a asp-controller="Profile" asp-action="Index" asp-route-tab="addresses" class="account-nav-btn @(activeTab == "addresses" ? "active" : "")">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                        Sổ địa chỉ giao hàng
+                    </a>
+                    <a asp-controller="Profile" asp-action="Index" asp-route-tab="prescriptions" class="account-nav-btn @(activeTab == "prescriptions" ? "active" : "")">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="4"/><circle cx="18" cy="12" r="4"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                        Sổ độ cận lưu sẵn
+                    </a>
+                    <a asp-controller="Profile" asp-action="Index" asp-route-tab="password" class="account-nav-btn @(activeTab == "password" ? "active" : "")">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        Đổi mật khẩu
+                    </a>
+                    <a asp-controller="UserOrder" asp-action="Index" class="account-nav-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                        Đơn hàng của tôi
+                    </a>
+                    <a asp-controller="Wishlist" asp-action="Index" class="account-nav-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                        Kính yêu thích
+                    </a>
+                    <hr class="account-nav-divider" />
+                    <form asp-controller="Logout" asp-action="Index" method="post" style="margin: 0;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="account-nav-btn danger-text" style="width: 100%; border: none; background: transparent; cursor: pointer; text-align: left;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                            Đăng xuất
+                        </button>
+                    </form>
+                </nav>
+            </aside>
+
+            <!-- Nội dung từng Tab -->
+            <div class="account-main-content">
+                @if (activeTab == "profile")
+                {
+                    <!-- TAB 1: Hồ sơ cá nhân -->
+                    <div class="account-tab-panel">
+                        <div class="portal-card">
+                            <div class="portal-card-head">
+                                <div>
+                                    <span class="eyebrow">Thông tin tài khoản</span>
+                                    <h2>Hồ sơ cá nhân</h2>
+                                    <p class="small muted">Cập nhật thông tin liên hệ để nhận thông báo đơn hàng chính xác.</p>
+                                </div>
+                            </div>
+                            <form class="customer-form" asp-controller="Profile" asp-action="Update" method="post" style="margin:0; max-width:none; border:0; padding:0; box-shadow:none; background:transparent">
+                                @Html.AntiForgeryToken()
+                                <div class="form-grid-2">
+                                    <label>
+                                        <span>Họ và tên *</span>
+                                        <input type="text" name="FullName" required value="@Model.FullName" />
+                                    </label>
+                                    <label>
+                                        <span>Số điện thoại *</span>
+                                        <input type="tel" name="Phone" required value="@Model.Phone" />
+                                    </label>
+                                </div>
+                                <label>
+                                    <span>Địa chỉ Email (chỉ đọc)</span>
+                                    <input type="email" value="@Model.Email" readonly disabled style="opacity: 0.7; background: #f8fafc;" />
+                                </label>
+                                <div class="form-grid-2">
+                                    <label>
+                                        <span>Giới tính</span>
+                                        <select name="Gender">
+                                            <option value="Nam" selected="@(Model.Gender == "Nam")">Nam</option>
+                                            <option value="Nữ" selected="@(Model.Gender == "Nữ")">Nữ</option>
+                                            <option value="Khác" selected="@(Model.Gender == "Khác")">Khác</option>
+                                        </select>
+                                    </label>
+                                    <label>
+                                        <span>Ngày sinh</span>
+                                        <input type="date" name="BirthDate" value="@(Model.BirthDate?.ToString("yyyy-MM-dd"))" />
+                                    </label>
+                                </div>
+                                <div style="margin-top: 16px">
+                                    <button type="submit" class="button">Lưu thay đổi hồ sơ</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                }
+                else if (activeTab == "addresses")
+                {
+                    <!-- TAB 2: Sổ địa chỉ giao hàng -->
+                    <div class="account-tab-panel">
+                        <div class="portal-card">
+                            <div class="portal-card-head">
+                                <div>
+                                    <span class="eyebrow">Quản lý nhận hàng</span>
+                                    <h2>Sổ địa chỉ giao hàng</h2>
+                                    <p class="small muted">Quản lý danh sách địa chỉ nhận kính khi đặt hàng trực tuyến.</p>
+                                </div>
+                            </div>
+
+                            <div class="address-grid" style="display: grid; gap: 16px; margin-bottom: 24px;">
+                                @if (Model.Addresses != null && Model.Addresses.Any())
+                                {
+                                    foreach (var addr in Model.Addresses)
+                                    {
+                                        <article class="address-card @(addr.IsDefault ? "is-default" : "")" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; background: #fff;">
+                                            <div class="address-card-body">
+                                                <div class="address-card-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                                    <strong>@addr.RecipientName</strong>
+                                                    @if (addr.IsDefault)
+                                                    {
+                                                        <span class="badge" style="background: #2563eb; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 12px;">Mặc định</span>
+                                                    }
+                                                </div>
+                                                <p class="small">Điện thoại: <strong>@addr.Phone</strong></p>
+                                                <p class="small muted">@addr.StreetAddress, @addr.DistrictWard, @addr.Province</p>
+                                            </div>
+                                            <div class="address-card-actions" style="margin-top: 12px; display: flex; gap: 12px;">
+                                                @if (!addr.IsDefault)
+                                                {
+                                                    <form asp-controller="Address" asp-action="SetDefault" method="post" style="display: inline;">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="addressId" value="@addr.AddressId" />
+                                                        <button type="submit" class="text-button" style="color: #2563eb; background: none; border: none; cursor: pointer; text-decoration: underline;">Đặt mặc định</button>
+                                                    </form>
+                                                }
+                                                <form asp-controller="Address" asp-action="Delete" method="post" style="display: inline;" onsubmit="return confirm('Bạn có chắc muốn xóa địa chỉ này?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="addressId" value="@addr.AddressId" />
+                                                    <button type="submit" class="text-button danger-text" style="color: #ef4444; background: none; border: none; cursor: pointer;">Xóa</button>
+                                                </form>
+                                            </div>
+                                        </article>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="small muted">Bạn chưa có địa chỉ lưu sẵn nào.</p>
+                                }
+                            </div>
+
+                            <!-- Form thêm địa chỉ mới -->
+                            <div style="border-top: 1px solid #e2e8f0; padding-top: 20px;">
+                                <h3 style="margin-bottom: 16px;">Thêm địa chỉ giao hàng mới</h3>
+                                <form class="customer-form" asp-controller="Address" asp-action="Add" method="post" style="margin:0; max-width:none; border:0; padding:0; box-shadow:none; background:transparent">
+                                    @Html.AntiForgeryToken()
+                                    <div class="form-grid-2">
+                                        <label>
+                                            <span>Họ tên người nhận *</span>
+                                            <input type="text" name="RecipientName" required placeholder="Nguyễn Văn A" />
+                                        </label>
+                                        <label>
+                                            <span>Số điện thoại *</span>
+                                            <input type="tel" name="Phone" required placeholder="0901234567" />
+                                        </label>
+                                        <label>
+                                            <span>Tỉnh / Thành phố *</span>
+                                            <input type="text" name="Province" required placeholder="TP. Hồ Chí Minh / Hà Nội" />
+                                        </label>
+                                        <label>
+                                            <span>Quận / Huyện / Phường / Xã *</span>
+                                            <input type="text" name="DistrictWard" required placeholder="Phường Bến Nghé, Quận 1" />
+                                        </label>
+                                    </div>
+                                    <label>
+                                        <span>Địa chỉ cụ thể (Số nhà, đường) *</span>
+                                        <input type="text" name="StreetAddress" required placeholder="123 Nguyễn Huệ" />
+                                    </label>
+                                    <label class="checkbox-inline-label" style="display: flex; align-items: center; gap: 8px; margin: 12px 0;">
+                                        <input type="checkbox" name="IsDefault" value="true" />
+                                        <span>Đặt làm địa chỉ giao hàng mặc định</span>
+                                    </label>
+                                    <button type="submit" class="button">Lưu địa chỉ</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else if (activeTab == "prescriptions")
+                {
+                    <!-- TAB 3: Hồ sơ độ cận -->
+                    <div class="account-tab-panel">
+                        <div class="portal-card">
+                            <div class="portal-card-head">
+                                <div>
+                                    <span class="eyebrow">Hồ sơ khúc xạ mắt</span>
+                                    <h2>Sổ độ cận lưu sẵn (CustomerPrescriptions)</h2>
+                                    <p class="small muted">Lưu sẵn độ cận để tái sử dụng nhanh khi đặt gọng và cắt tròng kính.</p>
+                                </div>
+                            </div>
+
+                            <div style="display: grid; gap: 16px; margin-bottom: 24px;">
+                                @if (Model.Prescriptions != null && Model.Prescriptions.Any())
+                                {
+                                    foreach (var p in Model.Prescriptions)
+                                    {
+                                        <article style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; background: #fff;">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                                <strong>@p.ProfileName</strong>
+                                                @if (p.IsDefault)
+                                                {
+                                                    <span class="badge" style="background: #2563eb; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 12px;">Mặc định</span>
+                                                }
+                                            </div>
+                                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px; background: #f8fafc; padding: 12px; border-radius: 6px;">
+                                                <div>
+                                                    <strong style="color: #2563eb;">Mắt phải (OD):</strong>
+                                                    <p class="small" style="margin: 4px 0 0;">Cầu (SPH): @(p.RightSph?.ToString("+0.00;-0.00;0.00") ?? "0.00") | Loạn (CYL): @(p.RightCyl?.ToString("+0.00;-0.00;0.00") ?? "0.00") | Trục (AXIS): @(p.RightAxis ?? 0)°</p>
+                                                </div>
+                                                <div>
+                                                    <strong style="color: #2563eb;">Mắt trái (OS):</strong>
+                                                    <p class="small" style="margin: 4px 0 0;">Cầu (SPH): @(p.LeftSph?.ToString("+0.00;-0.00;0.00") ?? "0.00") | Loạn (CYL): @(p.LeftCyl?.ToString("+0.00;-0.00;0.00") ?? "0.00") | Trục (AXIS): @(p.LeftAxis ?? 0)°</p>
+                                                </div>
+                                            </div>
+                                            <p class="small">Khoảng cách đồng tử (PD): <strong>@(p.PD?.ToString("0.0") ?? "62.0") mm</strong></p>
+
+                                            <div style="margin-top: 12px; display: flex; gap: 12px;">
+                                                @if (!p.IsDefault)
+                                                {
+                                                    <form asp-controller="Prescription" asp-action="SetDefault" method="post" style="display: inline;">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="prescriptionId" value="@p.UserPrescriptionId" />
+                                                        <button type="submit" class="text-button" style="color: #2563eb; background: none; border: none; cursor: pointer; text-decoration: underline;">Đặt mặc định</button>
+                                                    </form>
+                                                }
+                                                <form asp-controller="Prescription" asp-action="Delete" method="post" style="display: inline;" onsubmit="return confirm('Bạn có chắc muốn xóa hồ sơ độ cận này?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="prescriptionId" value="@p.UserPrescriptionId" />
+                                                    <button type="submit" class="text-button danger-text" style="color: #ef4444; background: none; border: none; cursor: pointer;">Xóa</button>
+                                                </form>
+                                            </div>
+                                        </article>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="small muted">Bạn chưa lưu hồ sơ độ cận nào.</p>
+                                }
+                            </div>
+
+                            <!-- Form thêm hồ sơ độ mới -->
+                            <div style="border-top: 1px solid #e2e8f0; padding-top: 20px;">
+                                <h3 style="margin-bottom: 16px;">Thêm hồ sơ độ cận mới</h3>
+                                <form class="customer-form" asp-controller="Prescription" asp-action="Add" method="post" style="margin:0; max-width:none; border:0; padding:0; box-shadow:none; background:transparent">
+                                    @Html.AntiForgeryToken()
+                                    <label>
+                                        <span>Tên hồ sơ *</span>
+                                        <input type="text" name="ProfileName" required placeholder="Ví dụ: Kính nhìn xa / Kính đọc sách" />
+                                    </label>
+                                    
+                                    <div style="background: #f8fafc; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                                        <h4 style="margin-bottom: 8px; color: #1e293b;">Mắt phải (OD)</h4>
+                                        <div class="form-grid-3" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+                                            <label>
+                                                <span>Cầu SPH</span>
+                                                <input type="number" step="0.25" name="RightSph" placeholder="-2.00" />
+                                            </label>
+                                            <label>
+                                                <span>Loạn CYL</span>
+                                                <input type="number" step="0.25" name="RightCyl" placeholder="-0.50" />
+                                            </label>
+                                            <label>
+                                                <span>Trục AXIS</span>
+                                                <input type="number" name="RightAxis" placeholder="180" />
+                                            </label>
+                                        </div>
+
+                                        <h4 style="margin: 16px 0 8px; color: #1e293b;">Mắt trái (OS)</h4>
+                                        <div class="form-grid-3" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+                                            <label>
+                                                <span>Cầu SPH</span>
+                                                <input type="number" step="0.25" name="LeftSph" placeholder="-2.25" />
+                                            </label>
+                                            <label>
+                                                <span>Loạn CYL</span>
+                                                <input type="number" step="0.25" name="LeftCyl" placeholder="-0.50" />
+                                            </label>
+                                            <label>
+                                                <span>Trục AXIS</span>
+                                                <input type="number" name="LeftAxis" placeholder="175" />
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <label>
+                                        <span>Khoảng cách đồng tử PD (mm)</span>
+                                        <input type="number" step="0.5" name="PD" placeholder="62.0" style="max-width: 200px;" />
+                                    </label>
+
+                                    <label class="checkbox-inline-label" style="display: flex; align-items: center; gap: 8px; margin: 12px 0;">
+                                        <input type="checkbox" name="IsDefault" value="true" />
+                                        <span>Đặt làm hồ sơ độ cận mặc định</span>
+                                    </label>
+
+                                    <button type="submit" class="button">Lưu hồ sơ độ cận</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else if (activeTab == "password")
+                {
+                    <!-- TAB 4: Đổi mật khẩu -->
+                    <div class="account-tab-panel">
+                        <div class="portal-card">
+                            <div class="portal-card-head">
+                                <div>
+                                    <span class="eyebrow">Bảo mật tài khoản</span>
+                                    <h2>Đổi mật khẩu</h2>
+                                    <p class="small muted">Sử dụng mật khẩu tối thiểu 6 ký tự để bảo vệ tài khoản của bạn.</p>
+                                </div>
+                            </div>
+                            <form class="customer-form" asp-controller="ChangePassword" asp-action="Index" method="post" style="margin:0; max-width:520px; border:0; padding:0; box-shadow:none; background:transparent">
+                                @Html.AntiForgeryToken()
+                                <label>
+                                    <span>Mật khẩu hiện tại *</span>
+                                    <input type="password" name="CurrentPassword" required placeholder="••••••••" />
+                                </label>
+                                <label>
+                                    <span>Mật khẩu mới *</span>
+                                    <input type="password" name="NewPassword" minlength="6" required placeholder="Tối thiểu 6 ký tự" />
+                                </label>
+                                <label>
+                                    <span>Xác nhận mật khẩu mới *</span>
+                                    <input type="password" name="ConfirmPassword" minlength="6" required placeholder="Nhập lại mật khẩu mới" />
+                                </label>
+                                <div style="margin-top: 16px">
+                                    <button type="submit" class="button">Cập nhật mật khẩu mới</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+</div>

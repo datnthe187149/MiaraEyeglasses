@@ -1,0 +1,127 @@
+@model IEnumerable<MiaraEyeglasses.Models.Entities.Review>
+@{
+    ViewData["Title"] = "Kiểm duyệt Đánh giá sản phẩm";
+    byte? selectedStatus = ViewBag.SelectedStatus as byte?;
+}
+
+<div class="bo-main-wrap container" style="padding-top: 10px;">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success" style="margin-bottom: 20px;">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger" style="margin-bottom: 20px;">@TempData["ErrorMessage"]</div>
+    }
+
+    <div class="portal-card" style="background: #fff; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <div class="portal-card-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+                <span class="eyebrow" style="color: #2563eb; text-transform: uppercase; font-size: 13px; font-weight: 600;">Chăm sóc khách hàng · Nhân viên</span>
+                <h2 style="margin: 4px 0;">Kiểm duyệt đánh giá & Bình luận sản phẩm</h2>
+                <p class="small muted" style="margin: 0;">Kiểm tra bình luận từ khách hàng đã mua, duyệt hiển thị lên trang chi tiết hoặc ẩn bình luận không phù hợp.</p>
+            </div>
+
+            <!-- Filter Status -->
+            <form method="get" asp-action="Reviews" asp-antiforgery="false" style="display: flex; gap: 8px; align-items: center;">
+                <label style="font-size: 14px; font-weight: 500;">Trạng thái:</label>
+                <select name="status" onchange="this.form.submit()" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    <option value="" selected="@(selectedStatus == null)">Tất cả</option>
+                    <option value="1" selected="@(selectedStatus == 1)">Đã duyệt hiển thị</option>
+                    <option value="0" selected="@(selectedStatus == 0)">Chờ duyệt</option>
+                    <option value="2" selected="@(selectedStatus == 2)">Đã ẩn</option>
+                </select>
+            </form>
+        </div>
+
+        <div class="admin-table-wrap" style="overflow-x: auto;">
+            <table class="table" style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left;">
+                        <th style="padding: 12px;">Khách hàng</th>
+                        <th style="padding: 12px;">Sản phẩm</th>
+                        <th style="padding: 12px;">Đánh giá & Nội dung</th>
+                        <th style="padding: 12px;">Ngày gửi</th>
+                        <th style="padding: 12px;">Trạng thái</th>
+                        <th style="padding: 12px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var r in Model)
+                        {
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 12px;">
+                                    <strong>@r.User.FullName</strong><br />
+                                    <small class="muted">@r.User.Email</small>
+                                </td>
+                                <td style="padding: 12px;">
+                                    <strong>@r.Product.ProductName</strong><br />
+                                    <small class="muted">@r.Product.ProductCode</small>
+                                </td>
+                                <td style="padding: 12px; max-width: 320px;">
+                                    <div style="color: #f59e0b; margin-bottom: 4px;">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            @(i <= r.Rating ? "★" : "☆")
+                                        }
+                                    </div>
+                                    <p style="margin: 0; color: #334155;">@r.Comment</p>
+                                </td>
+                                <td style="padding: 12px; font-size: 13px; color: #64748b;">
+                                    @r.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                </td>
+                                <td style="padding: 12px;">
+                                    @if (r.Status == 1)
+                                    {
+                                        <span class="badge" style="background: #10b981; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12px;">Đã duyệt hiển thị</span>
+                                    }
+                                    else if (r.Status == 0)
+                                    {
+                                        <span class="badge" style="background: #f59e0b; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12px;">Chờ duyệt</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge" style="background: #ef4444; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12px;">Đã ẩn</span>
+                                    }
+                                </td>
+                                <td style="padding: 12px;">
+                                    <div style="display: flex; gap: 8px;">
+                                        @if (r.Status != 1)
+                                        {
+                                            <form asp-action="ModerateReview" method="post" style="margin: 0;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="reviewId" value="@r.ReviewId" />
+                                                <input type="hidden" name="status" value="1" />
+                                                <button type="submit" class="button small-btn" style="background: #10b981; color: #fff; padding: 4px 10px;">Duyệt</button>
+                                            </form>
+                                        }
+                                        @if (r.Status != 2)
+                                        {
+                                            <form asp-action="ModerateReview" method="post" style="margin: 0;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="reviewId" value="@r.ReviewId" />
+                                                <input type="hidden" name="status" value="2" />
+                                                <button type="submit" class="button button-outline small-btn danger-text" style="color: #ef4444; border-color: #fca5a5; padding: 4px 10px;">Ẩn</button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 32px; color: #64748b;">
+                                Không có đánh giá nào.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+

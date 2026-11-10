@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#286598" />
+    <link rel="icon" type="image/png" href="~/images/miara/logo.png" />
+    <link rel="stylesheet" href="~/css/styles.css" />
+    <title>@ViewData["Title"] — MIARA Backoffice</title>
+    @await RenderSectionAsync("Styles", required: false)
+  </head>
+  <body class="bo-body">
+    <div class="bo-shell">
+      <!-- ==================== SIDEBAR ĐIỀU HƯỚNG NỘI BỘ ==================== -->
+      <aside class="bo-sidebar">
+        <div class="bo-brand">
+          <a asp-controller="AdminDashboard" asp-action="Index" class="brand-logo" aria-label="MIARA Admin Dashboard">
+            <img src="~/images/miara/logo.png" alt="MIARA" width="1269" height="703" />
+          </a>
+          <span class="bo-role-badge">QUẢN TRỊ VIÊN · ADMIN PORTAL</span>
+        </div>
+
+        @{
+            string currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+            string currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+        }
+
+        <nav class="bo-nav" aria-label="Điều hướng hệ thống quản lý">
+          <a asp-controller="AdminDashboard" asp-action="Index" class="account-nav-btn @(currentController == "AdminDashboard" ? "active" : "")">
+            Tổng quan thống kê
+          </a>
+          <a asp-controller="AdminOrder" asp-action="Index" class="account-nav-btn @(currentController == "AdminOrder" ? "active" : "")">
+            Quản lý Đơn hàng
+          </a>
+          <a asp-controller="AdminProduct" asp-action="Index" class="account-nav-btn @(currentController == "AdminProduct" ? "active" : "")">
+            Sản phẩm &amp; Biến thể
+          </a>
+          <a asp-controller="AdminCategory" asp-action="Index" class="account-nav-btn @(currentController == "AdminCategory" ? "active" : "")">
+            Danh mục gọng kính
+          </a>
+          <a asp-controller="AdminBrand" asp-action="Index" class="account-nav-btn @(currentController == "AdminBrand" ? "active" : "")">
+            Thương hiệu gọng kính
+          </a>
+          <a asp-controller="AdminLens" asp-action="Index" class="account-nav-btn @(currentController == "AdminLens" ? "active" : "")">
+            Tùy chọn tròng kính
+          </a>
+          <a asp-controller="AdminInventory" asp-action="Index" class="account-nav-btn @(currentController == "AdminInventory" ? "active" : "")">
+            Quản lý Tồn kho
+          </a>
+          <a asp-controller="AdminReview" asp-action="Index" class="account-nav-btn @(currentController == "AdminReview" ? "active" : "")">
+            Đánh giá &amp; Bình luận
+          </a>
+          <a asp-controller="AdminCoupon" asp-action="Index" class="account-nav-btn @(currentController == "AdminCoupon" ? "active" : "")">
+            Mã giảm giá
+          </a>
+          <a asp-controller="AdminBanner" asp-action="Index" class="account-nav-btn @(currentController == "AdminBanner" ? "active" : "")">
+            Banner quảng cáo
+          </a>
+          <a asp-controller="AdminUser" asp-action="Index" class="account-nav-btn @(currentController == "AdminUser" ? "active" : "")">
+            Tài khoản &amp; Phân quyền
+          </a>
+        </nav>
+
+        <div class="bo-sidebar-foot">
+          <div class="account-user-card" style="margin-bottom:10px; padding-bottom:12px">
+            <div class="account-avatar">AD</div>
+            <div>
+              <strong>@(Context.Session.GetString("UserName") ?? "Quản trị viên MIARA")</strong>
+              <p class="small muted">@(Context.Session.GetString("UserEmail") ?? "admin@miaraeyeglasses.com")</p>
+            </div>
+          </div>
+          <div class="bo-foot-links">
+            <a asp-controller="Logout" asp-action="Index" class="account-nav-btn danger-text">Đăng xuất</a>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ==================== NỘI DUNG CHÍNH ==================== -->
+      <div class="bo-main">
+        <header class="bo-topbar">
+          <div class="bo-topbar-left">
+            <span class="eyebrow">QUẢN TRỊ VIÊN · ADMIN PORTAL</span>
+            <h1 class="bo-topbar-title">@ViewData["Title"]</h1>
+          </div>
+
+          <div class="bo-topbar-right">
+            <div class="bo-signalr-pill">
+              <span class="signalr-dot"></span>
+              <span>Dữ liệu: <strong>Kết nối SQL Server EyeglassesShop trực tiếp</strong></span>
+            </div>
+          </div>
+        </header>
+
+        <main class="bo-content" id="main">
+          @RenderBody()
+        </main>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="~/js/common.js" defer></script>
+    <script src="~/js/admin.js" defer></script>
+    <script>
+      // Hàm mở / đóng form CRUD nhanh cho Admin
+      function toggleAdminForm(formId) {
+        var form = document.getElementById(formId);
+        if (!form) return;
+        if (form.hasAttribute('hidden')) {
+          form.removeAttribute('hidden');
+          var firstInput = form.querySelector('input[type="text"], input[type="number"], select');
+          if (firstInput) firstInput.focus();
+          form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+          form.setAttribute('hidden', '');
+        }
+      }
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+  </body>
+</html>
+

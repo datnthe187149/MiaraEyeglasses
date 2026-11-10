@@ -1,0 +1,80 @@
+@model IEnumerable<MiaraEyeglasses.Models.Entities.ProductVariant>
+@{
+    ViewData["Title"] = "Quản lý Tồn kho & Cảnh báo";
+}
+
+<div class="portal-card">
+  <div class="portal-card-head">
+    <div>
+      <span class="eyebrow">Kho vận &amp; Tồn kho · Realtime</span>
+      <h2>Quản lý Tồn kho &amp; Cảnh báo hết hàng</h2>
+      <p class="small muted">Kiểm tra số lượng tồn kho từng mẫu kính và màu sắc, tự động cảnh báo khi tồn kho dưới 3 chiếc và lưu cập nhật tức thì.</p>
+    </div>
+  </div>
+
+  @if (TempData["SuccessMessage"] != null)
+  {
+      <div class="alert alert-success" style="margin-bottom: 20px;">@TempData["SuccessMessage"]</div>
+  }
+  @if (TempData["ErrorMessage"] != null)
+  {
+      <div class="alert alert-danger" style="margin-bottom: 20px;">@TempData["ErrorMessage"]</div>
+  }
+
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Ảnh</th>
+          <th>Mẫu gọng kính</th>
+          <th>Mã SKU</th>
+          <th>Biến thể màu sắc &amp; Size</th>
+          <th>Tồn kho</th>
+          <th>Tình trạng</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach (var v in Model)
+        {
+          var img = v.Images?.FirstOrDefault()?.ImageUrl 
+                    ?? v.Product?.Images?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl 
+                    ?? v.Product?.Images?.FirstOrDefault()?.ImageUrl 
+                    ?? "/images/products/p1.png";
+          bool isLow = v.StockQty <= 3;
+          <tr>
+            <td><img src="@img" alt="@v.Product?.ProductName" class="table-thumb" /></td>
+            <td><strong>@(v.Product?.Brand?.BrandName ?? "MIARA") - @(v.Product?.ProductName ?? v.Product?.ProductCode)</strong></td>
+            <td><code>@v.Sku</code></td>
+            <td>@v.ColorName · Size @v.SizeLabel</td>
+            <td>
+              <form asp-controller="AdminInventory" asp-action="UpdateStock" method="post" style="display: flex; gap: 8px; align-items: center;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="variantId" value="@v.VariantId" />
+                <input type="number" name="newStock" class="stock-input" value="@v.StockQty" min="0" style="width: 70px; padding: 4px 8px; border: 1px solid var(--color-border); border-radius: 4px;" />
+                <button type="submit" class="button small-btn btn-save-stock">Lưu</button>
+              </form>
+            </td>
+            <td>
+              @if (v.StockQty == 0)
+              {
+                <span class="status-badge status-badge--cancelled">Hết hàng</span>
+              }
+              else if (isLow)
+              {
+                <span class="status-badge status-badge--pending">Sắp hết hàng</span>
+              }
+              else
+              {
+                <span class="status-badge status-badge--completed">Còn hàng</span>
+              }
+            </td>
+            <td>
+              <a asp-controller="Shop" asp-action="Detail" asp-route-id="@v.ProductId" target="_blank" class="button button-outline small-btn">Xem mẫu</a>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

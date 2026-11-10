@@ -1,0 +1,167 @@
+@model IEnumerable<MiaraEyeglasses.Models.Entities.Product>
+@{
+    ViewData["Title"] = "Quản lý Sản phẩm & Biến thể";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var categories = ViewBag.Categories as IEnumerable<MiaraEyeglasses.Models.Entities.Category> ?? Enumerable.Empty<MiaraEyeglasses.Models.Entities.Category>();
+    var brands = ViewBag.Brands as IEnumerable<MiaraEyeglasses.Models.Entities.Brand> ?? Enumerable.Empty<MiaraEyeglasses.Models.Entities.Brand>();
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" style="margin-bottom: 20px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46;">
+        @TempData["SuccessMessage"]
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger" style="margin-bottom: 20px; padding: 12px 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; color: #991b1b;">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="portal-card">
+    <div class="portal-card-head">
+        <div>
+            <span class="eyebrow">Kho sản phẩm · Products</span>
+            <h2>Quản lý Sản phẩm, Biến thể &amp; Hình ảnh</h2>
+            <p class="small muted">Thêm mới, cập nhật thông tin sản phẩm gọng kính, biến thể màu sắc, kích cỡ và danh sách hình ảnh chi tiết.</p>
+        </div>
+        <button type="button" class="button small-btn" data-toggle-form="form-add-product" onclick="toggleAdminForm('form-add-product')">+ Thêm sản phẩm mới</button>
+    </div>
+
+    <!-- Form Thêm / Cập nhật sản phẩm -->
+    <form class="customer-form sub-panel-form" id="form-add-product" hidden asp-controller="AdminProduct" asp-action="Add" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+            <h3 style="margin:0">Thêm / Cập nhật Sản phẩm &amp; Biến thể</h3>
+            <button type="button" class="text-button" onclick="document.getElementById('form-add-product').setAttribute('hidden','')">✕ Đóng form</button>
+        </div>
+        <div class="form-grid-2">
+            <label>
+                <span>Tên mẫu kính *</span>
+                <input type="text" name="productName" required placeholder="VD: ALFIO RALDO 3114" />
+            </label>
+            <label>
+                <span>Mã sản phẩm (SKU) *</span>
+                <input type="text" name="productCode" required placeholder="VD: 3114 151O16-143 C3" />
+            </label>
+            <label>
+                <span>Danh mục gọng kính *</span>
+                <select name="categoryId">
+                    @foreach (var c in categories)
+                    {
+                        <option value="@c.CategoryId">@c.CategoryName</option>
+                    }
+                </select>
+            </label>
+            <label>
+                <span>Thương hiệu *</span>
+                <select name="brandId">
+                    @foreach (var b in brands)
+                    {
+                        <option value="@b.BrandId">@b.BrandName</option>
+                    }
+                </select>
+            </label>
+            <label>
+                <span>Giá niêm yết (VNĐ) *</span>
+                <input type="number" name="price" required value="349000" />
+            </label>
+            <label>
+                <span>Dáng gọng &amp; Chất liệu</span>
+                <input type="text" name="specs" value="Vuông · Nhựa Acetate · Unisex" />
+            </label>
+            <label>
+                <span>Biến thể Màu sắc *</span>
+                <input type="text" name="colorName" required value="Nâu trong" placeholder="VD: Nâu trong" />
+            </label>
+            <label>
+                <span>Biến thể Kích cỡ &amp; Tồn ban đầu *</span>
+                <input type="text" name="sizesStock" required value="M (15)" placeholder="VD: M (15)" />
+            </label>
+        </div>
+        <label>
+            <span>Tải lên nhiều hình ảnh sản phẩm (.jpg, .png, .webp)</span>
+            <input type="file" name="galleryImageFiles" multiple accept="image/jpeg,image/png,image/webp" />
+        </label>
+        <div style="display:flex; gap:12px; margin-top:8px">
+            <button type="submit" class="button">Lưu sản phẩm</button>
+            <button type="reset" class="button button-outline">Làm mới</button>
+        </div>
+    </form>
+
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Ảnh</th>
+                    <th>Sản phẩm &amp; Mã SKU</th>
+                    <th>Danh mục / Thương hiệu</th>
+                    <th>Biến thể (Màu / Size)</th>
+                    <th>Giá bán</th>
+                    <th>Tồn kho</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var p in Model)
+                    {
+                        var primaryImg = p.Images?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl 
+                                         ?? p.Images?.FirstOrDefault()?.ImageUrl 
+                                         ?? "/images/products/p1.png";
+                        var colorNames = p.Variants != null && p.Variants.Any() 
+                                         ? string.Join(", ", p.Variants.Select(v => v.ColorName).Where(c => !string.IsNullOrEmpty(c)).Distinct())
+                                         : "Tiêu chuẩn";
+                        var sizeLabels = p.Variants != null && p.Variants.Any()
+                                         ? string.Join(", ", p.Variants.Select(v => v.SizeLabel).Where(s => !string.IsNullOrEmpty(s)).Distinct())
+                                         : "Free size";
+                        int totalStock = p.Variants != null ? p.Variants.Sum(v => v.StockQty) : 0;
+                        int imgCount = p.Images != null ? p.Images.Count() : 1;
+
+                        <tr>
+                            <td>
+                                <img src="@primaryImg" alt="@p.ProductName" class="table-thumb" />
+                            </td>
+                            <td>
+                                <strong>@p.ProductName</strong><br />
+                                <small class="muted">@p.ProductCode (@imgCount ảnh)</small>
+                            </td>
+                            <td>
+                                @(p.Category?.CategoryName ?? "Gọng kính")<br />
+                                <small class="muted">@(p.Brand?.BrandName ?? "MIARA")</small>
+                            </td>
+                            <td>
+                                @colorNames<br />
+                                <small class="muted">Size: @sizeLabels</small>
+                            </td>
+                            <td>
+                                <strong>@p.Price.ToString("N0") ₫</strong>
+                            </td>
+                            <td>
+                                @totalStock
+                            </td>
+                            <td>
+                                <a asp-controller="Shop" asp-action="Detail" asp-route-id="@p.ProductId" target="_blank" class="text-button" style="text-decoration:none; margin-right:8px;">Xem</a>
+                                <form asp-controller="AdminProduct" asp-action="ToggleActive" method="post" style="display:inline; margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="productId" value="@p.ProductId" />
+                                    <button type="submit" class="text-button @(p.IsActive ? "danger-text" : "")">
+                                        @(p.IsActive ? "Ẩn" : "Hiện")
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" style="text-align:center; padding:32px; color:#64748b;">Chưa có sản phẩm nào trong hệ thống.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

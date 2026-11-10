@@ -1,0 +1,278 @@
+@model MiaraEyeglasses.Models.Entities.Order
+@{
+    ViewData["Title"] = $"Chi tiết đơn hàng #{Model.OrderCode} — MIARA";
+    
+    // Màu sắc và nhãn trạng thái đơn hàng
+    string statusBadgeBg = "#f1f5f9";
+    string statusBadgeColor = "#475569";
+    string statusName = Model.OrderStatus?.StatusName ?? "Đang xử lý";
+    
+    switch (Model.Status)
+    {
+        case 1: // Chờ xác nhận
+            statusBadgeBg = "#fef3c7";
+            statusBadgeColor = "#b45309";
+            break;
+        case 2: // Đã xác nhận
+            statusBadgeBg = "#e0f2fe";
+            statusBadgeColor = "#0369a1";
+            break;
+        case 3: // Đang gia công / giao hàng
+            statusBadgeBg = "#f3e8ff";
+            statusBadgeColor = "#7e22ce";
+            break;
+        case 4: // Đã thanh toán / Hoàn thành
+            statusBadgeBg = "#dcfce7";
+            statusBadgeColor = "#15803d";
+            break;
+        case 5: // Đã hủy
+            statusBadgeBg = "#fee2e2";
+            statusBadgeColor = "#b91c1c";
+            break;
+    }
+}
+
+<div class="view-section" style="background: #f8fafc; padding: 40px 0 60px;">
+    <div class="container" style="max-width: 1040px; margin: 0 auto; padding: 0 16px;">
+        
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb" style="margin-bottom: 24px; font-size: 13px; color: #64748b;">
+            <a asp-controller="Home" asp-action="Index" style="color: #64748b; text-decoration: none;">Trang chủ</a>
+            <span style="margin: 0 8px;">/</span>
+            <a asp-controller="UserOrder" asp-action="Index" style="color: #64748b; text-decoration: none;">Đơn hàng của tôi</a>
+            <span style="margin: 0 8px;">/</span>
+            <span style="color: #1e293b; font-weight: 600;">#@Model.OrderCode</span>
+        </nav>
+
+        <!-- Main Order Shell -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05); overflow: hidden;">
+            
+            <!-- Header đơn hàng -->
+            <div style="padding: 28px 32px; background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+                        <h1 style="margin: 0; font-size: 26px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;">
+                            Đơn hàng #@Model.OrderCode
+                        </h1>
+                        <span style="background: @statusBadgeBg; color: @statusBadgeColor; padding: 4px 12px; border-radius: 9999px; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                            <span style="width: 8px; height: 8px; border-radius: 50%; background: @statusBadgeColor;"></span>
+                            @statusName
+                        </span>
+                    </div>
+                    <p style="margin: 0; font-size: 13px; color: #64748b; display: flex; align-items: center; gap: 6px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Thời gian đặt hàng: <strong>@Model.CreatedAt.ToString("HH:mm - dd/MM/yyyy")</strong>
+                    </p>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" onclick="window.print()" class="button button-outline" style="padding: 8px 16px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+                        In đơn hàng
+                    </button>
+                    <a asp-controller="UserOrder" asp-action="Index" class="button button-outline" style="padding: 8px 16px; font-size: 13px; text-decoration: none; border-radius: 8px;">
+                        Tất cả đơn hàng
+                    </a>
+                </div>
+            </div>
+
+            <!-- Thân đơn hàng: Grid Thông tin người nhận & Thanh toán -->
+            <div style="padding: 28px 32px; border-bottom: 1px solid #f1f5f9;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+                    
+                    <!-- Card Người nhận -->
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
+                            <div style="width: 32px; height: 32px; border-radius: 8px; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            </div>
+                            <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #1e293b;">Thông tin người nhận</h3>
+                        </div>
+                        <div style="font-size: 14px; line-height: 1.6; color: #334155;">
+                            <div style="margin-bottom: 8px;">
+                                <span style="color: #64748b; font-size: 13px;">Họ tên khách hàng:</span><br />
+                                <strong style="font-size: 15px; color: #0f172a;">@Model.RecipientName</strong>
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                <span style="color: #64748b; font-size: 13px;">Số điện thoại:</span><br />
+                                <strong>@Model.Phone</strong>
+                            </div>
+                            <div>
+                                <span style="color: #64748b; font-size: 13px;">Địa chỉ nhận hàng:</span><br />
+                                <span>@Model.ShippingAddress</span>
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(Model.OrderNote))
+                            {
+                                <div style="margin-top: 10px; padding: 8px 12px; background: #fff; border-left: 3px solid #3b82f6; border-radius: 4px; font-size: 13px; color: #475569;">
+                                    <strong>Ghi chú:</strong> @Model.OrderNote
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Card Thanh toán & Giao vận -->
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
+                            <div style="width: 32px; height: 32px; border-radius: 8px; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                            </div>
+                            <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #1e293b;">Phương thức & Thanh toán</h3>
+                        </div>
+                        <div style="font-size: 14px; line-height: 1.6; color: #334155;">
+                            @{
+                                var payment = Model.Payments?.FirstOrDefault();
+                                var paymentMethod = payment?.Method ?? "VNPAY";
+                                var isPaid = Model.PaidAt != null || Model.Status == 4 || (payment != null && payment.Status == 1);
+                            }
+                            <div style="margin-bottom: 10px;">
+                                <span style="color: #64748b; font-size: 13px;">Hình thức thanh toán:</span><br />
+                                <span style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: #0284c7; background: #e0f2fe; padding: 3px 10px; border-radius: 6px; font-size: 13px; margin-top: 3px;">
+                                    @if (paymentMethod.ToUpper().Contains("VNPAY"))
+                                    {
+                                        <span>💳 Cổng thanh toán VNPAY QR</span>
+                                    }
+                                    else
+                                    {
+                                        <span>💵 Thanh toán khi nhận hàng (COD)</span>
+                                    }
+                                </span>
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                <span style="color: #64748b; font-size: 13px;">Trạng thái thanh toán:</span><br />
+                                @if (isPaid)
+                                {
+                                    <span style="color: #16a34a; font-weight: 700;">✓ Đã thanh toán thành công</span>
+                                }
+                                else
+                                {
+                                    <span style="color: #ea580c; font-weight: 600;">⏳ Chưa thanh toán (Thu khi giao hàng)</span>
+                                }
+                            </div>
+                            <div>
+                                <span style="color: #64748b; font-size: 13px;">Đơn vị vận chuyển:</span><br />
+                                <span>MIARA Express Hỏa Tốc (Miễn phí toàn quốc)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bảng Sản phẩm & Độ cận chi tiết -->
+            <div style="padding: 28px 32px;">
+                <h3 style="margin: 0 0 16px; font-size: 17px; font-weight: 700; color: #0f172a;">
+                    Chi tiết sản phẩm kính & Gói tròng (@Model.Items.Count() món)
+                </h3>
+
+                <div style="border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        <thead>
+                            <tr style="background: #f1f5f9; text-align: left; color: #475569; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                <th style="padding: 12px 16px;">Sản phẩm</th>
+                                <th style="padding: 12px 16px;">Gói tròng</th>
+                                <th style="padding: 12px 16px;">Thông số độ cận (Rx)</th>
+                                <th style="padding: 12px 16px; text-align: center;">SL</th>
+                                <th style="padding: 12px 16px; text-align: right;">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr style="border-top: 1px solid #f1f5f9; vertical-align: top;">
+                                    <td style="padding: 16px;">
+                                        <strong style="color: #0f172a; font-size: 15px; display: block; margin-bottom: 4px;">@item.ProductName</strong>
+                                        <div style="font-size: 12px; color: #64748b; line-height: 1.5;">
+                                            <span>Màu: <strong style="color: #334155;">@item.ColorName</strong></span> · 
+                                            <span>Cỡ: <strong style="color: #334155;">@item.SizeLabel</strong></span><br />
+                                            <span>Mã SKU: <code>@item.Sku</code></span>
+                                        </div>
+                                    </td>
+                                    
+                                    <td style="padding: 16px;">
+                                        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 8px 12px; display: inline-block;">
+                                            <strong style="color: #166534; font-size: 13px; display: block;">@item.LensName</strong>
+                                            <span style="font-size: 12px; color: #15803d;">
+                                                @(item.LensPrice > 0 ? $"+{item.LensPrice:N0} ₫" : "Mặc định theo gọng")
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    <td style="padding: 16px;">
+                                        @if (item.RightSph != null || item.LeftSph != null)
+                                        {
+                                            <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-family: monospace; font-size: 12px; color: #1e293b; max-width: 280px;">
+                                                <div style="margin-bottom: 4px; display: flex; justify-content: space-between;">
+                                                    <span style="font-weight: 700; color: #2563eb;">OD (Mắt Phải):</span>
+                                                    <span>Sph <strong>@item.RightSph</strong> | Cyl <strong>@item.RightCyl</strong> | Ax <strong>@item.RightAxis°</strong></span>
+                                                </div>
+                                                <div style="margin-bottom: 4px; display: flex; justify-content: space-between;">
+                                                    <span style="font-weight: 700; color: #0284c7;">OS (Mắt Trái):</span>
+                                                    <span>Sph <strong>@item.LeftSph</strong> | Cyl <strong>@item.LeftCyl</strong> | Ax <strong>@item.LeftAxis°</strong></span>
+                                                </div>
+                                                <div style="border-top: 1px dashed #cbd5e1; padding-top: 4px; color: #64748b;">
+                                                    Khoảng cách đồng tử (PD): <strong style="color: #0f172a;">@item.PD mm</strong>
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span style="background: #f1f5f9; color: #64748b; font-size: 12px; padding: 4px 10px; border-radius: 6px;">
+                                                Kính không độ (Thời trang)
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td style="padding: 16px; text-align: center; font-weight: 600; color: #334155;">
+                                        @item.Quantity
+                                    </td>
+
+                                    <td style="padding: 16px; text-align: right;">
+                                        <strong style="color: #286598; font-size: 16px;">@item.LineTotal.ToString("N0") ₫</strong>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Box Tổng kết tiền đơn hàng -->
+            <div style="padding: 24px 32px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end;">
+                <div style="width: 100%; max-width: 380px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: #475569;">
+                        <span>Tiền hàng tạm tính:</span>
+                        <strong style="color: #0f172a;">@Model.Subtotal.ToString("N0") ₫</strong>
+                    </div>
+
+                    @if (Model.DiscountAmount > 0)
+                    {
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: #16a34a;">
+                            <span>Mã giảm giá (@(Model.CouponCode ?? "Voucher")):</span>
+                            <strong>-@Model.DiscountAmount.ToString("N0") ₫</strong>
+                        </div>
+                    }
+
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 14px; font-size: 14px; color: #475569;">
+                        <span>Phí vận chuyển:</span>
+                        <span style="color: #16a34a; font-weight: 600;">Miễn phí (0 ₫)</span>
+                    </div>
+
+                    <div style="border-top: 2px dashed #cbd5e1; padding-top: 14px; display: flex; justify-content: space-between; align-items: baseline;">
+                        <span style="font-size: 16px; font-weight: 700; color: #0f172a;">Tổng thanh toán:</span>
+                        <strong style="font-size: 26px; font-weight: 800; color: #286598;">@Model.TotalAmount.ToString("N0") ₫</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer nút bấm -->
+            <div style="padding: 20px 32px; background: #ffffff; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <a asp-controller="Shop" asp-action="Index" class="button button-outline" style="text-decoration: none; border-radius: 8px; font-size: 13px;">
+                    ← Tiếp tục mua sắm
+                </a>
+                <span style="font-size: 12px; color: #94a3b8;">
+                    Mọi thắc mắc về đơn hàng, vui lòng liên hệ Hotline: <strong>1900 6868</strong>
+                </span>
+            </div>
+
+        </div>
+    </div>
+</div>

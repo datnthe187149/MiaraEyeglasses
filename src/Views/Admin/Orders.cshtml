@@ -1,0 +1,162 @@
+@model IEnumerable<MiaraEyeglasses.Models.Entities.Order>
+@{
+    ViewData["Title"] = "Quản lý Đơn hàng & Hoàn tiền VNPay";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    byte? selectedStatus = ViewBag.SelectedStatus as byte?;
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" style="margin-bottom: 20px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46;">
+        @TempData["SuccessMessage"]
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger" style="margin-bottom: 20px; padding: 12px 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; color: #991b1b;">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="portal-card">
+    <div class="portal-card-head">
+        <div>
+            <span class="eyebrow">Đơn hàng &amp; Giao dịch VNPay</span>
+            <h2>Quản lý Đơn hàng &amp; Hoàn tiền VNPay</h2>
+            <p class="small muted">Theo dõi toàn bộ đơn hàng trực tuyến, kiểm tra thông số đơn kính mắt, chuyển trạng thái xử lý và thực hiện lệnh Hủy &amp; Hoàn tiền qua cổng VNPay.</p>
+        </div>
+    </div>
+
+    <form method="get" asp-action="Orders" class="admin-filter-row" asp-antiforgery="false">
+        <label>
+            <span>Lọc theo trạng thái</span>
+            <select name="status" onchange="this.form.submit()">
+                <option value="" selected="@(selectedStatus == null)">Tất cả trạng thái</option>
+                <option value="0" selected="@(selectedStatus == 0)">0. Chờ thanh toán</option>
+                <option value="1" selected="@(selectedStatus == 1)">1. Đã thanh toán</option>
+                <option value="2" selected="@(selectedStatus == 2)">2. Đang cắt tròng</option>
+                <option value="3" selected="@(selectedStatus == 3)">3. Đang giao hàng</option>
+                <option value="4" selected="@(selectedStatus == 4)">4. Hoàn thành</option>
+                <option value="5" selected="@(selectedStatus == 5)">5. Đã hủy</option>
+                <option value="6" selected="@(selectedStatus == 6)">6. Trả hàng</option>
+            </select>
+        </label>
+        <label>
+            <span>Từ ngày</span>
+            <input type="date" value="2026-10-01" />
+        </label>
+        <label>
+            <span>Đến ngày</span>
+            <input type="date" value="2026-11-08" />
+        </label>
+    </form>
+
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Mã đơn / GD VNPay</th>
+                    <th>Khách hàng</th>
+                    <th>Đơn kính cận (SPH, CYL, AXIS, PD)</th>
+                    <th>Tổng thanh toán</th>
+                    <th>Trạng thái</th>
+                    <th>Chuyển trạng thái</th>
+                    <th>Thao tác Quản trị</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var o in Model)
+                    {
+                        var payment = o.Payments?.FirstOrDefault();
+                        var firstItem = o.Items?.FirstOrDefault();
+                        string statusBadgeClass = "processing";
+                        string statusText = o.OrderStatus?.StatusName ?? "Đang xử lý";
+
+                        switch (o.Status)
+                        {
+                            case 0: statusBadgeClass = "pending"; statusText = "Chờ thanh toán"; break;
+                            case 1: statusBadgeClass = "processing"; statusText = "Đã thanh toán"; break;
+                            case 2: statusBadgeClass = "processing"; statusText = "Đang xử lý"; break;
+                            case 3: statusBadgeClass = "shipping"; statusText = "Đang giao"; break;
+                            case 4: statusBadgeClass = "completed"; statusText = "Hoàn thành"; break;
+                            case 5: statusBadgeClass = "cancelled"; statusText = "Đã hủy"; break;
+                            case 6: statusBadgeClass = "cancelled"; statusText = "Trả hàng"; break;
+                        }
+
+                        <tr>
+                            <td>
+                                <strong>#@o.OrderCode</strong><br />
+                                <small class="muted">GD: @(payment?.TransactionRef ?? "VNPAY-ONLINE")</small>
+                            </td>
+                            <td>
+                                <strong>@o.RecipientName</strong><br />
+                                <small class="muted">SĐT: @o.Phone</small>
+                            </td>
+                            <td>
+                                @if (firstItem != null && (firstItem.RightSph != null || firstItem.LeftSph != null))
+                                {
+                                    <div class="rx-mini-box">
+                                        <strong>OD:</strong> @firstItem.RightSph | @firstItem.RightCyl | @firstItem.RightAxis° · 
+                                        <strong>OS:</strong> @firstItem.LeftSph | @firstItem.LeftCyl | @firstItem.LeftAxis° · 
+                                        <strong>PD:</strong> @(firstItem.PD)mm
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="rx-mini-box">
+                                        <small class="muted">Kính không độ (Thời trang)</small>
+                                    </div>
+                                }
+                            </td>
+                            <td>
+                                <strong>@o.TotalAmount.ToString("N0") ₫</strong>
+                            </td>
+                            <td>
+                                <span class="status-badge status-badge--@statusBadgeClass status-cell-badge">@statusText</span>
+                            </td>
+                            <td>
+                                <form asp-controller="AdminOrder" asp-action="UpdateStatus" method="post" style="margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="orderId" value="@o.OrderId" />
+                                    <select name="newStatus" class="status-select-control" onchange="this.form.submit()">
+                                        <option value="0" selected="@(o.Status == 0)">0. Chờ thanh toán</option>
+                                        <option value="1" selected="@(o.Status == 1)">1. Đã thanh toán</option>
+                                        <option value="2" selected="@(o.Status == 2)">2. Đang xử lý</option>
+                                        <option value="3" selected="@(o.Status == 3)">3. Đang giao</option>
+                                        <option value="4" selected="@(o.Status == 4)">4. Hoàn thành</option>
+                                        <option value="5" selected="@(o.Status == 5)">5. Đã hủy</option>
+                                        <option value="6" selected="@(o.Status == 6)">6. Trả hàng</option>
+                                    </select>
+                                </form>
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 6px; align-items: center;">
+                                    <a asp-controller="Order" asp-action="Detail" asp-route-id="@o.OrderId" target="_blank" class="text-button" style="text-decoration:none;">Xem</a>
+                                    @if (o.Status != 5 && (payment?.Status == 1 || o.PaidAt != null))
+                                    {
+                                        <form asp-controller="AdminOrder" asp-action="RefundVnPay" method="post" style="margin:0;">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="orderId" value="@o.OrderId" />
+                                            <input type="hidden" name="reason" value="Yêu cầu từ Quản trị viên" />
+                                            <button type="submit" class="button button-danger small-btn btn-refund-order" onclick="return confirm('Bạn có chắc chắn muốn Hủy đơn và Hoàn tiền qua VNPay?');">
+                                                Hủy &amp; Hoàn tiền VNPay
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" style="text-align:center; padding:32px; color:#64748b;">Không có đơn hàng nào phù hợp với bộ lọc.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,15 @@
+## ASP.NET Core & .NET build output
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+
+## Mac OS
+.DS_Store
+
+## Temporary & Log files
+*.log
+*.tmp
+

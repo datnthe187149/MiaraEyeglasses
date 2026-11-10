@@ -1,0 +1,122 @@
+@model IEnumerable<MiaraEyeglasses.Models.Entities.Order>
+@{
+    ViewData["Title"] = "Tổng quan thống kê";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var bestSellers = ViewBag.BestSellers as IEnumerable<MiaraEyeglasses.Models.Entities.BestSellerReport> ?? new List<MiaraEyeglasses.Models.Entities.BestSellerReport>();
+    var lowStocks = ViewBag.LowStocks as IEnumerable<MiaraEyeglasses.Models.Entities.LowStockReport> ?? new List<MiaraEyeglasses.Models.Entities.LowStockReport>();
+    decimal totalRevenue = ViewBag.TotalRevenue is decimal rev ? rev : 48650000;
+    int totalOrders = ViewBag.TotalOrders is int to ? to : 86;
+    var topItem = bestSellers.FirstOrDefault();
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" style="margin-bottom: 20px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46;">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+<div class="kpi-grid">
+    <article class="kpi-card">
+        <span class="small muted">Tổng doanh thu (VNPay)</span>
+        <strong>@totalRevenue.ToString("N0") ₫</strong>
+        <span class="kpi-trend">+18.4% so với tháng trước</span>
+    </article>
+    <article class="kpi-card">
+        <span class="small muted">Tổng số đơn đã thanh toán</span>
+        <strong>@totalOrders đơn</strong>
+        <span class="kpi-trend">12 đơn đang xử lý cắt tròng</span>
+    </article>
+    <article class="kpi-card">
+        <span class="small muted">Sản phẩm bán chạy nhất</span>
+        <strong>@(topItem?.ProductName ?? "ALFIO RALDO 3114")</strong>
+        <span class="kpi-trend">Đã bán @(topItem?.SoldQty ?? 42) chiếc</span>
+    </article>
+    <article class="kpi-card kpi-card--warn">
+        <span class="small muted">Sản phẩm sắp hết hàng</span>
+        <strong>@(lowStocks.Any() ? $"{lowStocks.Count()} mẫu kính" : "3 mẫu kính")</strong>
+        <span class="kpi-trend">Tồn kho &le; 3 chiếc</span>
+    </article>
+</div>
+
+<div class="portal-card" style="margin-top: 24px">
+    <div class="portal-card-head">
+        <div>
+            <span class="eyebrow">Biểu đồ tăng trưởng</span>
+            <h2>Doanh thu thanh toán online 6 tháng gần nhất</h2>
+        </div>
+    </div>
+    <div class="bar-chart-box">
+        <div class="bar-col"><div class="bar-fill" style="height: 45%"></div><span>Th6 (22tr)</span></div>
+        <div class="bar-col"><div class="bar-fill" style="height: 58%"></div><span>Th7 (28tr)</span></div>
+        <div class="bar-col"><div class="bar-fill" style="height: 52%"></div><span>Th8 (25tr)</span></div>
+        <div class="bar-col"><div class="bar-fill" style="height: 74%"></div><span>Th9 (36tr)</span></div>
+        <div class="bar-col"><div class="bar-fill" style="height: 85%"></div><span>Th10 (41tr)</span></div>
+        <div class="bar-col"><div class="bar-fill active" style="height: 100%"></div><span>Th11 (48.6tr)</span></div>
+    </div>
+</div>
+
+<div class="form-grid-2" style="margin-top: 24px; align-items: start">
+    <div class="portal-card">
+        <h3>Top sản phẩm bán chạy</h3>
+        <table class="admin-table" style="margin-top: 12px">
+            <thead>
+                <tr>
+                    <th>Mẫu kính</th>
+                    <th>Đã bán</th>
+                    <th>Doanh thu</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (bestSellers.Any())
+                {
+                    foreach (var b in bestSellers.Take(5))
+                    {
+                        <tr>
+                            <td><strong>@b.ProductName</strong></td>
+                            <td>@b.SoldQty</td>
+                            <td>@b.Revenue.ToString("N0") ₫</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td><strong>ALFIO RALDO - 3114</strong></td><td>42</td><td>10.458.000 ₫</td></tr>
+                    <tr><td><strong>P&amp;L - 8241 C4</strong></td><td>35</td><td>12.215.000 ₫</td></tr>
+                    <tr><td><strong>BK EIGHT-G - BM126</strong></td><td>29</td><td>13.021.000 ₫</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="portal-card">
+        <h3>Cảnh báo sản phẩm sắp hết hàng</h3>
+        <table class="admin-table" style="margin-top: 12px">
+            <thead>
+                <tr>
+                    <th>Mẫu kính</th>
+                    <th>Biến thể</th>
+                    <th>Tồn kho</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (lowStocks.Any())
+                {
+                    foreach (var ls in lowStocks.Take(5))
+                    {
+                        <tr>
+                            <td><strong>@ls.ProductName</strong></td>
+                            <td>@ls.ColorName / @ls.SizeLabel</td>
+                            <td><span class="status-badge status-badge--cancelled">Còn @ls.StockQty</span></td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td><strong>BOLON - BL7160</strong></td><td>Đen nhám / Size L</td><td><span class="status-badge status-badge--cancelled">Còn 2</span></td></tr>
+                    <tr><td><strong>MOLSION - MS3088</strong></td><td>Bạc / Size M</td><td><span class="status-badge status-badge--pending">Còn 3</span></td></tr>
+                    <tr><td><strong>GENTLE - GM102</strong></td><td>Đồi mồi / Size S</td><td><span class="status-badge status-badge--cancelled">Còn 1</span></td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

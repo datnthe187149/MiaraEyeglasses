@@ -1,0 +1,121 @@
+@model IEnumerable<MiaraEyeglasses.Models.Entities.Order>
+@{
+    ViewData["Title"] = "Đơn hàng của tôi";
+}
+
+<div class="user-orders-page container section">
+    <nav class="breadcrumb" aria-label="Đường dẫn">
+        <a asp-controller="Home" asp-action="Index">Trang chủ</a>
+        <span>/</span>
+        <a asp-controller="Profile" asp-action="Index">Tài khoản</a>
+        <span>/</span>
+        <span aria-current="page">Đơn hàng của tôi</span>
+    </nav>
+
+    <div class="page-intro" style="margin-bottom: 24px;">
+        <span class="eyebrow">Quản lý giao dịch</span>
+        <h2>Lịch sử đơn hàng của tôi</h2>
+        <p class="small muted">Theo dõi tiến độ cắt tròng, vận chuyển và chi tiết các đơn hàng kính mắt.</p>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success" style="margin-bottom: 20px;">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger" style="margin-bottom: 20px;">@TempData["ErrorMessage"]</div>
+    }
+
+    <div class="orders-list" style="display: grid; gap: 20px;">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var order in Model)
+            {
+                <div class="order-card" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <div class="order-card-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 16px;">
+                        <div>
+                            <strong style="font-size: 16px;">Đơn hàng #@order.OrderCode</strong>
+                            <div class="small muted">Ngày đặt: @order.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                        </div>
+                        <div>
+                            @if (order.Status == 0)
+                            {
+                                <span class="badge" style="background: #f59e0b; color: #fff; padding: 4px 10px; border-radius: 4px;">Chờ thanh toán</span>
+                            }
+                            else if (order.Status == 1)
+                            {
+                                <span class="badge" style="background: #10b981; color: #fff; padding: 4px 10px; border-radius: 4px;">Đã thanh toán</span>
+                            }
+                            else if (order.Status == 2)
+                            {
+                                <span class="badge" style="background: #6366f1; color: #fff; padding: 4px 10px; border-radius: 4px;">Đang cắt tròng</span>
+                            }
+                            else if (order.Status == 3)
+                            {
+                                <span class="badge" style="background: #3b82f6; color: #fff; padding: 4px 10px; border-radius: 4px;">Đang giao hàng</span>
+                            }
+                            else if (order.Status == 4)
+                            {
+                                <span class="badge" style="background: #059669; color: #fff; padding: 4px 10px; border-radius: 4px;">Hoàn thành</span>
+                            }
+                            else if (order.Status == 5)
+                            {
+                                <span class="badge" style="background: #ef4444; color: #fff; padding: 4px 10px; border-radius: 4px;">Đã hủy</span>
+                            }
+                            else
+                            {
+                                <span class="badge" style="background: #64748b; color: #fff; padding: 4px 10px; border-radius: 4px;">@order.OrderStatus?.StatusName</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="order-card-items" style="display: grid; gap: 12px; margin-bottom: 16px;">
+                        @foreach (var item in order.Items)
+                        {
+                            <div class="order-card-item" style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <h4 style="margin: 0; font-size: 15px;">@item.ProductName (x@item.Quantity)</h4>
+                                    <p class="small muted" style="margin: 2px 0 0;">Màu: @item.ColorName | Size: @item.SizeLabel | Gói tròng: @item.LensName</p>
+                                </div>
+                                <strong style="color: #0f172a;">@item.LineTotal.ToString("N0") ₫</strong>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="order-card-footer" style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 14px;">
+                        <div>
+                            <span class="small muted">Tổng số tiền: </span>
+                            <strong style="color: #dc2626; font-size: 18px;">@order.TotalAmount.ToString("N0") ₫</strong>
+                        </div>
+                        <div class="actions" style="display: flex; gap: 10px; align-items: center;">
+                            <a asp-controller="Order" asp-action="Detail" asp-route-id="@order.OrderId" class="button button-outline small-btn" style="text-decoration: none;">Xem chi tiết & Tiến trình</a>
+
+                            @if (order.Status == 0)
+                            {
+                                <form asp-controller="Order" asp-action="PlaceOrder" method="post" style="display:inline;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="OrderId" value="@order.OrderId" />
+                                    <!-- Retry payment or Instant Pay button for course demo -->
+                                </form>
+                                <form asp-action="CancelOrder" method="post" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này? Tồn kho sẽ được tự động hoàn lại.');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="orderId" value="@order.OrderId" />
+                                    <input type="hidden" name="reason" value="Khách hàng hủy đơn trước khi thanh toán" />
+                                    <button type="submit" class="button small-btn" style="background: #ef4444; border-color: #ef4444; color: #fff;">Hủy đơn</button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div style="text-align: center; padding: 40px; background: #fff; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <p class="small muted" style="font-size: 16px;">Bạn chưa có đơn hàng nào tại MIARA.</p>
+                <a asp-controller="Shop" asp-action="Index" class="button" style="margin-top: 12px; display: inline-block;">Khám phá bộ sưu tập kính</a>
+            </div>
+        }
+    </div>
+</div>

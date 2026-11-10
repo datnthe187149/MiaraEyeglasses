@@ -1,0 +1,162 @@
+@model IEnumerable<MiaraEyeglasses.Models.Entities.User>
+@{
+    ViewData["Title"] = "Quản lý Tài khoản & Phân quyền";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" style="margin-bottom: 20px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46;">
+        @TempData["SuccessMessage"]
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger" style="margin-bottom: 20px; padding: 12px 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; color: #991b1b;">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="portal-card">
+    <div class="portal-card-head">
+        <div>
+            <span class="eyebrow">Người dùng hệ thống · Users &amp; Roles</span>
+            <h2>Quản lý Tài khoản &amp; Phân quyền</h2>
+            <p class="small muted">Tìm kiếm, lọc người dùng theo vai trò và trạng thái; cấp tài khoản Nhân viên; bấm <strong>Khóa / Mở</strong> để quản lý trạng thái tài khoản.</p>
+        </div>
+        <button type="button" class="button small-btn" data-toggle-form="form-create-staff" onclick="toggleAdminForm('form-create-staff')">+ Tạo tài khoản Nhân viên</button>
+    </div>
+
+    <!-- Thanh tìm kiếm & bộ lọc Người dùng -->
+    <div class="admin-filter-row user-filter-bar">
+        <label>
+            <span>Tìm kiếm tài khoản</span>
+            <input type="search" id="user-search-input" placeholder="Tìm theo Họ tên, Email, Số điện thoại..." />
+        </label>
+        <label>
+            <span>Lọc theo Vai trò</span>
+            <select id="user-filter-role">
+                <option value="all">Tất cả vai trò</option>
+                <option value="Khách hàng">Khách hàng (Customer)</option>
+                <option value="Nhân viên">Nhân viên (Staff)</option>
+                <option value="Quản trị viên">Quản trị viên (Admin)</option>
+            </select>
+        </label>
+        <label>
+            <span>Lọc theo Trạng thái</span>
+            <select id="user-filter-status">
+                <option value="all">Tất cả trạng thái</option>
+                <option value="Hoạt động">Đang hoạt động</option>
+                <option value="Đã khóa">Đã bị khóa</option>
+            </select>
+        </label>
+    </div>
+
+    <!-- Form Tạo tài khoản Nhân viên -->
+    <form class="customer-form sub-panel-form" id="form-create-staff" hidden asp-controller="AdminUser" asp-action="CreateStaff" method="post">
+        @Html.AntiForgeryToken()
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+            <h3 style="margin:0">Tạo tài khoản Nhân viên mới</h3>
+            <button type="button" class="text-button" onclick="document.getElementById('form-create-staff').setAttribute('hidden','')">✕ Đóng form</button>
+        </div>
+        <div class="form-grid-2">
+            <label>
+                <span>Họ và tên nhân viên *</span>
+                <input type="text" name="fullName" required placeholder="VD: Phạm Thanh Hà" />
+            </label>
+            <label>
+                <span>Email đăng nhập *</span>
+                <input type="email" name="email" required placeholder="ha.staff@miaraeyeglasses.com" />
+            </label>
+            <label>
+                <span>Số điện thoại *</span>
+                <input type="tel" name="phone" required placeholder="0912345678" />
+            </label>
+            <label>
+                <span>Mật khẩu khởi tạo *</span>
+                <input type="password" name="password" required placeholder="Tối thiểu 6 ký tự" />
+            </label>
+        </div>
+        <div style="display:flex; gap:12px; margin-top:8px">
+            <button type="submit" class="button">+ Tạo tài khoản nhân viên</button>
+            <button type="reset" class="button button-outline">Làm mới</button>
+        </div>
+    </form>
+
+    <div class="admin-table-wrap">
+        <table class="admin-table" id="users-admin-table">
+            <thead>
+                <tr>
+                    <th>Họ và tên</th>
+                    <th>Email liên hệ</th>
+                    <th>Số điện thoại</th>
+                    <th>Vai trò</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var u in Model)
+                    {
+                        string roleNameStr = u.Role?.RoleName ?? (u.RoleId == 3 ? "Admin" : u.RoleId == 2 ? "Staff" : "Customer");
+                        string roleBadgeClass = roleNameStr switch
+                        {
+                            "Admin" => "completed",
+                            "Staff" => "processing",
+                            _ => "pending"
+                        };
+                        string roleName = roleNameStr switch
+                        {
+                            "Admin" => "Quản trị viên",
+                            "Staff" => "Nhân viên",
+                            _ => "Khách hàng"
+                        };
+
+                        <tr>
+                            <td><strong>@u.FullName</strong></td>
+                            <td>@u.Email</td>
+                            <td>@(string.IsNullOrEmpty(u.Phone) ? "—" : u.Phone)</td>
+                            <td>
+                                <span class="status-badge status-badge--@roleBadgeClass">@roleName</span>
+                            </td>
+                            <td>
+                                @if (u.IsActive)
+                                {
+                                    <span class="status-badge status-badge--completed">Hoạt động</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-badge--cancelled">Đã khóa</span>
+                                }
+                            </td>
+                            <td>
+                                @if (roleNameStr != "Admin")
+                                {
+                                    <form asp-controller="AdminUser" asp-action="ToggleUserStatus" method="post" style="display:inline; margin:0;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="userId" value="@u.UserId" />
+                                        <button type="submit" class="text-button @(u.IsActive ? "danger-text" : "")">
+                                            @(u.IsActive ? "Khóa tài khoản" : "Mở khóa")
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="small muted">Mặc định</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" style="text-align:center; padding:32px; color:#64748b;">Chưa có tài khoản nào.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

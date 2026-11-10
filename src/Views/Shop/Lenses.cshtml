@@ -1,0 +1,128 @@
+@model IEnumerable<MiaraEyeglasses.Models.Entities.LensOption>
+@{
+    ViewData["Title"] = "Chọn tròng kính & Độ cận — MIARA";
+}
+
+<div class="view-section">
+    <section class="container shop-page">
+        <nav class="breadcrumb" aria-label="Đường dẫn">
+            <a asp-controller="Home" asp-action="Index">Trang chủ</a>
+            <span>/</span>
+            <a asp-controller="Shop" asp-action="Index">Gọng kính</a>
+            <span>/</span>
+            <span aria-current="page">Chọn tròng kính &amp; Nhập độ cận</span>
+        </nav>
+
+        <div class="page-intro" data-reveal>
+            <span class="eyebrow">Hoàn thiện góc nhìn · LensOptions &amp; Prescriptions</span>
+            <h1>Chọn tròng kính &amp; Nhập độ cận.</h1>
+            <p>Tùy chọn loại tròng kính phù hợp nhu cầu và nhập thông số khúc xạ (SPH, CYL, AXIS, PD) hoặc liên hệ kỹ thuật viên hỗ trợ.</p>
+        </div>
+
+        <div class="cart-layout">
+            <div>
+                <!-- Bước 1: Danh sách các gói tròng kính -->
+                <div class="portal-card" data-reveal style="margin-bottom: 24px">
+                    <h2>1. Danh mục các loại tròng kính (LensOptions)</h2>
+                    <p class="small muted">Giá tròng kính được cộng trực tiếp cùng giá gọng kính khi đặt cắt tròng.</p>
+
+                    <div class="lens-options-list" style="display: flex; flex-direction: column; gap: 12px; margin-top: 16px;">
+                        @foreach (var lens in Model)
+                        {
+                            <div class="lens-radio-card @(lens.ExtraPrice == 0 ? "is-selected" : "")" style="border: 1px solid var(--color-border, #e2e8f0); border-radius: 12px; padding: 16px; background: #fff; display: flex; justify-content: space-between; align-items: center;">
+                                <div class="lens-radio-body">
+                                    <div class="lens-radio-top" style="display: flex; gap: 12px; align-items: center; margin-bottom: 4px;">
+                                        <strong style="font-size: 16px; color: var(--navy, #1e293b);">@lens.LensName</strong>
+                                        <span class="lens-price-tag" style="font-weight: 700; color: var(--blue, #2563eb);">
+                                            @(lens.ExtraPrice > 0 ? $"+{lens.ExtraPrice:N0} ₫" : "0 ₫ (Miễn phí)")
+                                        </span>
+                                    </div>
+                                    <small class="muted" style="color: var(--muted, #64748b); display: block;">Giới hạn độ cận: @lens.RxLimit</small>
+                                </div>
+                                <div>
+                                    <a asp-controller="Shop" asp-action="Index" class="button button-outline" style="padding: 8px 16px; font-size: 13px; text-decoration: none;">Chọn gọng kính</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Bước 2: Hướng dẫn đọc & nhập thông số độ cận -->
+                <div class="portal-card" data-reveal>
+                    <h2>2. Hướng dẫn thông số khúc xạ (Prescriptions)</h2>
+                    <p class="small muted">Giải thích các chỉ số trên phiếu đo mắt chuẩn nhãn khoa:</p>
+
+                    <div class="rx-table-wrap" style="overflow-x: auto; margin-top: 16px;">
+                        <table class="rx-table" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f8fafc; text-align: left; border-bottom: 2px solid #e2e8f0;">
+                                    <th style="padding: 12px;">Ký hiệu</th>
+                                    <th style="padding: 12px;">Tên gọi</th>
+                                    <th style="padding: 12px;">Ý nghĩa</th>
+                                    <th style="padding: 12px;">Ví dụ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 12px;"><strong>OD</strong></td>
+                                    <td style="padding: 12px;">Oculus Dexter</td>
+                                    <td style="padding: 12px;">Mắt phải</td>
+                                    <td style="padding: 12px;">Mắt bên phải</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 12px;"><strong>OS</strong></td>
+                                    <td style="padding: 12px;">Oculus Sinister</td>
+                                    <td style="padding: 12px;">Mắt trái</td>
+                                    <td style="padding: 12px;">Mắt bên trái</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 12px;"><strong>SPH (Sphere)</strong></td>
+                                    <td style="padding: 12px;">Độ cầu</td>
+                                    <td style="padding: 12px;">Độ cận (-) hoặc độ viễn (+)</td>
+                                    <td style="padding: 12px;">-2.00, -3.50, +1.25</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 12px;"><strong>CYL (Cylinder)</strong></td>
+                                    <td style="padding: 12px;">Độ loạn</td>
+                                    <td style="padding: 12px;">Độ loạn thị (luôn đi kèm trục)</td>
+                                    <td style="padding: 12px;">-0.50, -1.00</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 12px;"><strong>AXIS</strong></td>
+                                    <td style="padding: 12px;">Trục loạn</td>
+                                    <td style="padding: 12px;">Góc độ của loạn thị (0° – 180°)</td>
+                                    <td style="padding: 12px;">180°, 90°, 75°</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px;"><strong>PD</strong></td>
+                                    <td style="padding: 12px;">Pupillary Distance</td>
+                                    <td style="padding: 12px;">Khoảng cách giữa hai tâm đồng tử (mm)</td>
+                                    <td style="padding: 12px;">60 - 64 mm</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột bên phải: Tư vấn & Gọi ý -->
+            <aside class="order-summary" data-reveal>
+                <h2>Tư vấn tròng mắt</h2>
+                <div style="font-size: 14px; line-height: 1.6; color: var(--navy);">
+                    <p><strong>Lời khuyên từ MIARA:</strong></p>
+                    <ul style="padding-left: 18px; margin: 8px 0 16px;">
+                        <li>Độ cận <strong>dưới 2.50</strong>: Tròng tiêu chuẩn 1.56 đã đủ mỏng và bền.</li>
+                        <li>Độ cận <strong>2.50 – 4.50</strong>: Nên chọn tròng chiết suất 1.60 để giảm độ dày viền.</li>
+                        <li>Độ cận <strong>trên 4.50</strong>: Ưu tiên chiết suất 1.67 hoặc 1.74 để mắt kính nhẹ và không lộ đáy chai.</li>
+                    </ul>
+                </div>
+                <div class="summary-total" style="border-top: 1px solid var(--color-border); padding-top: 16px; margin-top: 16px;">
+                    <a asp-controller="Shop" asp-action="Index" class="button" style="width: 100%; text-align: center; text-decoration: none;">
+                        Xem danh sách gọng kính →
+                    </a>
+                </div>
+            </aside>
+        </div>
+    </section>
+</div>
+

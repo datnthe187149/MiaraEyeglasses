@@ -1,0 +1,252 @@
+@model MiaraEyeglasses.Models.ViewModels.ProductFilterViewModel
+@{
+    ViewData["Title"] = "Tất cả gọng kính";
+}
+
+<div class="view-section">
+  <div class="container shop-page">
+    <nav class="breadcrumb" aria-label="Đường dẫn">
+      <a asp-controller="Home" asp-action="Index">Trang chủ</a>
+      <span>/</span>
+      <span aria-current="page">Tất cả gọng kính</span>
+    </nav>
+
+    <div class="page-intro" data-reveal>
+      <span class="eyebrow">Khám phá MIARA</span>
+      <h1>Muôn dáng kính, vạn chất riêng.</h1>
+      <p>Tìm kiếm theo tên, lọc theo danh mục, thương hiệu, khoảng giá, giới tính, dáng gọng, chất liệu, màu sắc.</p>
+    </div>
+
+    <form id="shop-filter-form" asp-action="Index" method="get" asp-antiforgery="false">
+      <div class="shop-toolbar" data-reveal>
+        <div class="shop-search">
+          <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <label class="sr-only" for="catalog-search">Tìm sản phẩm theo tên</label>
+          <input id="catalog-search" name="Search" value="@Model.Search" type="search" placeholder="Tìm sản phẩm theo tên hoặc mã kính..." />
+        </div>
+
+        <button type="button" class="button button-outline mobile-filter-button" id="mobile-filter-toggle" aria-expanded="false">
+          Bộ lọc
+        </button>
+
+        <label class="sort-label">
+          Sắp xếp
+          <select id="shop-sort-select" name="Sort" onchange="this.form.submit()" aria-label="Sắp xếp sản phẩm">
+            <option value="">Mặc định (Nổi bật)</option>
+            <option value="bestseller" selected="@(Model.Sort == "bestseller")">Bán chạy nhất</option>
+            <option value="discount" selected="@(Model.Sort == "discount")">Đang giảm giá</option>
+            <option value="price-asc" selected="@(Model.Sort == "price-asc")">Giá tăng dần</option>
+            <option value="price-desc" selected="@(Model.Sort == "price-desc")">Giá giảm dần</option>
+            <option value="name" selected="@(Model.Sort == "name")">Tên thương hiệu (A–Z)</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="shop-layout">
+        <aside class="filters" id="shop-filters-aside">
+          <div class="filter-title">
+            <h2>Bộ lọc</h2>
+            <a asp-action="Index" class="text-button" id="reset-all-filters">Xóa tất cả</a>
+          </div>
+
+          <label class="filter-field">
+            Danh mục
+            <select id="filter-category" name="CategoryId" onchange="this.form.submit()">
+              <option value="">Tất cả danh mục</option>
+              @if (Model.Categories != null)
+              {
+                foreach (var cat in Model.Categories)
+                {
+                  <option value="@cat.CategoryId" selected="@(Model.CategoryId == cat.CategoryId)">@cat.CategoryName</option>
+                }
+              }
+            </select>
+          </label>
+
+          <label class="filter-field">
+            Thương hiệu
+            <select id="filter-brand" name="BrandId" onchange="this.form.submit()">
+              <option value="">Tất cả thương hiệu</option>
+              @if (Model.Brands != null)
+              {
+                foreach (var b in Model.Brands)
+                {
+                  <option value="@b.BrandId" selected="@(Model.BrandId == b.BrandId)">@b.BrandName</option>
+                }
+              }
+            </select>
+          </label>
+
+          <label class="filter-field">
+            Dáng gọng
+            <select id="filter-shape" name="Shape" onchange="this.form.submit()">
+              <option value="">Tất cả dáng kính</option>
+              <option value="Chữ nhật" selected="@(Model.Shape == "Chữ nhật")">Chữ nhật</option>
+              <option value="Vuông" selected="@(Model.Shape == "Vuông")">Vuông</option>
+              <option value="Tròn" selected="@(Model.Shape == "Tròn")">Tròn</option>
+              <option value="Oval" selected="@(Model.Shape == "Oval")">Oval</option>
+              <option value="Mắt mèo" selected="@(Model.Shape == "Mắt mèo")">Mắt mèo</option>
+              <option value="Đa giác" selected="@(Model.Shape == "Đa giác")">Đa giác</option>
+            </select>
+          </label>
+
+          <label class="filter-field">
+            Chất liệu
+            <select id="filter-material" name="Material" onchange="this.form.submit()">
+              <option value="">Tất cả chất liệu</option>
+              <option value="Nhựa Acetate" selected="@(Model.Material == "Nhựa Acetate")">Nhựa Acetate</option>
+              <option value="Kim loại" selected="@(Model.Material == "Kim loại")">Kim loại</option>
+              <option value="Titan" selected="@(Model.Material == "Titan")">Titan siêu nhẹ</option>
+            </select>
+          </label>
+
+          <label class="filter-field">
+            Giới tính
+            <select id="filter-gender" name="Gender" onchange="this.form.submit()">
+              <option value="">Tất cả</option>
+              <option value="Unisex" selected="@(Model.Gender == "Unisex")">Unisex</option>
+              <option value="Nam" selected="@(Model.Gender == "Nam")">Nam</option>
+              <option value="Nữ" selected="@(Model.Gender == "Nữ")">Nữ</option>
+            </select>
+          </label>
+
+          <button type="submit" class="button" style="width: 100%; margin-top: 14px;">Áp dụng bộ lọc</button>
+        </aside>
+
+        <!-- Product Grid -->
+        <div class="catalog">
+          <div class="product-grid">
+            @if (Model.Products != null && Model.Products.Any())
+            {
+              foreach (var product in Model.Products)
+              {
+                var img = product.Images?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl 
+                          ?? product.Images?.FirstOrDefault()?.ImageUrl 
+                          ?? "/images/products/249k/01-3114-151O16-143-C3/main.jpg";
+                var firstVariant = product.Variants?.FirstOrDefault();
+
+                <article class="product-card" data-reveal>
+                  <div class="product-photo">
+                    <a asp-controller="Shop" asp-action="Detail" asp-route-id="@product.ProductId" tabindex="-1" aria-hidden="true">
+                      <span class="miara-lazy-image miara-lazy-image--ready">
+                        <img src="@img" alt="@product.ProductName" loading="lazy" width="600" height="750" />
+                      </span>
+                    </a>
+                    <span class="collection-tag">@(product.Category?.CategoryName ?? "Gọng kính")</span>
+                    <span class="bestseller-badge">Bán chạy</span>
+                    
+                    <button type="button" class="favorite-button" data-favorite-btn="@product.ProductId" aria-label="Yêu thích @product.ProductName" aria-pressed="false">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                    </button>
+
+                    <a class="product-view" asp-controller="Shop" asp-action="Detail" asp-route-id="@product.ProductId">
+                      Khám phá mẫu kính
+                      <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+                    </a>
+                  </div>
+                  <div class="product-card-info">
+                    <a class="product-name" asp-controller="Shop" asp-action="Detail" asp-route-id="@product.ProductId">@product.ProductName</a>
+                    <p class="product-card-description">@product.FrameShape · @product.Material · Còn @(firstVariant?.StockQty ?? 10)</p>
+                    <div class="product-meta">
+                      <span><i style="background:#282c30"></i>@(firstVariant?.ColorName ?? "Tiêu chuẩn")</span>
+                      <div class="product-price-wrap">
+                        <strong>@product.Price.ToString("N0") ₫</strong>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              }
+            }
+            else
+            {
+              <div style="grid-column: 1/-1; text-align: center; padding: 48px; color: #64748b;">
+                <p>Không tìm thấy sản phẩm nào phù hợp với bộ lọc bạn chọn.</p>
+                <a asp-action="Index" class="button button-outline" style="margin-top: 12px; display: inline-block;">Xóa bộ lọc</a>
+              </div>
+            }
+          </div>
+
+          <!-- Phân trang đơn giản cho danh sách sản phẩm -->
+          @if (Model.TotalPages > 1)
+          {
+            <div class="pagination-wrapper" style="margin-top: 36px; display: flex; flex-direction: column; align-items: center; gap: 12px;">
+              <div style="font-size: 13px; color: #64748b;">
+                Hiển thị từ <strong>@((Model.Page - 1) * Model.PageSize + 1)</strong> đến <strong>@(Math.Min(Model.Page * Model.PageSize, Model.TotalCount))</strong> trên tổng số <strong>@Model.TotalCount</strong> sản phẩm
+              </div>
+              <div class="pagination" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: center;">
+                @if (Model.Page > 1)
+                {
+                  <a asp-action="Index" 
+                     asp-route-Page="@(Model.Page - 1)" 
+                     asp-route-Search="@Model.Search"
+                     asp-route-Sort="@Model.Sort"
+                     asp-route-CategoryId="@Model.CategoryId"
+                     asp-route-BrandId="@Model.BrandId"
+                     asp-route-Gender="@Model.Gender"
+                     asp-route-Shape="@Model.Shape"
+                     asp-route-Material="@Model.Material"
+                     asp-route-MinPrice="@Model.MinPrice"
+                     asp-route-MaxPrice="@Model.MaxPrice"
+                     class="button button-outline" style="padding: 6px 14px; font-size: 13px; text-decoration: none;">
+                    « Trước
+                  </a>
+                }
+                else
+                {
+                  <span class="button button-outline disabled" style="padding: 6px 14px; font-size: 13px; opacity: 0.5; cursor: not-allowed;">« Trước</span>
+                }
+
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                  if (i == Model.Page)
+                  {
+                    <span class="button" style="padding: 6px 14px; font-size: 13px; background: #286598; color: #fff; border-color: #286598; font-weight: 700;">@i</span>
+                  }
+                  else
+                  {
+                    <a asp-action="Index" 
+                       asp-route-Page="@i" 
+                       asp-route-Search="@Model.Search"
+                       asp-route-Sort="@Model.Sort"
+                       asp-route-CategoryId="@Model.CategoryId"
+                       asp-route-BrandId="@Model.BrandId"
+                       asp-route-Gender="@Model.Gender"
+                       asp-route-Shape="@Model.Shape"
+                       asp-route-Material="@Model.Material"
+                       asp-route-MinPrice="@Model.MinPrice"
+                       asp-route-MaxPrice="@Model.MaxPrice"
+                       class="button button-outline" style="padding: 6px 14px; font-size: 13px; text-decoration: none;">
+                      @i
+                    </a>
+                  }
+                }
+
+                @if (Model.Page < Model.TotalPages)
+                {
+                  <a asp-action="Index" 
+                     asp-route-Page="@(Model.Page + 1)" 
+                     asp-route-Search="@Model.Search"
+                     asp-route-Sort="@Model.Sort"
+                     asp-route-CategoryId="@Model.CategoryId"
+                     asp-route-BrandId="@Model.BrandId"
+                     asp-route-Gender="@Model.Gender"
+                     asp-route-Shape="@Model.Shape"
+                     asp-route-Material="@Model.Material"
+                     asp-route-MinPrice="@Model.MinPrice"
+                     asp-route-MaxPrice="@Model.MaxPrice"
+                     class="button button-outline" style="padding: 6px 14px; font-size: 13px; text-decoration: none;">
+                    Sau »
+                  </a>
+                }
+                else
+                {
+                  <span class="button button-outline disabled" style="padding: 6px 14px; font-size: 13px; opacity: 0.5; cursor: not-allowed;">Sau »</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

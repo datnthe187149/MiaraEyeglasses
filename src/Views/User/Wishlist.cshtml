@@ -1,0 +1,75 @@
+@model IEnumerable<MiaraEyeglasses.Models.Entities.Wishlist>
+@{
+    ViewData["Title"] = "Mẫu kính yêu thích";
+}
+
+<div class="user-wishlist-page container section">
+    <nav class="breadcrumb" aria-label="Đường dẫn">
+        <a asp-controller="Home" asp-action="Index">Trang chủ</a>
+        <span>/</span>
+        <a asp-controller="Profile" asp-action="Index">Tài khoản</a>
+        <span>/</span>
+        <span aria-current="page">Kính yêu thích</span>
+    </nav>
+
+    <div class="page-intro" style="margin-bottom: 24px;">
+        <span class="eyebrow">Bộ sưu tập cá nhân</span>
+        <h2>Danh sách mẫu kính yêu thích</h2>
+        <p class="small muted">Lưu lại những kiểu dáng gọng kính bạn quan tâm để dễ dàng so sánh và mua sau.</p>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success" style="margin-bottom: 20px;">@TempData["SuccessMessage"]</div>
+    }
+
+    <div class="product-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px;">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var w in Model)
+            {
+                var p = w.Product;
+                var img = p.Images.FirstOrDefault(i => i.IsPrimary)?.ImageUrl 
+                          ?? p.Images.FirstOrDefault()?.ImageUrl 
+                          ?? "/images/products/p1.png";
+
+                <article class="product-card" style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #fff; display: flex; flex-direction: column;">
+                    <div class="product-card-media" style="position: relative; padding-top: 75%; background: #f8fafc;">
+                        <a asp-controller="Shop" asp-action="Detail" asp-route-id="@p.ProductId" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px;">
+                            <img src="@img" alt="@p.ProductName" style="max-width: 100%; max-height: 100%; object-fit: contain;" loading="lazy" />
+                        </a>
+                    </div>
+                    <div class="product-card-info" style="padding: 16px; display: flex; flex-direction: column; flex: 1;">
+                        <span class="product-brand" style="font-size: 12px; color: #64748b; text-transform: uppercase;">@p.Brand?.BrandName</span>
+                        <a class="product-name" asp-controller="Shop" asp-action="Detail" asp-route-id="@p.ProductId" style="font-weight: 600; color: #1e293b; text-decoration: none; margin: 4px 0 8px; font-size: 15px;">
+                            @p.ProductName
+                        </a>
+                        <div class="product-meta" style="margin-top: auto; margin-bottom: 12px;">
+                            <div class="product-price-wrap">
+                                <strong style="color: #2563eb; font-size: 16px;">@p.Price.ToString("N0") ₫</strong>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 8px;">
+                            <a asp-controller="Shop" asp-action="Detail" asp-route-id="@p.ProductId" class="button small-btn" style="flex: 1; text-align: center; text-decoration: none;">Xem chi tiết</a>
+                            <form asp-controller="Wishlist" asp-action="Toggle" method="post" style="margin: 0;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="productId" value="@p.ProductId" />
+                                <button type="submit" class="button button-outline small-btn danger-text" title="Xóa khỏi yêu thích" style="color: #ef4444; border-color: #fca5a5;">
+                                    ✕
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            }
+        }
+        else
+        {
+            <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: #fff; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <p class="small muted" style="font-size: 16px;">Bạn chưa lưu mẫu kính yêu thích nào.</p>
+                <a asp-controller="Shop" asp-action="Index" class="button" style="margin-top: 12px; display: inline-block;">Khám phá bộ sưu tập kính</a>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,108 @@
+@model IEnumerable<MiaraEyeglasses.Models.Entities.Brand>
+@{
+    ViewData["Title"] = "Quản lý Thương hiệu Gọng kính";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" style="margin-bottom: 20px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46;">
+        @TempData["SuccessMessage"]
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger" style="margin-bottom: 20px; padding: 12px 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; color: #991b1b;">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="portal-card">
+    <div class="portal-card-head">
+        <div>
+            <span class="eyebrow">Đối tác phân phối · Brands</span>
+            <h2>Quản lý Thương hiệu Gọng kính</h2>
+            <p class="small muted">Quản lý các nhãn hàng mắt kính trong nước và quốc tế có mặt tại hệ thống MIARA.</p>
+        </div>
+        <button type="button" class="button small-btn" data-toggle-form="form-add-brand" onclick="toggleAdminForm('form-add-brand')">+ Thêm thương hiệu mới</button>
+    </div>
+
+    <!-- Form Thêm / Cập nhật Thương hiệu -->
+    <form class="customer-form sub-panel-form" id="form-add-brand" hidden asp-controller="AdminBrand" asp-action="Add" method="post">
+        @Html.AntiForgeryToken()
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+            <h3 style="margin:0">Thêm / Cập nhật Thương hiệu</h3>
+            <button type="button" class="text-button" onclick="document.getElementById('form-add-brand').setAttribute('hidden','')">✕ Đóng form</button>
+        </div>
+        <div class="form-grid-2">
+            <label>
+                <span>Tên thương hiệu *</span>
+                <input type="text" name="brandName" required placeholder="VD: BOLON Eyewear" />
+            </label>
+            <label>
+                <span>Quốc gia xuất xứ *</span>
+                <input type="text" name="country" required placeholder="VD: Pháp, Ý, Hàn Quốc, Việt Nam" />
+            </label>
+        </div>
+        <label>
+            <span>Giới thiệu thương hiệu</span>
+            <input type="text" name="description" placeholder="Mô tả phong cách và chất liệu đặc trưng..." />
+        </label>
+        <div style="display:flex; gap:12px; margin-top:8px">
+            <button type="submit" class="button">Lưu thương hiệu</button>
+            <button type="reset" class="button button-outline">Làm mới</button>
+        </div>
+    </form>
+
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Thương hiệu</th>
+                    <th>Xuất xứ</th>
+                    <th>Mô tả phong cách</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var b in Model)
+                    {
+                        <tr>
+                            <td><strong>@b.BrandName</strong></td>
+                            <td>@(string.IsNullOrEmpty(b.Country) ? "Quốc tế" : b.Country)</td>
+                            <td>@(string.IsNullOrEmpty(b.Description) ? "—" : b.Description)</td>
+                            <td>
+                                @if (b.IsActive)
+                                {
+                                    <span class="status-badge status-badge--completed">Đang phân phối</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-badge--cancelled">Đã dừng</span>
+                                }
+                            </td>
+                            <td>
+                                <form asp-controller="AdminBrand" asp-action="ToggleActive" method="post" style="display:inline; margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="brandId" value="@b.BrandId" />
+                                    <button type="submit" class="text-button @(b.IsActive ? "danger-text" : "")">
+                                        @(b.IsActive ? "Dừng" : "Phân phối")
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" style="text-align:center; padding:32px; color:#64748b;">Chưa có thương hiệu nào.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

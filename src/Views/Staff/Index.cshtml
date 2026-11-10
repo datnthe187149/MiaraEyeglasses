@@ -1,0 +1,162 @@
+@model IEnumerable<MiaraEyeglasses.Models.Entities.Order>
+@{
+    ViewData["Title"] = "Quản lý Đơn hàng & Cắt tròng";
+    byte? selectedStatus = ViewBag.SelectedStatus as byte?;
+}
+
+<div class="bo-main-wrap container" style="padding-top: 10px;">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success" style="margin-bottom: 20px;">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger" style="margin-bottom: 20px;">@TempData["ErrorMessage"]</div>
+    }
+
+    <div class="portal-card" style="background: #fff; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <div class="portal-card-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+                <span class="eyebrow" style="color: #2563eb; text-transform: uppercase; font-size: 13px; font-weight: 600;">Cổng Nhân viên Kỹ thuật</span>
+                <h2 style="margin: 4px 0;">Đơn hàng & Gia công Cắt mài tròng kính</h2>
+                <p class="small muted" style="margin: 0;">Tiếp nhận đơn đã thanh toán, xem thông số độ khúc xạ OD/OS/PD và chuyển trạng thái đơn hàng.</p>
+            </div>
+
+            <!-- Filter Status -->
+            <form method="get" asp-action="Index" asp-antiforgery="false" style="display: flex; gap: 8px; align-items: center;">
+                <label style="font-size: 14px; font-weight: 500;">Trạng thái:</label>
+                <select name="status" onchange="this.form.submit()" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    <option value="" selected="@(selectedStatus == null)">Tất cả đơn hàng</option>
+                    <option value="1" selected="@(selectedStatus == 1)">1. Đã thanh toán (Chờ cắt)</option>
+                    <option value="2" selected="@(selectedStatus == 2)">2. Đang cắt tròng</option>
+                    <option value="3" selected="@(selectedStatus == 3)">3. Đang giao hàng</option>
+                    <option value="4" selected="@(selectedStatus == 4)">4. Đã hoàn thành</option>
+                </select>
+            </form>
+        </div>
+
+        <div class="admin-table-wrap" style="overflow-x: auto;">
+            <table class="table" style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left;">
+                        <th style="padding: 12px;">Mã đơn / Ngày</th>
+                        <th style="padding: 12px;">Khách hàng</th>
+                        <th style="padding: 12px;">Sản phẩm & Gói tròng</th>
+                        <th style="padding: 12px;">Độ cận (OD / OS / PD)</th>
+                        <th style="padding: 12px;">Tổng tiền</th>
+                        <th style="padding: 12px;">Trạng thái</th>
+                        <th style="padding: 12px;">Thao tác tiến độ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var o in Model)
+                        {
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 12px;">
+                                    <strong>#@o.OrderCode</strong><br />
+                                    <small class="muted">@o.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                                </td>
+                                <td style="padding: 12px;">
+                                    <strong>@o.RecipientName</strong><br />
+                                    <small class="muted">@o.Phone</small><br />
+                                    <small class="muted" style="max-width: 180px; display: inline-block;">@o.ShippingAddress</small>
+                                </td>
+                                <td style="padding: 12px;">
+                                    @foreach (var it in o.Items)
+                                    {
+                                        <div style="margin-bottom: 6px;">
+                                            <strong>@it.ProductName</strong> (x@it.Quantity)<br />
+                                            <small class="muted">@it.ColorName | @it.SizeLabel | Gói: <strong style="color: #2563eb;">@it.LensName</strong></small>
+                                        </div>
+                                    }
+                                </td>
+                                <td style="padding: 12px;">
+                                    @foreach (var it in o.Items)
+                                    {
+                                        if (it.RightSph != null || it.LeftSph != null)
+                                        {
+                                            <div style="background: #eff6ff; padding: 6px 10px; border-radius: 6px; font-size: 12px; margin-bottom: 4px; border: 1px solid #bfdbfe;">
+                                                <div><strong>OD:</strong> Sph @(it.RightSph?.ToString("+0.00;-0.00;0.00") ?? "0.00") | Cyl @(it.RightCyl?.ToString("+0.00;-0.00;0.00") ?? "0.00") | Ax @(it.RightAxis ?? 0)°</div>
+                                                <div><strong>OS:</strong> Sph @(it.LeftSph?.ToString("+0.00;-0.00;0.00") ?? "0.00") | Cyl @(it.LeftCyl?.ToString("+0.00;-0.00;0.00") ?? "0.00") | Ax @(it.LeftAxis ?? 0)°</div>
+                                                <div><strong>PD:</strong> @(it.PD?.ToString("0.0") ?? "62.0") mm</div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="muted" style="font-size: 12px;">Kính không độ</span>
+                                        }
+                                    }
+                                </td>
+                                <td style="padding: 12px; font-weight: 600; color: #dc2626;">
+                                    @o.TotalAmount.ToString("N0") ₫
+                                </td>
+                                <td style="padding: 12px;">
+                                    @if (o.Status == 1)
+                                    {
+                                        <span class="badge" style="background: #10b981; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12px;">1. Đã thanh toán</span>
+                                    }
+                                    else if (o.Status == 2)
+                                    {
+                                        <span class="badge" style="background: #6366f1; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12px;">2. Đang cắt tròng</span>
+                                    }
+                                    else if (o.Status == 3)
+                                    {
+                                        <span class="badge" style="background: #3b82f6; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12px;">3. Đang giao hàng</span>
+                                    }
+                                    else if (o.Status == 4)
+                                    {
+                                        <span class="badge" style="background: #059669; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12px;">4. Hoàn thành</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge" style="background: #64748b; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12px;">@o.OrderStatus?.StatusName</span>
+                                    }
+                                </td>
+                                <td style="padding: 12px;">
+                                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                                        @if (o.Status == 1)
+                                        {
+                                            <form asp-action="ProcessCutting" method="post" style="margin: 0;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="orderId" value="@o.OrderId" />
+                                                <button type="submit" class="button small-btn" style="width: 100%; background: #2563eb; color: #fff;">Tiếp nhận & Cắt tròng</button>
+                                            </form>
+                                        }
+                                        else if (o.Status == 2)
+                                        {
+                                            <form asp-action="Ship" method="post" style="margin: 0;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="orderId" value="@o.OrderId" />
+                                                <button type="submit" class="button small-btn" style="width: 100%; background: #0284c7; color: #fff;">Bàn giao giao hàng</button>
+                                            </form>
+                                        }
+                                        else if (o.Status == 3)
+                                        {
+                                            <form asp-action="Complete" method="post" style="margin: 0;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="orderId" value="@o.OrderId" />
+                                                <button type="submit" class="button small-btn" style="width: 100%; background: #059669; color: #fff;">Xác nhận hoàn thành</button>
+                                            </form>
+                                        }
+
+                                        <a asp-action="OrderDetail" asp-route-id="@o.OrderId" class="button button-outline small-btn" style="text-align: center; text-decoration: none;">Xem phiếu kỹ thuật</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 32px; color: #64748b;">
+                                Không có đơn hàng nào phù hợp với bộ lọc.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

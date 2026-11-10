@@ -1,0 +1,234 @@
+@model IEnumerable<MiaraEyeglasses.Models.Entities.Product>
+@{
+    ViewData["Title"] = "Trang chủ";
+}
+
+<div class="view-section">
+  <!-- Hero Banner -->
+  <section class="hero hero--header container-wide" aria-labelledby="home-hero-title">
+    <div class="hero-content" data-reveal>
+      <h1 id="home-hero-title">Khám phá bản thân<br />qua góc nhìn mới.</h1>
+      <p class="hero-description">
+        Gọng kính đa dạng kiểu dáng, chất liệu và màu sắc. Chọn tròng kính theo đúng số đo độ cận và thanh toán trực tuyến qua VNPay.
+      </p>
+      <div class="hero-offer">
+        <p class="hero-price">Chỉ từ <strong>249K</strong></p>
+      </div>
+      <div class="hero-buttons">
+        <a class="button" asp-controller="Shop" asp-action="Index">
+          Mua ngay
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+        </a>
+        <a class="button button-outline" asp-controller="Shop" asp-action="Lenses">
+          Chọn tròng &amp; Nhập độ cận
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+        </a>
+      </div>
+      <div class="hero-note">
+        <span class="hero-note-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="15" r="4"/><circle cx="18" cy="15" r="4"/><path d="M14 15a2 2 0 0 0-2-2 2 2 0 0 0-2 2"/><path d="M2.5 13 5 7c.7-1.3 1.4-2 3-2"/><path d="M21.5 13 19 7c-.7-1.3-1.5-2-3-2"/></svg>
+        </span>
+        <div>
+          <a asp-controller="Shop" asp-action="Index">
+            <strong>
+              Danh mục đa dạng
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+            </strong>
+          </a>
+          <span>Hỗ trợ cắt lắp tròng kính cận theo đơn</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-visual" data-reveal>
+      <div class="hero-orbit"></div>
+      <div class="hero-window hero-window--people">
+        <img
+          src="~/images/editorial/brand-people-cutout.png"
+          alt="Người mẫu đeo kính MIARA"
+          fetchpriority="high"
+          width="1347"
+          height="1167"
+        />
+      </div>
+      <a asp-controller="Shop" asp-action="Index" class="hero-caption hero-caption--offer">
+        <div>
+          <span>Ưu đãi lên đến</span>
+          <strong>20%</strong>
+          <small>Cho sản phẩm áp dụng</small>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- Cam kết minh bạch (Values Strip) -->
+  <div class="values-strip container" data-reveal-group>
+    <span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+      Giá gọng kính &amp; tròng kính minh bạch
+    </span>
+    <span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+      Nhập độ cận (SPH, CYL, AXIS, PD) hoặc tải ảnh đơn kính
+    </span>
+    <span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+      Thanh toán trực tuyến qua VNPay Sandbox
+    </span>
+    <span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+      Cập nhật trạng thái đơn &amp; tồn kho Realtime
+    </span>
+  </div>
+
+  <!-- Danh mục nổi bật -->
+  <section class="collection-section section">
+    <div class="container">
+      <div class="section-heading" data-reveal>
+        <div>
+          <span class="eyebrow">Danh mục sản phẩm</span>
+          <h2>Chọn theo nhu cầu của bạn</h2>
+        </div>
+        <a class="text-link" asp-controller="Shop" asp-action="Index">
+          Xem tất cả sản phẩm
+          <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+        </a>
+      </div>
+      <div class="collection-grid home-category-grid" data-reveal-group>
+        <a class="collection-card" asp-controller="Shop" asp-action="Index" asp-route-category="gong-kinh-can">
+          <span class="miara-lazy-image miara-lazy-image--ready">
+            <img src="~/images/products/349k/10-8241-C4-50O20-141/main.jpg" alt="Gọng kính cận" loading="lazy" width="600" height="750" />
+          </span>
+          <div class="collection-overlay">
+            <div>
+              <span class="eyebrow">Danh mục</span>
+              <h3>Gọng kính cận</h3>
+              <p>Thanh lịch, nhẹ êm cho nhu cầu học tập và làm việc mỗi ngày.</p>
+            </div>
+            <span class="round-arrow">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+            </span>
+          </div>
+        </a>
+
+        <a class="collection-card" asp-controller="Shop" asp-action="Index" asp-route-category="chong-anh-sang-xanh">
+          <span class="miara-lazy-image miara-lazy-image--ready">
+            <img src="~/images/products/449k/25-BM126-54O18-105-O106/main.jpg" alt="Kính chống ánh sáng xanh" loading="lazy" width="600" height="750" />
+          </span>
+          <div class="collection-overlay">
+            <div>
+              <span class="eyebrow">Danh mục</span>
+              <h3>Kính chống ánh sáng xanh</h3>
+              <p>Bảo vệ mắt trước màn hình máy tính, điện thoại.</p>
+            </div>
+            <span class="round-arrow">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+            </span>
+          </div>
+        </a>
+
+        <a class="collection-card" asp-controller="Shop" asp-action="Index" asp-route-category="kinh-mat">
+          <span class="miara-lazy-image miara-lazy-image--ready">
+            <img src="~/images/products/549k/29-BM-218-50O19-145-C2/main.jpg" alt="Kính mát có độ" loading="lazy" width="600" height="750" />
+          </span>
+          <div class="collection-overlay">
+            <div>
+              <span class="eyebrow">Danh mục</span>
+              <h3>Kính mát có độ</h3>
+              <p>Chống tia UV400, hỗ trợ lắp tròng râm cận theo số đo.</p>
+            </div>
+            <span class="round-arrow">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+            </span>
+          </div>
+        </a>
+
+        <a class="collection-card" asp-controller="Shop" asp-action="Index" asp-route-category="gong-titan">
+          <span class="miara-lazy-image miara-lazy-image--ready">
+            <img src="~/images/products/849k/54-BF-155-51-17-145-C2/main.jpg" alt="Gọng Titan &amp; Kim loại" loading="lazy" width="600" height="750" />
+          </span>
+          <div class="collection-overlay">
+            <div>
+              <span class="eyebrow">Danh mục</span>
+              <h3>Gọng Titan &amp; Kim loại</h3>
+              <p>Siêu nhẹ, bền bỉ và sang trọng trong từng đường nét.</p>
+            </div>
+            <span class="round-arrow">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+            </span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sản phẩm nổi bật (Lấy dữ liệu từ Database) -->
+  <section class="section container" id="san-pham-noi-bat">
+    <div class="section-heading" data-reveal>
+      <div>
+        <span class="eyebrow">Tìm thấy điều hợp với bạn</span>
+        <h2>Sản phẩm nổi bật.</h2>
+        <p>Những thiết kế gọng kính tiêu biểu được yêu thích tại MIARA.</p>
+      </div>
+      <a class="text-link" asp-controller="Shop" asp-action="Index">
+        Xem tất cả kính
+        <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+      </a>
+    </div>
+
+    <div class="product-grid" data-reveal-group>
+      @if (Model != null && Model.Any())
+      {
+        foreach (var product in Model)
+        {
+          var img = product.Images.FirstOrDefault(i => i.IsPrimary)?.ImageUrl 
+                    ?? product.Images.FirstOrDefault()?.ImageUrl 
+                    ?? "/images/products/249k/01-3114-151O16-143-C3/main.jpg";
+          var firstVariant = product.Variants.FirstOrDefault();
+
+          <article class="product-card" data-reveal>
+            <div class="product-photo">
+              <a asp-controller="Shop" asp-action="Detail" asp-route-id="@product.ProductId" tabindex="-1" aria-hidden="true">
+                <span class="miara-lazy-image miara-lazy-image--ready">
+                  <img src="@img" alt="@product.ProductName" loading="lazy" width="600" height="750" />
+                </span>
+              </a>
+              <span class="collection-tag">@(product.Category?.CategoryName ?? "Gọng kính")</span>
+              <span class="bestseller-badge">Bán chạy</span>
+              
+              <form asp-controller="Wishlist" asp-action="Toggle" method="post" style="display:inline; margin:0;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="productId" value="@product.ProductId" />
+                <button type="submit" class="favorite-button" aria-label="Yêu thích @product.ProductName">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                </button>
+              </form>
+
+              <a class="product-view" asp-controller="Shop" asp-action="Detail" asp-route-id="@product.ProductId">
+                Khám phá mẫu kính
+                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+              </a>
+            </div>
+            <div class="product-card-info">
+              <a class="product-name" asp-controller="Shop" asp-action="Detail" asp-route-id="@product.ProductId">@product.ProductName</a>
+              <p class="product-card-description">@product.FrameShape · @product.Material · Còn @(firstVariant?.StockQty ?? 10)</p>
+              <div class="product-meta">
+                <span><i style="background:#282c30"></i>@(firstVariant?.ColorName ?? "Tiêu chuẩn")</span>
+                <div class="product-price-wrap">
+                  <strong>@product.Price.ToString("N0") ₫</strong>
+                </div>
+              </div>
+            </div>
+          </article>
+        }
+      }
+      else
+      {
+        <p style="grid-column: 1/-1; text-align: center; padding: 48px; color: #64748b;">
+          Đang cập nhật danh mục sản phẩm mới...
+        </p>
+      }
+    </div>
+  </section>
+</div>

@@ -1,0 +1,115 @@
+@model IEnumerable<MiaraEyeglasses.Models.Entities.Coupon>
+@{
+    ViewData["Title"] = "Quản lý Mã giảm giá (Coupons)";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" style="margin-bottom: 20px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46;">
+        @TempData["SuccessMessage"]
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger" style="margin-bottom: 20px; padding: 12px 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; color: #991b1b;">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="portal-card">
+    <div class="portal-card-head">
+        <div>
+            <span class="eyebrow">Chiến dịch khuyến mại · Coupons</span>
+            <h2>Quản lý Mã giảm giá (Coupons)</h2>
+            <p class="small muted">Tạo và cấu hình mã coupon giảm giá (tiền mặt hoặc %), hạn sử dụng và điều kiện giá trị đơn hàng tối thiểu.</p>
+        </div>
+        <button type="button" class="button small-btn" data-toggle-form="form-add-coupon" onclick="toggleAdminForm('form-add-coupon')">+ Thêm mã giảm giá mới</button>
+    </div>
+
+    <!-- Form Thêm / Cập nhật Mã giảm giá -->
+    <form class="customer-form sub-panel-form" id="form-add-coupon" hidden asp-controller="AdminCoupon" asp-action="Add" method="post">
+        @Html.AntiForgeryToken()
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+            <h3 style="margin:0">Thêm / Cập nhật Mã giảm giá</h3>
+            <button type="button" class="text-button" onclick="document.getElementById('form-add-coupon').setAttribute('hidden','')">✕ Đóng form</button>
+        </div>
+        <div class="form-grid-2">
+            <label>
+                <span>Mã Code khuyến mãi *</span>
+                <input type="text" name="couponCode" required placeholder="VD: MIARA50K" />
+            </label>
+            <label>
+                <span>Mức giảm (VNĐ hoặc %) *</span>
+                <input type="text" name="discountValueInput" required placeholder="VD: 50000 hoặc 10%" />
+            </label>
+            <label>
+                <span>Đơn hàng tối thiểu (VNĐ) *</span>
+                <input type="number" name="minOrder" required value="300000" />
+            </label>
+            <label>
+                <span>Ngày hết hạn *</span>
+                <input type="date" name="expireDate" required value="2026-12-31" />
+            </label>
+        </div>
+        <div style="display:flex; gap:12px; margin-top:8px">
+            <button type="submit" class="button">Lưu mã giảm giá</button>
+            <button type="reset" class="button button-outline">Làm mới</button>
+        </div>
+    </form>
+
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Mã Code</th>
+                    <th>Mức giảm giá</th>
+                    <th>Đơn hàng tối thiểu</th>
+                    <th>Hạn sử dụng</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var c in Model)
+                    {
+                        string discountDisplay = c.DiscountType == "PERCENT" ? $"{c.DiscountValue:0}%" : $"{c.DiscountValue:N0} ₫";
+                        <tr>
+                            <td><strong>@c.CouponCode</strong></td>
+                            <td>@discountDisplay</td>
+                            <td>@c.MinOrderAmount.ToString("N0") ₫</td>
+                            <td>@c.ExpireDate.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @if (c.IsActive && c.ExpireDate >= DateOnly.FromDateTime(DateTime.UtcNow))
+                                {
+                                    <span class="status-badge status-badge--completed">Đang áp dụng</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-badge--cancelled">Đã hết hạn / Tắt</span>
+                                }
+                            </td>
+                            <td>
+                                <form asp-controller="AdminCoupon" asp-action="ToggleActive" method="post" style="display:inline; margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="couponId" value="@c.CouponId" />
+                                    <button type="submit" class="text-button @(c.IsActive ? "danger-text" : "")">
+                                        @(c.IsActive ? "Tắt" : "Bật")
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" style="text-align:center; padding:32px; color:#64748b;">Chưa có mã giảm giá nào.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

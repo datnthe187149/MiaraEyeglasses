@@ -1,0 +1,107 @@
+@model IEnumerable<MiaraEyeglasses.Models.Entities.Review>
+@{
+    ViewData["Title"] = "Quản lý Đánh giá & Bình luận";
+    byte? selectedStatus = ViewBag.SelectedStatus as byte?;
+}
+
+<div class="portal-card">
+  <div class="portal-card-head">
+    <div>
+      <span class="eyebrow">Phản hồi khách hàng · Reviews</span>
+      <h2>Quản lý Đánh giá &amp; Bình luận</h2>
+      <p class="small muted">Kiểm duyệt các phản hồi, đánh giá sao của khách hàng sau khi nhận đơn, duyệt hiển thị công khai hoặc ẩn bình luận vi phạm.</p>
+    </div>
+  </div>
+
+  @if (TempData["SuccessMessage"] != null)
+  {
+      <div class="alert alert-success" style="margin-bottom: 20px;">@TempData["SuccessMessage"]</div>
+  }
+  @if (TempData["ErrorMessage"] != null)
+  {
+      <div class="alert alert-danger" style="margin-bottom: 20px;">@TempData["ErrorMessage"]</div>
+  }
+
+  <!-- Bộ lọc trạng thái đánh giá -->
+  <div class="admin-filter-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
+    <a asp-action="Index" class="button @(selectedStatus == null ? "" : "button-outline") small-btn">Tất cả</a>
+    <a asp-action="Index" asp-route-status="0" class="button @(selectedStatus == 0 ? "" : "button-outline") small-btn">Chờ duyệt</a>
+    <a asp-action="Index" asp-route-status="1" class="button @(selectedStatus == 1 ? "" : "button-outline") small-btn">Đã duyệt hiển thị</a>
+    <a asp-action="Index" asp-route-status="2" class="button @(selectedStatus == 2 ? "" : "button-outline") small-btn">Đã ẩn / Vi phạm</a>
+  </div>
+
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Khách hàng</th>
+          <th>Sản phẩm</th>
+          <th>Nội dung đánh giá</th>
+          <th>Ngày gửi</th>
+          <th>Trạng thái</th>
+          <th>Hành động</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (!Model.Any())
+        {
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 32px; color: var(--color-muted);">Không có đánh giá nào.</td>
+          </tr>
+        }
+        @foreach (var r in Model)
+        {
+          <tr>
+            <td>
+              <strong>@(r.User?.FullName ?? "Khách hàng")</strong><br/>
+              <span class="small muted">@(r.User?.Email ?? r.User?.Phone ?? "KH-#" + r.UserId)</span>
+            </td>
+            <td>@(r.Product?.ProductName ?? "Sản phẩm #" + r.ProductId)</td>
+            <td>
+              <span class="review-stars" style="color: #f59e0b;">@string.Concat(Enumerable.Repeat("★", r.Rating))@string.Concat(Enumerable.Repeat("☆", 5 - r.Rating))</span>
+              <p class="small" style="margin-top:4px; margin-bottom: 0;">@r.Comment</p>
+            </td>
+            <td>@r.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+            <td>
+              @if (r.Status == 1)
+              {
+                <span class="status-badge status-badge--completed review-status-badge">Đã duyệt hiển thị</span>
+              }
+              else if (r.Status == 0)
+              {
+                <span class="status-badge status-badge--pending review-status-badge">Chờ duyệt</span>
+              }
+              else
+              {
+                <span class="status-badge status-badge--cancelled review-status-badge">Đã ẩn</span>
+              }
+            </td>
+            <td>
+              <div style="display: flex; gap: 6px;">
+                @if (r.Status != 1)
+                {
+                  <form asp-controller="AdminReview" asp-action="ModerateReview" method="post" style="display:inline;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="reviewId" value="@r.ReviewId" />
+                    <input type="hidden" name="status" value="1" />
+                    <button type="submit" class="button small-btn">Duyệt hiển thị</button>
+                  </form>
+                }
+                @if (r.Status != 2)
+                {
+                  <form asp-controller="AdminReview" asp-action="ModerateReview" method="post" style="display:inline;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="reviewId" value="@r.ReviewId" />
+                    <input type="hidden" name="status" value="2" />
+                    <button type="submit" class="button button-outline small-btn">Ẩn đánh giá</button>
+                  </form>
+                }
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+

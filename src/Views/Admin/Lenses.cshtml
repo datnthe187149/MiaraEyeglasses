@@ -1,0 +1,107 @@
+@model IEnumerable<MiaraEyeglasses.Models.Entities.LensOption>
+@{
+    ViewData["Title"] = "Quản lý Tùy chọn Tròng kính";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" style="margin-bottom: 20px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46;">
+        @TempData["SuccessMessage"]
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger" style="margin-bottom: 20px; padding: 12px 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; color: #991b1b;">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="portal-card">
+    <div class="portal-card-head">
+        <div>
+            <span class="eyebrow">Dịch vụ cắt kính · LensOptions</span>
+            <h2>Quản lý Tùy chọn Tròng kính</h2>
+            <p class="small muted">Cấu hình các gói tròng kính cận, viễn, loạn: chiết suất mỏng, chống tia UV, lọc ánh sáng xanh, đổi màu và đơn giá cộng thêm.</p>
+        </div>
+        <button type="button" class="button small-btn" data-toggle-form="form-add-lens" onclick="toggleAdminForm('form-add-lens')">+ Thêm gói tròng kính mới</button>
+    </div>
+
+    <!-- Form Thêm / Cập nhật Gói Tròng kính -->
+    <form class="customer-form sub-panel-form" id="form-add-lens" hidden asp-controller="AdminLens" asp-action="Add" method="post">
+        @Html.AntiForgeryToken()
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+            <h3 style="margin:0">Thêm / Cập nhật Gói Tròng kính</h3>
+            <button type="button" class="text-button" onclick="document.getElementById('form-add-lens').setAttribute('hidden','')">✕ Đóng form</button>
+        </div>
+        <div class="form-grid-2">
+            <label>
+                <span>Tên gói tròng kính *</span>
+                <input type="text" name="lensName" required placeholder="VD: Tròng Chống Ánh Sáng Xanh BlueCut" />
+            </label>
+            <label>
+                <span>Chiết suất (Index) *</span>
+                <input type="text" name="refractiveIndex" required placeholder="VD: 1.56, 1.60, 1.67, 1.74" value="1.56" />
+            </label>
+            <label>
+                <span>Đơn giá cộng thêm (VNĐ) *</span>
+                <input type="number" name="extraPrice" required value="250000" />
+            </label>
+            <label>
+                <span>Độ cận khuyến nghị</span>
+                <input type="text" name="rxLimit" placeholder="VD: Dưới 4 độ cận, loạn dưới 2 độ" />
+            </label>
+        </div>
+        <label>
+            <span>Tính năng nổi bật *</span>
+            <input type="text" name="features" required placeholder="Lọc ánh sáng xanh máy tính, chống trầy, giảm chói ban đêm..." />
+        </label>
+        <div style="display:flex; gap:12px; margin-top:8px">
+            <button type="submit" class="button">Lưu gói tròng kính</button>
+            <button type="reset" class="button button-outline">Làm mới</button>
+        </div>
+    </form>
+
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Tên gói tròng kính</th>
+                    <th>Chiết suất</th>
+                    <th>Đơn giá cộng thêm</th>
+                    <th>Tính năng nổi bật</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var l in Model)
+                    {
+                        <tr>
+                            <td><strong>@l.LensName</strong></td>
+                            <td>@l.RefractiveIndex.ToString("F2")</td>
+                            <td>@(l.ExtraPrice > 0 ? $"{l.ExtraPrice:N0} ₫" : "0 ₫")</td>
+                            <td>@(string.IsNullOrEmpty(l.Description) ? l.RxLimit : l.Description)</td>
+                            <td>
+                                <form asp-controller="AdminLens" asp-action="ToggleActive" method="post" style="display:inline; margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="lensOptionId" value="@l.LensOptionId" />
+                                    <button type="submit" class="text-button @(l.IsActive ? "danger-text" : "")">
+                                        @(l.IsActive ? "Tắt" : "Bật")
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" style="text-align:center; padding:32px; color:#64748b;">Chưa có gói tròng kính nào.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
