@@ -35,8 +35,10 @@ namespace MiaraEyeglasses.Controllers.Order
             return 1;
         }
 
-        // [GET] /Checkout: Hiển thị form thanh toán và danh sách món được chọn trong giỏ
+        // [GET] /Checkout hoặc /Order/Checkout: Hiển thị form thanh toán và danh sách món được chọn trong giỏ
         [HttpGet]
+        [Route("Checkout")]
+        [Route("Order/Checkout")]
         public async Task<IActionResult> Checkout()
         {
             int userId = GetCurrentUserId();

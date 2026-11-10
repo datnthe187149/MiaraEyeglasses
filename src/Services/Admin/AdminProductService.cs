@@ -11,11 +11,17 @@ namespace MiaraEyeglasses.Services.Admin
     {
         Task<IEnumerable<ProductEntity>> GetAllProductsAsync();
         Task<(IEnumerable<ProductEntity> Products, int TotalCount, int TotalPages)> GetProductsPagedAsync(int page, int pageSize, string? search = null);
+        Task<ProductEntity?> GetProductByIdAsync(int productId);
         Task<(bool Success, string? ErrorMessage)> CreateProductAsync(
             string productName, string productCode, int categoryId, int brandId, decimal price,
             string description, string frameShape, string material, string gender,
             string? imageUrl, IFormFile? primaryImageFile, List<IFormFile>? galleryImageFiles,
             string colorName, string sizeLabel, int stockQty);
+        Task<(bool Success, string? ErrorMessage)> UpdateProductAsync(
+            int productId, string productName, string productCode, int categoryId, int brandId, decimal price,
+            string description, string frameShape, string material, string gender, bool isActive,
+            IFormFile? primaryImageFile, List<IFormFile>? galleryImageFiles,
+            Dictionary<int, int>? variantStocks, Dictionary<int, string>? variantColors);
         Task ToggleProductActiveAsync(int productId);
         Task<(int ImportedCount, List<string> Messages)> ImportFromScraperFolderAsync(string scraperOutputDir);
     }
@@ -36,6 +42,15 @@ namespace MiaraEyeglasses.Services.Admin
         public async Task<IEnumerable<ProductEntity>> GetAllProductsAsync()
         {
             return await _productRepository.GetAllProductsWithDetailsAsync();
+        }
+
+        public async Task<ProductEntity?> GetProductByIdAsync(int productId)
+        {
+            if (productId <= 0)
+            {
+                return null;
+            }
+            return await _productRepository.GetProductByIdWithDetailsAsync(productId);
         }
 
         public async Task<(IEnumerable<ProductEntity> Products, int TotalCount, int TotalPages)> GetProductsPagedAsync(int page, int pageSize, string? search = null)
@@ -157,6 +172,136 @@ namespace MiaraEyeglasses.Services.Admin
         public async Task ToggleProductActiveAsync(int productId)
         {
             await _productRepository.ToggleProductActiveAsync(productId);
+        }
+
+        // Cập nhật thông tin chi tiết của sản phẩm, giá bán, tồn kho các biến thể và gallery ảnh
+        public async Task<(bool Success, string? ErrorMessage)> UpdateProductAsync(
+            int productId, string productName, string productCode, int categoryId, int brandId, decimal price,
+            string description, string frameShape, string material, string gender, bool isActive,
+            IFormFile? primaryImageFile, List<IFormFile>? galleryImageFiles,
+            Dictionary<int, int>? variantStocks, Dictionary<int, string>? variantColors)
+        {
+            // 1. Kiểm tra tồn tại sản phẩm
+            var product = await _productRepository.GetProductByIdWithDetailsAsync(productId);
+            if (product == null)
+            {
+                return (false, "Không tìm thấy sản phẩm cần cập nhật trong hệ thống.");
+            }
+
+            // 2. Validate dữ liệu đầu vào
+            if (string.IsNullOrWhiteSpace(productName))
+            {
+                return (false, "Tên mẫu kính không được để trống.");
+            }
+
+            if (string.IsNullOrWhiteSpace(productCode))
+            {
+                return (false, "Mã sản phẩm / SKU không được để trống.");
+            }
+
+            if (price <= 0)
+            {
+                return (false, "Giá bán của sản phẩm phải lớn hơn 0 ₫.");
+            }
+
+            if (categoryId <= 0)
+            {
+                return (false, "Vui lòng chọn danh mục gọng kính hợp lệ.");
+            }
+
+            if (brandId <= 0)
+            {
+                return (false, "Vui lòng chọn thương hiệu hợp lệ.");
+            }
+
+            // Kiểm tra mã sản phẩm có bị trùng với sản phẩm khác hay không
+            bool codeExists = await _productRepository.ProductCodeExistsAsync(productCode.Trim(), productId);
+            if (codeExists)
+            {
+                return (false, $"Mã sản phẩm '{productCode.Trim()}' đã được dùng cho sản phẩm khác.");
+            }
+
+            // 3. Gán cập nhật các trường thông tin cơ bản
+            product.ProductName = productName.Trim();
+            product.ProductCode = productCode.Trim();
+            product.CategoryId = categoryId;
+            product.BrandId = brandId;
+            product.Price = price;
+            product.Description = description;
+            product.FrameShape = frameShape;
+            product.Material = material;
+            product.Gender = gender;
+            product.IsActive = isActive;
+
+            // 4. Xử lý ảnh đại diện mới nếu có tải lên
+            ProductImage? newPrimary = null;
+            if (primaryImageFile != null && primaryImageFile.Length > 0)
+            {
+                string savedPath = await _fileUploadService.SaveImageAsync(primaryImageFile);
+                if (!string.IsNullOrEmpty(savedPath))
+                {
+                    newPrimary = new ProductImage
+                    {
+                        ImageUrl = savedPath,
+                        IsPrimary = true,
+                        SortOrder = 0
+                    };
+                }
+            }
+
+            // 5. Xử lý các ảnh phụ mới tải lên
+            List<ProductImage>? newGalleries = null;
+            if (galleryImageFiles != null && galleryImageFiles.Count > 0)
+            {
+                newGalleries = new List<ProductImage>();
+                int currentSort = 1;
+                if (product.Images != null && product.Images.Count > 0)
+                {
+                    currentSort = product.Images.Count;
+                }
+
+                foreach (var file in galleryImageFiles)
+                {
+                    if (file != null && file.Length > 0)
+                    {
+                        string gPath = await _fileUploadService.SaveImageAsync(file);
+                        if (!string.IsNullOrEmpty(gPath))
+                        {
+                            newGalleries.Add(new ProductImage
+                            {
+                                ImageUrl = gPath,
+                                IsPrimary = false,
+                                SortOrder = currentSort
+                            });
+                            currentSort++;
+                        }
+                    }
+                }
+            }
+
+            // 6. Cập nhật số lượng tồn kho của các biến thể trực tiếp trên entity đã tracking
+            if (product.Variants != null && product.Variants.Count > 0)
+            {
+                foreach (var variant in product.Variants)
+                {
+                    // Cập nhật tồn kho nếu có truyền vào
+                    if (variantStocks != null && variantStocks.ContainsKey(variant.VariantId))
+                    {
+                        int newStock = variantStocks[variant.VariantId];
+                        if (newStock < 0)
+                        {
+                            newStock = 0;
+                        }
+                        variant.StockQty = newStock;
+                    }
+                }
+            }
+
+            // 7. Gọi Repository lưu vào CSDL
+            await _productRepository.UpdateProductWithVariantsAndImagesAsync(
+                product, null, newPrimary, newGalleries);
+
+            return (true, null);
         }
 
         public async Task<(int ImportedCount, List<string> Messages)> ImportFromScraperFolderAsync(string scraperOutputDir)

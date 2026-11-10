@@ -809,10 +809,10 @@ IF NOT EXISTS (SELECT 1 FROM Users WHERE Email = 'admin@miara.vn')
 BEGIN
     INSERT INTO Users (FullName, Email, Phone, PasswordHash, Gender, BirthDate, RoleId, IsActive, CreatedAt)
     VALUES
-    (N'Quản trị viên MIARA', 'admin@miara.vn', '0988888888', '$2a$12$YdhqeTnc1hTkQpDeADzw3.cm7YEIPf/ifWfRdhKklkKw2oWOky4yu', N'Nam', '1995-01-01', 3, 1, SYSDATETIME()),
-    (N'Kỹ thuật viên Cắt kính', 'staff@miara.vn', '0977777777', '$2a$12$YdhqeTnc1hTkQpDeADzw3.cm7YEIPf/ifWfRdhKklkKw2oWOky4yu', N'Nam', '1998-05-15', 2, 1, SYSDATETIME()),
-    (N'Nguyễn Thành Đạt', 'datnthe187149@fpt.edu.vn', '0901234567', '$2a$12$YdhqeTnc1hTkQpDeADzw3.cm7YEIPf/ifWfRdhKklkKw2oWOky4yu', N'Nam', '2004-10-20', 1, 1, SYSDATETIME()),
-    (N'Trần Thu Hà', 'khachhang@miara.vn', '0912345678', '$2a$12$YdhqeTnc1hTkQpDeADzw3.cm7YEIPf/ifWfRdhKklkKw2oWOky4yu', N'Nữ', '2002-08-12', 1, 1, SYSDATETIME());
+    (N'Quản trị viên MIARA', 'admin@miara.vn', '0988888888', '$2b$12$YR7OGP1NVWuaCR3G1rjvK.i0w2Hme11isMNGmQnnI3eS7wdRYV4E2', N'Nam', '1995-01-01', 3, 1, SYSDATETIME()),
+    (N'Kỹ thuật viên Cắt kính', 'staff@miara.vn', '0977777777', '$2b$12$YR7OGP1NVWuaCR3G1rjvK.i0w2Hme11isMNGmQnnI3eS7wdRYV4E2', N'Nam', '1998-05-15', 2, 1, SYSDATETIME()),
+    (N'Nguyễn Thành Đạt', 'datnthe187149@fpt.edu.vn', '0901234567', '$2b$12$YR7OGP1NVWuaCR3G1rjvK.i0w2Hme11isMNGmQnnI3eS7wdRYV4E2', N'Nam', '2004-10-20', 1, 1, SYSDATETIME()),
+    (N'Trần Thu Hà', 'khachhang@miara.vn', '0912345678', '$2b$12$YR7OGP1NVWuaCR3G1rjvK.i0w2Hme11isMNGmQnnI3eS7wdRYV4E2', N'Nữ', '2002-08-12', 1, 1, SYSDATETIME());
 END
 GO
 

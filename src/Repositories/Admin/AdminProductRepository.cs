@@ -10,10 +10,13 @@ namespace MiaraEyeglasses.Repositories.Admin
     {
         Task<IEnumerable<ProductEntity>> GetAllProductsWithDetailsAsync();
         Task<(IEnumerable<ProductEntity> Products, int TotalCount)> GetProductsPagedAsync(int page, int pageSize, string? search = null);
+        Task<ProductEntity?> GetProductByIdWithDetailsAsync(int productId);
         Task AddProductWithVariantAndImageAsync(ProductEntity product, ProductVariant variant, ProductImage image);
         Task AddProductWithVariantsAndImagesAsync(ProductEntity product, IEnumerable<ProductVariant> variants, IEnumerable<ProductImage> images);
+        Task UpdateProductWithVariantsAndImagesAsync(ProductEntity product, IEnumerable<ProductVariant>? updatedVariants, ProductImage? newPrimaryImage, IEnumerable<ProductImage>? newGalleryImages);
         Task ToggleProductActiveAsync(int productId);
         Task<bool> ProductCodeExistsAsync(string productCode);
+        Task<bool> ProductCodeExistsAsync(string productCode, int excludeProductId = 0);
         Task<Brand> GetOrCreateBrandAsync(string brandName);
         Task<Category> GetOrCreateCategoryAsync(string categoryName, string slug);
     }
@@ -57,6 +60,16 @@ namespace MiaraEyeglasses.Repositories.Admin
             return (products, totalCount);
         }
 
+        public async Task<ProductEntity?> GetProductByIdWithDetailsAsync(int productId)
+        {
+            return await _dbSet
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .Include(p => p.Variants)
+                .Include(p => p.Images)
+                .FirstOrDefaultAsync(p => p.ProductId == productId);
+        }
+
         public async Task AddProductWithVariantAndImageAsync(ProductEntity product, ProductVariant variant, ProductImage image)
         {
             await AddProductWithVariantsAndImagesAsync(product, new[] { variant }, new[] { image });
@@ -95,6 +108,50 @@ namespace MiaraEyeglasses.Repositories.Admin
         public async Task<bool> ProductCodeExistsAsync(string productCode)
         {
             return await _dbSet.AnyAsync(p => p.ProductCode == productCode);
+        }
+
+        public async Task<bool> ProductCodeExistsAsync(string productCode, int excludeProductId = 0)
+        {
+            if (excludeProductId > 0)
+            {
+                return await _dbSet.AnyAsync(p => p.ProductCode == productCode && p.ProductId != excludeProductId);
+            }
+            return await _dbSet.AnyAsync(p => p.ProductCode == productCode);
+        }
+
+        public async Task UpdateProductWithVariantsAndImagesAsync(
+            ProductEntity product,
+            IEnumerable<ProductVariant>? updatedVariants,
+            ProductImage? newPrimaryImage,
+            IEnumerable<ProductImage>? newGalleryImages)
+        {
+            // 1. Nếu có ảnh đại diện mới được chọn/upload
+            if (newPrimaryImage != null)
+            {
+                var oldPrimaries = await _context.ProductImages
+                    .Where(i => i.ProductId == product.ProductId && i.IsPrimary)
+                    .ToListAsync();
+                foreach (var old in oldPrimaries)
+                {
+                    old.IsPrimary = false;
+                }
+
+                newPrimaryImage.ProductId = product.ProductId;
+                await _context.ProductImages.AddAsync(newPrimaryImage);
+            }
+
+            // 2. Nếu có ảnh phụ mới
+            if (newGalleryImages != null)
+            {
+                foreach (var gImg in newGalleryImages)
+                {
+                    gImg.ProductId = product.ProductId;
+                    await _context.ProductImages.AddAsync(gImg);
+                }
+            }
+
+            // Lưu toàn bộ thay đổi của Product và các Variant đã được tracking
+            await _context.SaveChangesAsync();
         }
 
         public async Task<Brand> GetOrCreateBrandAsync(string brandName)

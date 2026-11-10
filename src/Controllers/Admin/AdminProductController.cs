@@ -112,11 +112,19 @@ namespace MiaraEyeglasses.Controllers.Admin
 
             if (string.IsNullOrWhiteSpace(material))
             {
-                material = "Nhựa Acetate";
+                material = "Nhựa";
+            }
+            else if (material.Contains("Titan", StringComparison.OrdinalIgnoreCase))
+            {
+                material = "Titan";
+            }
+            else if (material.Contains("Kim loại", StringComparison.OrdinalIgnoreCase))
+            {
+                material = "Kim loại";
             }
             else
             {
-                material = material.Trim();
+                material = "Nhựa";
             }
 
             if (string.IsNullOrWhiteSpace(gender))
@@ -184,6 +192,158 @@ namespace MiaraEyeglasses.Controllers.Admin
                 TempData["ErrorMessage"] = error ?? "Thêm sản phẩm thất bại.";
 
             return RedirectToAction("Index");
+        }
+
+        // [GET] /Admin/Products/Edit/{id}: Hiển thị giao diện Chỉnh sửa thông tin chi tiết sản phẩm
+        [HttpGet]
+        [Route("Admin/Products/Edit/{id}")]
+        [Route("AdminProduct/Edit/{id}")]
+        public async Task<IActionResult> Edit(int id)
+        {
+            if (id <= 0)
+            {
+                TempData["ErrorMessage"] = "Mã sản phẩm không hợp lệ.";
+                return RedirectToAction("Index");
+            }
+
+            var product = await _productService.GetProductByIdAsync(id);
+            if (product == null)
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy thông tin sản phẩm yêu cầu.";
+                return RedirectToAction("Index");
+            }
+
+            var categories = await _categoryService.GetAllCategoriesAsync();
+            var brands = await _brandService.GetAllBrandsAsync();
+
+            ViewBag.Categories = categories.Where(c => c.IsActive);
+            ViewBag.Brands = brands.Where(b => b.IsActive);
+
+            return View("~/Views/Admin/EditProduct.cshtml", product);
+        }
+
+        // [POST] /Admin/Products/Edit/{id}: Lưu cập nhật thông tin sản phẩm & tồn kho biến thể
+        [HttpPost]
+        [Route("Admin/Products/Edit/{id}")]
+        [Route("AdminProduct/Edit/{id}")]
+        public async Task<IActionResult> Edit(
+            int id,
+            string? productName,
+            string? productCode,
+            int categoryId,
+            int brandId,
+            decimal price,
+            string? frameShape,
+            string? material,
+            string? gender,
+            string? description,
+            bool isActive,
+            IFormFile? primaryImageFile,
+            List<IFormFile>? galleryImageFiles,
+            Dictionary<int, int>? variantStock,
+            Dictionary<int, string>? variantColor)
+        {
+            if (id <= 0)
+            {
+                TempData["ErrorMessage"] = "Mã sản phẩm không hợp lệ.";
+                return RedirectToAction("Index");
+            }
+
+            if (string.IsNullOrWhiteSpace(productName))
+            {
+                TempData["ErrorMessage"] = "Vui lòng nhập tên mẫu kính (không được để trống).";
+                return RedirectToAction("Edit", new { id });
+            }
+
+            if (string.IsNullOrWhiteSpace(productCode))
+            {
+                TempData["ErrorMessage"] = "Vui lòng nhập mã sản phẩm / SKU (không được để trống).";
+                return RedirectToAction("Edit", new { id });
+            }
+
+            if (price <= 0)
+            {
+                TempData["ErrorMessage"] = "Giá bán của sản phẩm phải lớn hơn 0 ₫.";
+                return RedirectToAction("Edit", new { id });
+            }
+
+            if (categoryId <= 0)
+            {
+                TempData["ErrorMessage"] = "Vui lòng chọn danh mục gọng kính hợp lệ.";
+                return RedirectToAction("Edit", new { id });
+            }
+
+            if (brandId <= 0)
+            {
+                TempData["ErrorMessage"] = "Vui lòng chọn thương hiệu hợp lệ.";
+                return RedirectToAction("Edit", new { id });
+            }
+
+            // Chuẩn hóa Dáng gọng theo CHECK constraint: Chữ nhật, Vuông, Tròn, Oval, Mắt mèo, Đa giác
+            if (string.IsNullOrWhiteSpace(frameShape))
+            {
+                frameShape = "Vuông";
+            }
+            else
+            {
+                frameShape = frameShape.Trim();
+            }
+
+            // Chuẩn hóa Chất liệu theo CHECK constraint: Nhựa, Kim loại, Titan
+            if (string.IsNullOrWhiteSpace(material))
+            {
+                material = "Nhựa";
+            }
+            else if (material.Contains("Titan", StringComparison.OrdinalIgnoreCase))
+            {
+                material = "Titan";
+            }
+            else if (material.Contains("Kim loại", StringComparison.OrdinalIgnoreCase))
+            {
+                material = "Kim loại";
+            }
+            else
+            {
+                material = "Nhựa";
+            }
+
+            if (string.IsNullOrWhiteSpace(gender))
+            {
+                gender = "Unisex";
+            }
+            else
+            {
+                gender = gender.Trim();
+            }
+
+            if (string.IsNullOrWhiteSpace(description))
+            {
+                description = productName.Trim() + " - Gọng " + material + " dáng " + frameShape;
+            }
+            else
+            {
+                description = description.Trim();
+            }
+
+            var (success, error) = await _productService.UpdateProductAsync(
+                id, productName.Trim(), productCode.Trim(), categoryId, brandId, price,
+                description, frameShape, material, gender, isActive,
+                primaryImageFile, galleryImageFiles, variantStock, variantColor);
+
+            if (success)
+            {
+                TempData["SuccessMessage"] = $"Đã cập nhật thông tin sản phẩm '{productName.Trim()}' thành công!";
+                return RedirectToAction("Index");
+            }
+            else
+            {
+                TempData["ErrorMessage"] = error;
+                if (string.IsNullOrEmpty(error))
+                {
+                    TempData["ErrorMessage"] = "Cập nhật sản phẩm thất bại.";
+                }
+                return RedirectToAction("Edit", new { id });
+            }
         }
 
         // [POST] Bật / Tắt trạng thái hiển thị của sản phẩm (Ẩn / Hiện)

@@ -1,0 +1,196 @@
+@model MiaraEyeglasses.Models.Entities.Product
+@{
+    ViewData["Title"] = "Chỉnh sửa sản phẩm: " + Model.ProductName;
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var categories = ViewBag.Categories as IEnumerable<MiaraEyeglasses.Models.Entities.Category> ?? Enumerable.Empty<MiaraEyeglasses.Models.Entities.Category>();
+    var brands = ViewBag.Brands as IEnumerable<MiaraEyeglasses.Models.Entities.Brand> ?? Enumerable.Empty<MiaraEyeglasses.Models.Entities.Brand>();
+    var primaryImg = Model.Images?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl 
+                     ?? Model.Images?.FirstOrDefault()?.ImageUrl 
+                     ?? "/images/products/p1.png";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" style="margin-bottom: 20px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46;">
+        @TempData["SuccessMessage"]
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger" style="margin-bottom: 20px; padding: 12px 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; color: #991b1b;">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="portal-card">
+    <div class="portal-card-head">
+        <div>
+            <span class="eyebrow">QUẢN TRỊ KHO · CHỈNH SỬA SẢN PHẨM</span>
+            <h2>Chỉnh sửa thông tin sản phẩm: @Model.ProductName</h2>
+            <p class="small muted">Cập nhật thông tin chi tiết, giá bán, danh mục, thông số kỹ thuật và số lượng tồn kho biến thể.</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <a asp-controller="AdminInventory" asp-action="Index" class="button button-outline small-btn">← Quay lại Quản lý tồn kho</a>
+            <a asp-controller="AdminProduct" asp-action="Index" class="button button-outline small-btn">Danh sách sản phẩm</a>
+        </div>
+    </div>
+
+    <!-- Form Chỉnh sửa Sản phẩm -->
+    <form class="customer-form sub-panel-form" asp-controller="AdminProduct" asp-action="Edit" asp-route-id="@Model.ProductId" method="post" enctype="multipart/form-data" style="margin-top: 20px;">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.ProductId" />
+
+        <div style="display: flex; gap: 24px; margin-bottom: 24px; align-items: flex-start; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <div>
+                <img src="@primaryImg" alt="@Model.ProductName" style="width: 120px; height: 120px; object-fit: contain; background: #fff; border-radius: 6px; border: 1px solid #cbd5e1;" />
+            </div>
+            <div style="flex: 1;">
+                <h4 style="margin: 0 0 8px 0; color: #0f172a;">Ảnh đại diện hiện tại</h4>
+                <p class="small muted" style="margin-bottom: 12px;">Đang sử dụng ảnh: <code>@primaryImg</code>. Bạn có thể tải lên ảnh mới để thay thế ảnh đại diện này.</p>
+                <label style="margin: 0;">
+                    <span style="font-size: 13px; font-weight: 600; color: #475569;">Chọn ảnh đại diện mới (.jpg, .png, .webp):</span>
+                    <input type="file" name="primaryImageFile" accept="image/jpeg,image/png,image/webp" style="margin-top: 6px;" />
+                </label>
+            </div>
+        </div>
+
+        <div class="form-grid-2">
+            <label>
+                <span>Tên mẫu kính *</span>
+                <input type="text" name="productName" value="@Model.ProductName" required placeholder="VD: ALFIO RALDO 3114" />
+            </label>
+            <label>
+                <span>Mã sản phẩm (SKU) *</span>
+                <input type="text" name="productCode" value="@Model.ProductCode" required placeholder="VD: 3114-151O16-143" />
+            </label>
+            <label>
+                <span>Danh mục gọng kính *</span>
+                <select name="categoryId">
+                    @foreach (var c in categories)
+                    {
+                        if (c.CategoryId == Model.CategoryId)
+                        {
+                            <option value="@c.CategoryId" selected>@c.CategoryName</option>
+                        }
+                        else
+                        {
+                            <option value="@c.CategoryId">@c.CategoryName</option>
+                        }
+                    }
+                </select>
+            </label>
+            <label>
+                <span>Thương hiệu *</span>
+                <select name="brandId">
+                    @foreach (var b in brands)
+                    {
+                        if (b.BrandId == Model.BrandId)
+                        {
+                            <option value="@b.BrandId" selected>@b.BrandName</option>
+                        }
+                        else
+                        {
+                            <option value="@b.BrandId">@b.BrandName</option>
+                        }
+                    }
+                </select>
+            </label>
+            <label>
+                <span>Giá niêm yết (VNĐ) *</span>
+                <input type="number" name="price" value="@((long)Model.Price)" required />
+            </label>
+            <label>
+                <span>Dáng gọng kính</span>
+                <select name="frameShape">
+                    <!option value="Vuông" @(Model.FrameShape == "Vuông" ? "selected" : "")>Vuông</!option>
+                    <!option value="Tròn" @(Model.FrameShape == "Tròn" ? "selected" : "")>Tròn</!option>
+                    <!option value="Chữ nhật" @(Model.FrameShape == "Chữ nhật" ? "selected" : "")>Chữ nhật</!option>
+                    <!option value="Oval" @(Model.FrameShape == "Oval" ? "selected" : "")>Oval</!option>
+                    <!option value="Mắt mèo" @(Model.FrameShape == "Mắt mèo" ? "selected" : "")>Mắt mèo</!option>
+                    <!option value="Đa giác" @(Model.FrameShape == "Đa giác" ? "selected" : "")>Đa giác</!option>
+                </select>
+            </label>
+            <label>
+                <span>Chất liệu gọng kính</span>
+                <select name="material">
+                    <!option value="Nhựa" @(Model.Material == "Nhựa" ? "selected" : "")>Nhựa</!option>
+                    <!option value="Kim loại" @(Model.Material == "Kim loại" ? "selected" : "")>Kim loại</!option>
+                    <!option value="Titan" @(Model.Material == "Titan" ? "selected" : "")>Titan</!option>
+                </select>
+            </label>
+            <label>
+                <span>Đối tượng / Giới tính</span>
+                <select name="gender">
+                    <!option value="Unisex" @(Model.Gender == "Unisex" ? "selected" : "")>Unisex (Nam &amp; Nữ)</!option>
+                    <!option value="Nam" @(Model.Gender == "Nam" ? "selected" : "")>Nam</!option>
+                    <!option value="Nữ" @(Model.Gender == "Nữ" ? "selected" : "")>Nữ</!option>
+                </select>
+            </label>
+        </div>
+
+        <label style="margin-top: 12px;">
+            <span>Mô tả chi tiết sản phẩm</span>
+            <textarea name="description" rows="4" style="width: 100%; padding: 10px; border: 1px solid var(--color-border); border-radius: 6px;">@Model.Description</textarea>
+        </label>
+
+        <div style="margin-top: 16px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" name="isActive" value="true" @(Model.IsActive ? "checked" : "") />
+                <span style="font-weight: 600;">Cho phép hiển thị và kinh doanh sản phẩm này ngoài cửa hàng</span>
+            </label>
+        </div>
+
+        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+            <h3 style="margin-bottom: 8px;">Quản lý Biến thể &amp; Số lượng Tồn kho</h3>
+            <p class="small muted" style="margin-bottom: 16px;">Chỉnh sửa màu sắc và cập nhật số lượng tồn kho trực tiếp cho từng biến thể của sản phẩm.</p>
+
+            <table class="admin-table" style="margin-bottom: 16px;">
+                <thead>
+                    <tr>
+                        <th>Mã SKU biến thể</th>
+                        <th>Tên màu sắc</th>
+                        <th>Kích cỡ (Size)</th>
+                        <th>Số lượng tồn kho</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Variants != null && Model.Variants.Any())
+                    {
+                        foreach (var v in Model.Variants)
+                        {
+                            <tr>
+                                <td><code>@v.Sku</code></td>
+                                <td>
+                                    <strong>@v.ColorName</strong>
+                                    <input type="hidden" name="variantColor[@v.VariantId]" value="@v.ColorName" />
+                                </td>
+                                <td><span class="badge">Size @v.SizeLabel</span></td>
+                                <td>
+                                    <input type="number" name="variantStock[@v.VariantId]" value="@v.StockQty" min="0" max="9999" style="padding: 6px 10px; border: 1px solid var(--color-border); border-radius: 4px; width: 100px; font-weight: bold;" /> chiếc
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: #64748b; padding: 16px;">Sản phẩm chưa có biến thể màu sắc hoặc kích cỡ nào.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top: 16px;">
+            <label>
+                <span>Tải lên thêm ảnh phụ cho bộ sưu tập gallery (.jpg, .png, .webp)</span>
+                <input type="file" name="galleryImageFiles" multiple accept="image/jpeg,image/png,image/webp" style="margin-top: 6px;" />
+            </label>
+        </div>
+
+        <div style="display:flex; gap:12px; margin-top:24px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+            <button type="submit" class="button" style="padding: 10px 24px; font-weight: 600;">✓ Lưu cập nhật sản phẩm</button>
+            <a asp-controller="AdminProduct" asp-action="Index" class="button button-outline" style="padding: 10px 20px;">Hủy bỏ</a>
+        </div>
+    </form>
+</div>
