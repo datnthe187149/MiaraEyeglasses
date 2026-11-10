@@ -160,33 +160,15 @@
                     <tbody>
                         @foreach (var order in Model.Orders.OrderByDescending(o => o.CreatedAt))
                         {
-                            string statusClass = "pending";
-                            string statusText = "Chờ thanh toán";
-                            if (order.Status == 1 || order.Status == 4)
+                            string statusClass = "completed";
+                            string statusText = "Đã thanh toán";
+
+                            if (order.Status == 0)
                             {
-                                statusClass = "completed";
-                                if (order.Status == 1)
-                                {
-                                    statusText = "Đã thanh toán";
-                                }
-                                else
-                                {
-                                    statusText = "Hoàn thành";
-                                }
+                                statusClass = "pending";
+                                statusText = "Đang thanh toán";
                             }
-                            else if (order.Status == 2 || order.Status == 3)
-                            {
-                                statusClass = "processing";
-                                if (order.Status == 2)
-                                {
-                                    statusText = "Đang mài lắp";
-                                }
-                                else
-                                {
-                                    statusText = "Đang giao hàng";
-                                }
-                            }
-                            else if (order.Status == 5)
+                            else if (order.Status == 5 || order.Status == 6)
                             {
                                 statusClass = "cancelled";
                                 statusText = "Đã hủy";
@@ -218,7 +200,7 @@
                                     <span class="status-badge status-badge--@statusClass">@statusText</span>
                                 </td>
                                 <td>
-                                    <a asp-controller="AdminOrder" asp-action="Index" class="button button-outline small-btn" style="text-decoration: none; padding: 4px 8px; font-size: 12px;">Xem trong Đơn hàng</a>
+                                    <a asp-controller="AdminOrder" asp-action="Detail" asp-route-id="@order.OrderId" class="button button-outline small-btn" style="text-decoration: none; padding: 4px 8px; font-size: 12px;">Xem chi tiết</a>
                                 </td>
                             </tr>
                         }

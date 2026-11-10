@@ -5,7 +5,7 @@ namespace MiaraEyeglasses.Repositories.Admin
     public interface IAdminOrderRepository
     {
         Task<IEnumerable<Models.Entities.Order>> GetAllOrdersAsync(byte? status = null);
-        Task RefundOrderAsync(int orderId, int adminId, string refundTxnNo, string reason, decimal? refundAmount = null);
+        Task<Models.Entities.Order?> GetOrderDetailsAsync(int orderId);
     }
 
     public class AdminOrderRepository : IAdminOrderRepository
@@ -17,14 +17,16 @@ namespace MiaraEyeglasses.Repositories.Admin
             _orderRepository = orderRepository;
         }
 
+        // Lấy toàn bộ danh sách đơn hàng cho Admin theo bộ lọc trạng thái
         public async Task<IEnumerable<Models.Entities.Order>> GetAllOrdersAsync(byte? status = null)
         {
             return await _orderRepository.GetAllOrdersForAdminAsync(status);
         }
 
-        public async Task RefundOrderAsync(int orderId, int adminId, string refundTxnNo, string reason, decimal? refundAmount = null)
+        // Lấy thông tin chi tiết một đơn hàng kèm sản phẩm, tròng kính và nhật ký giao dịch
+        public async Task<Models.Entities.Order?> GetOrderDetailsAsync(int orderId)
         {
-            await _orderRepository.RefundOrderViaProcedureAsync(orderId, adminId, refundTxnNo, reason, refundAmount);
+            return await _orderRepository.GetOrderWithDetailsAsync(orderId);
         }
     }
 }

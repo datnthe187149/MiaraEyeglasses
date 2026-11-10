@@ -1,10 +1,12 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MiaraEyeglasses.Services.Admin;
 
 namespace MiaraEyeglasses.Controllers.Admin
 {
+    // Controller quản lý Đơn hàng cho Quản trị viên (Admin)
+    // Hệ thống chỉ theo dõi 3 trạng thái: Đang thanh toán, Đã thanh toán, Đã hủy.
+    // Quản trị viên chỉ có quyền xem chi tiết đơn hàng, không tự ý chỉnh sửa hay hủy đơn.
     [Authorize(Roles = "Admin")]
     public class AdminOrderController : Controller
     {
@@ -15,17 +17,7 @@ namespace MiaraEyeglasses.Controllers.Admin
             _orderService = orderService;
         }
 
-        private int GetCurrentAdminId()
-        {
-            var sessionUserId = HttpContext.Session.GetInt32("UserId");
-            if (sessionUserId.HasValue && sessionUserId.Value > 0)
-                return sessionUserId.Value;
-
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (int.TryParse(userIdStr, out var userId)) return userId;
-            return 1;
-        }
-
+        // [GET] /Admin/Orders: Hiển thị danh sách đơn hàng lọc theo 3 trạng thái
         [HttpGet]
         [Route("Admin/Orders")]
         [Route("AdminOrder")]
@@ -36,20 +28,26 @@ namespace MiaraEyeglasses.Controllers.Admin
             return View("~/Views/Admin/Orders.cshtml", orders);
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Route("Admin/Refund")]
-        [Route("AdminOrder/Refund")]
-        public async Task<IActionResult> Refund(int orderId, string reason, decimal? refundAmount = null)
+        // [GET] /Admin/Orders/Detail/{id}: Xem thông tin chi tiết một đơn hàng
+        [HttpGet]
+        [Route("Admin/Orders/Detail/{id}")]
+        [Route("AdminOrder/Detail/{id}")]
+        public async Task<IActionResult> Detail(int id)
         {
-            int adminId = GetCurrentAdminId();
-            var (success, error) = await _orderService.RefundOrderAsync(orderId, adminId, reason ?? "Admin hoàn tiền đơn hàng", refundAmount);
-            if (success)
-                TempData["SuccessMessage"] = $"Đã hoàn tiền đơn hàng #{orderId} thành công!";
-            else
-                TempData["ErrorMessage"] = error ?? "Hoàn tiền đơn hàng thất bại.";
+            if (id <= 0)
+            {
+                TempData["ErrorMessage"] = "Mã đơn hàng không hợp lệ.";
+                return RedirectToAction("Index");
+            }
 
-            return RedirectToAction("Index");
+            var order = await _orderService.GetOrderDetailsAsync(id);
+            if (order == null)
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy thông tin đơn hàng yêu cầu.";
+                return RedirectToAction("Index");
+            }
+
+            return View("~/Views/Admin/OrderDetail.cshtml", order);
         }
     }
 }
