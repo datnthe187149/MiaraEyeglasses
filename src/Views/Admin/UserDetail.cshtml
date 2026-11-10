@@ -1,0 +1,331 @@
+@model MiaraEyeglasses.Models.Entities.User
+@{
+    ViewData["Title"] = "Chi tiết tài khoản: " + Model.FullName;
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    string roleNameStr = "Khách hàng";
+    if (Model.Role != null)
+    {
+        roleNameStr = Model.Role.RoleName;
+    }
+    else if (Model.RoleId == 3)
+    {
+        roleNameStr = "Quản trị viên";
+    }
+    else if (Model.RoleId == 2)
+    {
+        roleNameStr = "Nhân viên";
+    }
+
+    int orderCount = 0;
+    decimal totalSpent = 0;
+    if (Model.Orders != null)
+    {
+        orderCount = Model.Orders.Count;
+        foreach (var o in Model.Orders)
+        {
+            if (o.Status != 5) // 5 là Đã hủy (Cancelled)
+            {
+                totalSpent += o.TotalAmount;
+            }
+        }
+    }
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" style="margin-bottom: 20px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46;">
+        @TempData["SuccessMessage"]
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger" style="margin-bottom: 20px; padding: 12px 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; color: #991b1b;">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="portal-card">
+    <div class="portal-card-head">
+        <div>
+            <span class="eyebrow">QUẢN TRỊ NGƯỜI DÙNG · HỒ SƠ CHI TIẾT</span>
+            <h2>@Model.FullName</h2>
+            <p class="small muted">Email: <strong>@Model.Email</strong> · Vai trò: <strong>@roleNameStr</strong> · Mã định danh: <code>#USER-@Model.UserId</code></p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <a asp-controller="AdminUser" asp-action="Edit" asp-route-id="@Model.UserId" class="button small-btn">Chỉnh sửa tài khoản</a>
+            <a asp-controller="AdminUser" asp-action="Index" class="button button-outline small-btn">← Quay lại danh sách</a>
+        </div>
+    </div>
+
+    <!-- Hàng thống kê tổng quan của Người dùng -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 20px; margin-bottom: 24px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+            <span class="small muted" style="display: block; margin-bottom: 4px;">Tổng đơn hàng</span>
+            <strong style="font-size: 24px; color: #0f172a;">@orderCount</strong>
+        </div>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+            <span class="small muted" style="display: block; margin-bottom: 4px;">Tổng chi tiêu mua sắm</span>
+            <strong style="font-size: 24px; color: #0284c7;">@totalSpent.ToString("N0") ₫</strong>
+        </div>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+            <span class="small muted" style="display: block; margin-bottom: 4px;">Trạng thái tài khoản</span>
+            <div style="margin-top: 6px;">
+                @if (Model.IsActive)
+                {
+                    <span class="status-badge status-badge--completed">Đang hoạt động</span>
+                }
+                else
+                {
+                    <span class="status-badge status-badge--cancelled">Đã bị khóa</span>
+                }
+            </div>
+        </div>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+            <span class="small muted" style="display: block; margin-bottom: 4px;">Ngày đăng ký</span>
+            <strong style="font-size: 16px; color: #334155; display: block; margin-top: 8px;">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</strong>
+        </div>
+    </div>
+
+    <!-- Thông tin cá nhân chi tiết -->
+    <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+        <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 18px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">1. Thông tin lý lịch &amp; liên hệ</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+            <div>
+                <span class="small muted" style="display:block;">Họ và tên:</span>
+                <strong style="font-size: 15px;">@Model.FullName</strong>
+            </div>
+            <div>
+                <span class="small muted" style="display:block;">Email:</span>
+                <strong style="font-size: 15px;">@Model.Email</strong>
+            </div>
+            <div>
+                <span class="small muted" style="display:block;">Số điện thoại:</span>
+                <strong style="font-size: 15px;">
+                    @if (string.IsNullOrEmpty(Model.Phone))
+                    {
+                        <span class="muted">Chưa cập nhật</span>
+                    }
+                    else
+                    {
+                        @Model.Phone
+                    }
+                </strong>
+            </div>
+            <div>
+                <span class="small muted" style="display:block;">Giới tính:</span>
+                <strong style="font-size: 15px;">@(Model.Gender ?? "Chưa rõ")</strong>
+            </div>
+            <div>
+                <span class="small muted" style="display:block;">Ngày sinh:</span>
+                <strong style="font-size: 15px;">
+                    @if (Model.BirthDate.HasValue)
+                    {
+                        @Model.BirthDate.Value.ToString("dd/MM/yyyy")
+                    }
+                    else
+                    {
+                        <span class="muted">Chưa cập nhật</span>
+                    }
+                </strong>
+            </div>
+            <div>
+                <span class="small muted" style="display:block;">Vai trò phân quyền:</span>
+                <strong style="font-size: 15px; color: #0284c7;">@roleNameStr</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lịch sử Đơn hàng đã mua của User -->
+    <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+            <h3 style="margin: 0; font-size: 18px;">2. Lịch sử đơn hàng đã đặt (@orderCount đơn)</h3>
+            <span class="small muted">Toàn bộ đơn hàng được ghi nhận trên hệ thống</span>
+        </div>
+
+        @if (Model.Orders != null && Model.Orders.Any())
+        {
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn hàng</th>
+                            <th>Ngày đặt</th>
+                            <th>Sản phẩm đặt mua</th>
+                            <th>Tổng tiền</th>
+                            <th>Phương thức</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.Orders.OrderByDescending(o => o.CreatedAt))
+                        {
+                            string statusClass = "pending";
+                            string statusText = "Chờ thanh toán";
+                            if (order.Status == 1 || order.Status == 4)
+                            {
+                                statusClass = "completed";
+                                if (order.Status == 1)
+                                {
+                                    statusText = "Đã thanh toán";
+                                }
+                                else
+                                {
+                                    statusText = "Hoàn thành";
+                                }
+                            }
+                            else if (order.Status == 2 || order.Status == 3)
+                            {
+                                statusClass = "processing";
+                                if (order.Status == 2)
+                                {
+                                    statusText = "Đang mài lắp";
+                                }
+                                else
+                                {
+                                    statusText = "Đang giao hàng";
+                                }
+                            }
+                            else if (order.Status == 5)
+                            {
+                                statusClass = "cancelled";
+                                statusText = "Đã hủy";
+                            }
+
+                            int itemCount = 0;
+                            if (order.Items != null)
+                            {
+                                itemCount = order.Items.Count;
+                            }
+
+                            string paymentMethod = "COD";
+                            if (order.Payments != null && order.Payments.Any())
+                            {
+                                var pay = order.Payments.FirstOrDefault();
+                                if (pay != null && !string.IsNullOrEmpty(pay.Method))
+                                {
+                                    paymentMethod = pay.Method;
+                                }
+                            }
+
+                            <tr>
+                                <td><strong>#@order.OrderCode</strong></td>
+                                <td>@order.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@itemCount sản phẩm</td>
+                                <td><strong style="color: #0284c7;">@order.TotalAmount.ToString("N0") ₫</strong></td>
+                                <td>@paymentMethod</td>
+                                <td>
+                                    <span class="status-badge status-badge--@statusClass">@statusText</span>
+                                </td>
+                                <td>
+                                    <a asp-controller="AdminOrder" asp-action="Index" class="button button-outline small-btn" style="text-decoration: none; padding: 4px 8px; font-size: 12px;">Xem trong Đơn hàng</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="muted" style="text-align: center; padding: 24px 0; margin: 0;">Người dùng này chưa phát sinh đơn hàng nào.</p>
+        }
+    </div>
+
+    <!-- Sổ địa chỉ giao hàng và Đơn kính cận -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <!-- Sổ địa chỉ -->
+        <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px;">
+            <h3 style="margin-top: 0; margin-bottom: 12px; font-size: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">3. Sổ địa chỉ nhận hàng</h3>
+            @if (Model.Addresses != null && Model.Addresses.Any())
+            {
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                    @foreach (var addr in Model.Addresses)
+                    {
+                        <li style="padding: 12px 0; border-bottom: 1px dashed #e2e8f0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <strong>@addr.RecipientName</strong>
+                                @if (addr.IsDefault)
+                                {
+                                    <span class="status-badge status-badge--completed" style="font-size: 11px;">Mặc định</span>
+                                }
+                            </div>
+                            <div class="small muted">SĐT: @addr.Phone</div>
+                            <div style="font-size: 13px; color: #334155; margin-top: 2px;">
+                                @addr.StreetAddress, @addr.DistrictWard, @addr.Province
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p class="small muted" style="margin: 0; padding: 12px 0;">Chưa lưu địa chỉ nhận hàng nào.</p>
+            }
+        </div>
+
+        <!-- Đơn kính cận -->
+        <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px;">
+            <h3 style="margin-top: 0; margin-bottom: 12px; font-size: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">4. Đơn thuốc đo mắt / Độ kính</h3>
+            @if (Model.Prescriptions != null && Model.Prescriptions.Any())
+            {
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                    @foreach (var pres in Model.Prescriptions)
+                    {
+                        <li style="padding: 12px 0; border-bottom: 1px dashed #e2e8f0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <strong>@pres.ProfileName</strong>
+                                @if (pres.IsDefault)
+                                {
+                                    <span class="status-badge status-badge--completed" style="font-size: 11px;">Mặc định</span>
+                                }
+                            </div>
+                            <div style="font-size: 13px; color: #0284c7;">
+                                Mắt phải (OD): Cầu @(pres.RightSph.HasValue ? pres.RightSph.Value.ToString("0.00") : "0.00") · Loạn @(pres.RightCyl.HasValue ? pres.RightCyl.Value.ToString("0.00") : "0.00") · Trục @(pres.RightAxis.HasValue ? pres.RightAxis.Value.ToString() : "0")°
+                            </div>
+                            <div style="font-size: 13px; color: #0284c7; margin-top: 2px;">
+                                Mắt trái (OS): Cầu @(pres.LeftSph.HasValue ? pres.LeftSph.Value.ToString("0.00") : "0.00") · Loạn @(pres.LeftCyl.HasValue ? pres.LeftCyl.Value.ToString("0.00") : "0.00") · Trục @(pres.LeftAxis.HasValue ? pres.LeftAxis.Value.ToString() : "0")°
+                            </div>
+                            <div class="small muted" style="margin-top: 4px;">Khoảng cách đồng tử (PD): @(pres.PD.HasValue ? pres.PD.Value.ToString("0.0") : "62.0") mm</div>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p class="small muted" style="margin: 0; padding: 12px 0;">Chưa có đơn đo thị lực nào được lưu.</p>
+            }
+        </div>
+    </div>
+
+    <!-- Thanh thao tác nhanh -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+        <div style="display: flex; gap: 12px;">
+            <a asp-controller="AdminUser" asp-action="Edit" asp-route-id="@Model.UserId" class="button" style="text-decoration: none;">Chỉnh sửa tài khoản</a>
+            <form asp-controller="AdminUser" asp-action="ToggleActive" method="post" style="display: inline; margin: 0;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="userId" value="@Model.UserId" />
+                <button type="submit" class="button button-outline">
+                    @if (Model.IsActive)
+                    {
+                        <span>Khóa tài khoản</span>
+                    }
+                    else
+                    {
+                        <span>Mở khóa tài khoản</span>
+                    }
+                </button>
+            </form>
+        </div>
+
+        @if (roleNameStr != "Admin" && roleNameStr != "Quản trị viên")
+        {
+            <form asp-controller="AdminUser" asp-action="Delete" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa tài khoản này?');" style="margin: 0;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="userId" value="@Model.UserId" />
+                <button type="submit" class="button button-outline" style="color: #dc2626; border-color: #fecaca;">Xóa tài khoản</button>
+            </form>
+        }
+    </div>
+</div>

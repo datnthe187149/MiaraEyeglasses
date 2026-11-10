@@ -7,7 +7,11 @@ namespace MiaraEyeglasses.Services.Admin
     {
         Task<IEnumerable<Models.Entities.User>> GetUsersAsync(int? roleId = null, string? search = null);
         Task<IEnumerable<Role>> GetAllRolesAsync();
+        Task<Models.Entities.User?> GetUserDetailsAsync(int userId);
+        Task<(bool Success, string? ErrorMessage)> CreateUserAsync(string fullName, string email, string phone, string password, int roleId, string? gender, DateOnly? birthDate, bool isActive);
         Task<(bool Success, string? ErrorMessage)> CreateStaffUserAsync(string fullName, string email, string phone, string password);
+        Task<(bool Success, string? ErrorMessage)> UpdateUserAsync(int userId, string fullName, string phone, int roleId, string? gender, DateOnly? birthDate, bool isActive, string? newPassword);
+        Task<(bool Success, string Message)> DeleteUserAsync(int userId);
         Task ToggleUserActiveAsync(int userId);
     }
 
@@ -20,38 +24,121 @@ namespace MiaraEyeglasses.Services.Admin
             _userRepository = userRepository;
         }
 
+        // Lấy danh sách tài khoản theo vai trò hoặc từ khóa tìm kiếm
         public async Task<IEnumerable<Models.Entities.User>> GetUsersAsync(int? roleId = null, string? search = null)
         {
             return await _userRepository.GetUsersAsync(roleId, search);
         }
 
+        // Lấy danh sách tất cả các Role
         public async Task<IEnumerable<Role>> GetAllRolesAsync()
         {
             return await _userRepository.GetAllRolesAsync();
         }
 
-        public async Task<(bool Success, string? ErrorMessage)> CreateStaffUserAsync(string fullName, string email, string phone, string password)
+        // Lấy chi tiết tài khoản người dùng kèm theo đơn hàng, địa chỉ và đơn kính
+        public async Task<Models.Entities.User?> GetUserDetailsAsync(int userId)
         {
-            var exists = await _userRepository.EmailExistsAsync(email);
-            if (exists)
-                return (false, "Email này đã được sử dụng.");
-
-            var staffUser = new Models.Entities.User
+            if (userId <= 0)
             {
-                FullName = fullName,
-                Email = email,
-                Phone = phone,
+                return null;
+            }
+            return await _userRepository.GetUserByIdWithFullDetailsAsync(userId);
+        }
+
+        // Thêm mới tài khoản người dùng (Khách hàng, Nhân viên hoặc Quản trị viên)
+        public async Task<(bool Success, string? ErrorMessage)> CreateUserAsync(
+            string fullName, string email, string phone, string password, int roleId, string? gender, DateOnly? birthDate, bool isActive)
+        {
+            // Kiểm tra email trùng
+            bool exists = await _userRepository.EmailExistsAsync(email);
+            if (exists)
+            {
+                return (false, "Địa chỉ email này đã được sử dụng trong hệ thống.");
+            }
+
+            if (roleId <= 0)
+            {
+                roleId = 1; // Mặc định là Khách hàng
+            }
+
+            string cleanGender = "Nam";
+            if (!string.IsNullOrWhiteSpace(gender))
+            {
+                cleanGender = gender.Trim();
+            }
+
+            var newUser = new Models.Entities.User
+            {
+                FullName = fullName.Trim(),
+                Email = email.Trim().ToLower(),
+                Phone = phone.Trim(),
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
-                RoleId = 2,
-                IsActive = true,
+                RoleId = roleId,
+                Gender = cleanGender,
+                BirthDate = birthDate,
+                IsActive = isActive,
                 CreatedAt = DateTime.UtcNow
             };
 
-            await _userRepository.AddAsync(staffUser);
+            await _userRepository.AddAsync(newUser);
             await _userRepository.SaveChangesAsync();
             return (true, null);
         }
 
+        // Tạo tài khoản Nhân viên nhanh (tương thích method cũ)
+        public async Task<(bool Success, string? ErrorMessage)> CreateStaffUserAsync(string fullName, string email, string phone, string password)
+        {
+            return await CreateUserAsync(fullName, email, phone, password, 2, "Nam", null, true);
+        }
+
+        // Chỉnh sửa thông tin tài khoản người dùng
+        public async Task<(bool Success, string? ErrorMessage)> UpdateUserAsync(
+            int userId, string fullName, string phone, int roleId, string? gender, DateOnly? birthDate, bool isActive, string? newPassword)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return (false, "Không tìm thấy tài khoản người dùng.");
+            }
+
+            if (roleId <= 0)
+            {
+                roleId = 1;
+            }
+
+            user.FullName = fullName.Trim();
+            user.Phone = phone.Trim();
+            user.RoleId = roleId;
+            user.IsActive = isActive;
+            user.BirthDate = birthDate;
+
+            if (!string.IsNullOrWhiteSpace(gender))
+            {
+                user.Gender = gender.Trim();
+            }
+
+            // Nếu người quản trị nhập mật khẩu mới để đổi mật khẩu cho user
+            if (!string.IsNullOrWhiteSpace(newPassword) && newPassword.Length >= 6)
+            {
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            }
+
+            await _userRepository.UpdateUserAsync(user);
+            return (true, null);
+        }
+
+        // Xóa hoặc khóa tài khoản an toàn
+        public async Task<(bool Success, string Message)> DeleteUserAsync(int userId)
+        {
+            if (userId <= 0)
+            {
+                return (false, "Mã người dùng không hợp lệ.");
+            }
+            return await _userRepository.DeleteUserAsync(userId);
+        }
+
+        // Đổi trạng thái kích hoạt tài khoản
         public async Task ToggleUserActiveAsync(int userId)
         {
             await _userRepository.ToggleActiveAsync(userId);

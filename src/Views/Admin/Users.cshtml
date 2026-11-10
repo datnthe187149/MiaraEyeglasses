@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Quản lý Tài khoản & Phân quyền";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var roles = ViewBag.Roles as IEnumerable<MiaraEyeglasses.Models.Entities.Role> ?? Enumerable.Empty<MiaraEyeglasses.Models.Entities.Role>();
 }
 
 @if (TempData["SuccessMessage"] != null)
@@ -22,9 +23,9 @@
         <div>
             <span class="eyebrow">Người dùng hệ thống · Users &amp; Roles</span>
             <h2>Quản lý Tài khoản &amp; Phân quyền</h2>
-            <p class="small muted">Tìm kiếm, lọc người dùng theo vai trò và trạng thái; cấp tài khoản Nhân viên; bấm <strong>Khóa / Mở</strong> để quản lý trạng thái tài khoản.</p>
+            <p class="small muted">Quản lý toàn diện tài khoản Khách hàng, Nhân viên và Quản trị viên: Xem hồ sơ &amp; lịch sử đơn hàng, thêm mới, chỉnh sửa thông tin, khóa hoặc xóa tài khoản.</p>
         </div>
-        <button type="button" class="button small-btn" data-toggle-form="form-create-staff" onclick="toggleAdminForm('form-create-staff')">+ Tạo tài khoản Nhân viên</button>
+        <button type="button" class="button small-btn" data-toggle-form="form-create-user" onclick="toggleAdminForm('form-create-user')">+ Thêm tài khoản mới</button>
     </div>
 
     <!-- Thanh tìm kiếm & bộ lọc Người dùng -->
@@ -52,33 +53,54 @@
         </label>
     </div>
 
-    <!-- Form Tạo tài khoản Nhân viên -->
-    <form class="customer-form sub-panel-form" id="form-create-staff" hidden asp-controller="AdminUser" asp-action="CreateStaff" method="post">
+    <!-- Form Thêm mới Tài khoản Người dùng -->
+    <form class="customer-form sub-panel-form" id="form-create-user" hidden asp-controller="AdminUser" asp-action="Create" method="post">
         @Html.AntiForgeryToken()
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
-            <h3 style="margin:0">Tạo tài khoản Nhân viên mới</h3>
-            <button type="button" class="text-button" onclick="document.getElementById('form-create-staff').setAttribute('hidden','')">✕ Đóng form</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+            <h3 style="margin:0">Thêm mới tài khoản người dùng</h3>
+            <button type="button" class="text-button" onclick="document.getElementById('form-create-user').setAttribute('hidden','')">✕ Đóng form</button>
         </div>
         <div class="form-grid-2">
             <label>
-                <span>Họ và tên nhân viên *</span>
-                <input type="text" name="fullName" required placeholder="VD: Phạm Thanh Hà" />
+                <span>Họ và tên *</span>
+                <input type="text" name="fullName" required placeholder="VD: Nguyễn Văn An" />
             </label>
             <label>
                 <span>Email đăng nhập *</span>
-                <input type="email" name="email" required placeholder="ha.staff@miaraeyeglasses.com" />
+                <input type="email" name="email" required placeholder="an.nguyen@miaraeyeglasses.com" />
             </label>
             <label>
                 <span>Số điện thoại *</span>
                 <input type="tel" name="phone" required placeholder="0912345678" />
             </label>
             <label>
-                <span>Mật khẩu khởi tạo *</span>
-                <input type="password" name="password" required placeholder="Tối thiểu 6 ký tự" />
+                <span>Mật khẩu khởi tạo * (Tối thiểu 6 ký tự)</span>
+                <input type="password" name="password" required placeholder="••••••••" />
+            </label>
+            <label>
+                <span>Vai trò phân quyền *</span>
+                <select name="roleId">
+                    @foreach (var r in roles)
+                    {
+                        <option value="@r.RoleId">@r.RoleName</option>
+                    }
+                </select>
+            </label>
+            <label>
+                <span>Giới tính</span>
+                <select name="gender">
+                    <option value="Nam">Nam</option>
+                    <option value="Nữ">Nữ</option>
+                    <option value="Khác">Khác</option>
+                </select>
+            </label>
+            <label>
+                <span>Ngày sinh</span>
+                <input type="date" name="birthDateStr" />
             </label>
         </div>
-        <div style="display:flex; gap:12px; margin-top:8px">
-            <button type="submit" class="button">+ Tạo tài khoản nhân viên</button>
+        <div style="display:flex; gap:12px; margin-top:16px">
+            <button type="submit" class="button">+ Lưu tạo tài khoản</button>
             <button type="reset" class="button button-outline">Làm mới</button>
         </div>
     </form>
@@ -100,26 +122,45 @@
                 {
                     foreach (var u in Model)
                     {
-                        string roleNameStr = u.Role?.RoleName ?? (u.RoleId == 3 ? "Admin" : u.RoleId == 2 ? "Staff" : "Customer");
-                        string roleBadgeClass = roleNameStr switch
+                        string roleNameStr = "Khách hàng";
+                        if (u.Role != null)
                         {
-                            "Admin" => "completed",
-                            "Staff" => "processing",
-                            _ => "pending"
-                        };
-                        string roleName = roleNameStr switch
+                            roleNameStr = u.Role.RoleName;
+                        }
+                        else if (u.RoleId == 3)
                         {
-                            "Admin" => "Quản trị viên",
-                            "Staff" => "Nhân viên",
-                            _ => "Khách hàng"
-                        };
+                            roleNameStr = "Quản trị viên";
+                        }
+                        else if (u.RoleId == 2)
+                        {
+                            roleNameStr = "Nhân viên";
+                        }
+
+                        string roleBadgeClass = "pending";
+                        if (roleNameStr == "Quản trị viên" || roleNameStr == "Admin")
+                        {
+                            roleBadgeClass = "completed";
+                        }
+                        else if (roleNameStr == "Nhân viên" || roleNameStr == "Staff")
+                        {
+                            roleBadgeClass = "processing";
+                        }
 
                         <tr>
                             <td><strong>@u.FullName</strong></td>
                             <td>@u.Email</td>
-                            <td>@(string.IsNullOrEmpty(u.Phone) ? "—" : u.Phone)</td>
                             <td>
-                                <span class="status-badge status-badge--@roleBadgeClass">@roleName</span>
+                                @if (string.IsNullOrEmpty(u.Phone))
+                                {
+                                    <span class="muted">—</span>
+                                }
+                                else
+                                {
+                                    @u.Phone
+                                }
+                            </td>
+                            <td>
+                                <span class="status-badge status-badge--@roleBadgeClass">@roleNameStr</span>
                             </td>
                             <td>
                                 @if (u.IsActive)
@@ -132,20 +173,33 @@
                                 }
                             </td>
                             <td>
-                                @if (roleNameStr != "Admin")
-                                {
-                                    <form asp-controller="AdminUser" asp-action="ToggleUserStatus" method="post" style="display:inline; margin:0;">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="userId" value="@u.UserId" />
-                                        <button type="submit" class="text-button @(u.IsActive ? "danger-text" : "")">
-                                            @(u.IsActive ? "Khóa tài khoản" : "Mở khóa")
-                                        </button>
-                                    </form>
-                                }
-                                else
-                                {
-                                    <span class="small muted">Mặc định</span>
-                                }
+                                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                    <a asp-controller="AdminUser" asp-action="Details" asp-route-id="@u.UserId" class="button button-outline small-btn" style="text-decoration:none; padding:4px 8px; font-size:12px;">Chi tiết</a>
+                                    <a asp-controller="AdminUser" asp-action="Edit" asp-route-id="@u.UserId" class="button button-outline small-btn" style="text-decoration:none; padding:4px 8px; font-size:12px;">Sửa</a>
+                                    
+                                    @if (roleNameStr != "Admin" && roleNameStr != "Quản trị viên")
+                                    {
+                                        <form asp-controller="AdminUser" asp-action="ToggleActive" method="post" style="display:inline; margin:0;">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="userId" value="@u.UserId" />
+                                            <button type="submit" class="text-button @(u.IsActive ? "danger-text" : "")" style="padding: 4px; font-size: 12px;">
+                                                @(u.IsActive ? "Khóa" : "Mở")
+                                            </button>
+                                        </form>
+
+                                        <form asp-controller="AdminUser" asp-action="Delete" method="post" onsubmit="return confirm('Bạn có chắc muốn xóa tài khoản này?');" style="display:inline; margin:0;">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="userId" value="@u.UserId" />
+                                            <button type="submit" class="text-button danger-text" style="padding: 4px; font-size: 12px;">
+                                                Xóa
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="small muted" style="padding-left: 4px;">Mặc định</span>
+                                    }
+                                </div>
                             </td>
                         </tr>
                     }
