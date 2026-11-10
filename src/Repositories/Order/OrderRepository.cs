@@ -25,6 +25,7 @@ namespace MiaraEyeglasses.Repositories.Order
         Task CancelOrderViaProcedureAsync(int orderId, int? userId, string reason);
         Task RefundOrderViaProcedureAsync(int orderId, int adminId, string refundTxnNo, string reason, decimal? refundAmount = null);
         Task UpdateOrderStatusViaProcedureAsync(int orderId, byte newStatus, int staffId);
+        Task AddPaymentRecordAsync(int orderId, string method, decimal amount, byte status, string txnRef);
     }
 
     public class OrderRepository : BaseRepository<Models.Entities.Order>, IOrderRepository
@@ -174,6 +175,22 @@ namespace MiaraEyeglasses.Repositories.Order
             parameters.Add("@StaffId", staffId);
 
             await connection.ExecuteAsync("dbo.sp_UpdateOrderStatus", parameters, commandType: CommandType.StoredProcedure);
+        }
+
+        public async Task AddPaymentRecordAsync(int orderId, string method, decimal amount, byte status, string txnRef)
+        {
+            var payment = new Payment
+            {
+                OrderId = orderId,
+                Method = method,
+                Amount = amount,
+                Status = status,
+                TransactionRef = txnRef,
+                CreatedAt = DateTime.UtcNow,
+                PayDate = status == 1 ? DateTime.UtcNow : null
+            };
+            await _context.Payments.AddAsync(payment);
+            await _context.SaveChangesAsync();
         }
     }
 }

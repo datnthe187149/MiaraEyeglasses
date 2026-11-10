@@ -49,20 +49,37 @@ namespace MiaraEyeglasses.Controllers.Order
                 return RedirectToAction("Index", "Cart");
             }
 
-            var checkoutModel = new CheckoutViewModel { Cart = cart };
+            var checkoutModel = new CheckoutViewModel 
+            { 
+                Cart = cart,
+                PaymentMethod = "COD" // Mặc định là COD (Thanh toán khi nhận hàng)
+            };
 
-            var user = await _profileService.GetUserProfileAsync(userId);
-            if (user != null)
+            // TUYỆT ĐỐI KHÔNG tự động điền thông tin của Quản trị viên (Admin) hoặc Nhân viên (Staff)
+            // Chỉ prefill thông tin nếu người dùng đăng nhập THẬT SỰ là Khách hàng (Customer)
+            bool isActuallyLoggedIn = User.Identity?.IsAuthenticated == true || HttpContext.Session.GetInt32("UserId").HasValue;
+            var userRole = User.FindFirstValue(ClaimTypes.Role) ?? HttpContext.Session.GetString("Role") ?? "";
+
+            bool isAdminOrStaff = userRole.Equals("Admin", StringComparison.OrdinalIgnoreCase) 
+                               || userRole.Equals("Staff", StringComparison.OrdinalIgnoreCase)
+                               || userRole.Equals("Quản trị viên", StringComparison.OrdinalIgnoreCase)
+                               || userRole.Equals("Nhân viên", StringComparison.OrdinalIgnoreCase);
+
+            if (isActuallyLoggedIn && !isAdminOrStaff && userId > 1)
             {
-                checkoutModel.RecipientName = user.FullName;
-                checkoutModel.Phone = user.Phone;
-
-                var defaultAddr = user.Addresses.FirstOrDefault(a => a.IsDefault) ?? user.Addresses.FirstOrDefault();
-                if (defaultAddr != null)
+                var user = await _profileService.GetUserProfileAsync(userId);
+                if (user != null && user.RoleId == 1) // RoleId = 1 là Khách hàng
                 {
-                    checkoutModel.RecipientName = defaultAddr.RecipientName;
-                    checkoutModel.Phone = defaultAddr.Phone;
-                    checkoutModel.ShippingAddress = $"{defaultAddr.StreetAddress}, {defaultAddr.DistrictWard}, {defaultAddr.Province}";
+                    checkoutModel.RecipientName = user.FullName;
+                    checkoutModel.Phone = user.Phone;
+
+                    var defaultAddr = user.Addresses.FirstOrDefault(a => a.IsDefault) ?? user.Addresses.FirstOrDefault();
+                    if (defaultAddr != null)
+                    {
+                        checkoutModel.RecipientName = defaultAddr.RecipientName;
+                        checkoutModel.Phone = defaultAddr.Phone;
+                        checkoutModel.ShippingAddress = $"{defaultAddr.StreetAddress}, {defaultAddr.DistrictWard}, {defaultAddr.Province}";
+                    }
                 }
             }
 
@@ -115,16 +132,25 @@ namespace MiaraEyeglasses.Controllers.Order
             if (order == null)
                 return RedirectToAction("Success", new { id = orderId });
 
-            // Nếu người dùng chủ động chọn VNPAY
+            // Lựa chọn 1: Cổng thanh toán trực tuyến VNPAY (Sandbox)
             if (model.PaymentMethod == "VNPAY")
             {
                 var paymentUrl = _vnPayService.CreatePaymentUrl(order, HttpContext);
                 return Redirect(paymentUrl);
             }
 
-            // Mặc định: Mua 1 phát là thanh toán xác nhận thành công ngay lập tức (Status = 1: Đã thanh toán)
-            await _orderService.UpdateOrderStatusAsync(orderId, 1, 1);
-            TempData["SuccessMessage"] = "Đặt hàng thành công! Đơn hàng của bạn đã được thanh toán và xác nhận ngay lập tức.";
+            // Lựa chọn 2: Chuyển khoản trực tiếp / Quét mã QR (DIRECT)
+            if (model.PaymentMethod == "DIRECT")
+            {
+                await _orderService.AddPaymentRecordAsync(orderId, "DIRECT", order.TotalAmount, 1, order.OrderCode);
+                await _orderService.UpdateOrderStatusAsync(orderId, 1, 1); // 1: Đã thanh toán
+                TempData["SuccessMessage"] = "Đặt hàng thành công! Đơn hàng chuyển khoản trực tiếp đã được xác nhận thanh toán.";
+                return RedirectToAction("Success", new { id = orderId });
+            }
+
+            // Lựa chọn 3 (Mặc định): Thanh toán khi nhận hàng (COD / Tiền mặt)
+            await _orderService.AddPaymentRecordAsync(orderId, "COD", order.TotalAmount, 0, order.OrderCode);
+            TempData["SuccessMessage"] = "Đặt hàng thành công! MIARA đã tiếp nhận đơn hàng. Quý khách thanh toán tiền mặt khi nhận kính.";
             return RedirectToAction("Success", new { id = orderId });
         }
 

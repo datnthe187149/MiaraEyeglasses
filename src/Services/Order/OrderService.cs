@@ -26,6 +26,9 @@ namespace MiaraEyeglasses.Services.Order
 
         // Hoàn tiền đơn hàng (Dành cho Quản trị viên Admin)
         Task<(bool Success, string? ErrorMessage)> RefundOrderAsync(int orderId, int adminId, string refundTxnNo, string reason, decimal? refundAmount = null);
+
+        // Lưu bản ghi phương thức thanh toán cho đơn hàng (COD / DIRECT / VNPAY)
+        Task AddPaymentRecordAsync(int orderId, string method, decimal amount, byte status, string txnRef);
     }
 
     // Triển khai nghiệp vụ đơn hàng
@@ -141,6 +144,11 @@ namespace MiaraEyeglasses.Services.Order
             {
                 return (false, ex.Message);
             }
+        }
+
+        public async Task AddPaymentRecordAsync(int orderId, string method, decimal amount, byte status, string txnRef)
+        {
+            await _orderRepository.AddPaymentRecordAsync(orderId, method, amount, status, txnRef);
         }
     }
 }

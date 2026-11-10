@@ -93,7 +93,7 @@ namespace MiaraEyeglasses.Models.ViewModels
 
         public string? CouponCode { get; set; }
 
-        public string PaymentMethod { get; set; } = "VNPAY"; // VNPAY
+        public string PaymentMethod { get; set; } = "COD"; // Mặc định: COD (Thanh toán khi nhận hàng)
 
         public CartViewModel Cart { get; set; } = new();
     }
