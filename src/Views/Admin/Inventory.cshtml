@@ -1,6 +1,6 @@
 @model IEnumerable<MiaraEyeglasses.Models.Entities.ProductVariant>
 @{
-    ViewData["Title"] = "Quản lý Tồn kho & Cảnh báo";
+    ViewData["Title"] = "Quản lý Tồn kho";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     int totalVariants = Model?.Count() ?? 0;
     int lowStockCount = Model?.Count(v => v.StockQty > 0 && v.StockQty <= 3) ?? 0;
@@ -12,7 +12,7 @@
         <div>
             <span class="eyebrow">Kho vận &amp; Tồn kho · Realtime</span>
             <h2>Quản lý Tồn kho &amp; Cảnh báo hết hàng</h2>
-            <p class="small muted">Kiểm tra và cập nhật trực tiếp số lượng tồn kho theo từng biến thể màu sắc &amp; kích cỡ của mẫu kính.</p>
+            <p class="small muted">Chuyên trách kiểm kê và cập nhật số lượng tồn kho cho từng biến thể màu sắc &amp; kích cỡ của gọng kính.</p>
         </div>
         <div style="display:flex; gap:10px; align-items:center;">
             <span class="badge" style="background:#f1f5f9; color:#334155; padding:6px 12px; font-size:13px; font-weight:600;">
@@ -66,9 +66,9 @@
                     <th>Mẫu gọng kính</th>
                     <th>Mã SKU</th>
                     <th>Màu sắc &amp; Kích cỡ</th>
-                    <th style="width: 170px;">Số lượng tồn kho</th>
                     <th>Tình trạng</th>
-                    <th style="width: 120px;">Thao tác</th>
+                    <th style="width: 120px;">Tồn kho hiện tại</th>
+                    <th style="width: 200px;">Cập nhật tồn kho</th>
                 </tr>
             </thead>
             <tbody>
@@ -96,19 +96,6 @@
                                 <span>@v.ColorName</span> &bull; <span class="badge" style="background:#f1f5f9; color:#334155;">Size @v.SizeLabel</span>
                             </td>
                             <td>
-                                <form asp-controller="AdminInventory" asp-action="UpdateStock" method="post" class="admin-table-actions" style="margin:0;">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="variantId" value="@v.VariantId" />
-                                    <input type="number" 
-                                           name="newStock" 
-                                           value="@v.StockQty" 
-                                           min="0" 
-                                           max="9999" 
-                                           style="width: 75px; height: 32px; padding: 0 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 700; font-size: 13px; text-align: center;" />
-                                    <button type="submit" class="admin-btn-action btn-primary-action" title="Lưu số lượng tồn kho mới">Lưu</button>
-                                </form>
-                            </td>
-                            <td>
                                 @if (isOut)
                                 {
                                     <span class="status-badge status-badge--cancelled">Hết hàng</span>
@@ -123,11 +110,21 @@
                                 }
                             </td>
                             <td>
-                                <div class="admin-table-actions">
-                                    <a asp-controller="AdminProduct" asp-action="Edit" asp-route-id="@v.ProductId" class="admin-btn-action">
-                                        Chỉnh sửa
-                                    </a>
-                                </div>
+                                <strong style="font-size: 15px; color: #0f172a;">@v.StockQty</strong>
+                                <span style="font-size: 12px; color: #64748b;">chiếc</span>
+                            </td>
+                            <td>
+                                <form asp-controller="AdminInventory" asp-action="UpdateStock" method="post" class="admin-table-actions" style="margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="variantId" value="@v.VariantId" />
+                                    <input type="number" 
+                                           name="newStock" 
+                                           value="@v.StockQty" 
+                                           min="0" 
+                                           max="9999" 
+                                           style="width: 75px; height: 32px; padding: 0 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 700; font-size: 13px; text-align: center;" />
+                                    <button type="submit" class="admin-btn-action btn-primary-action" title="Lưu số lượng tồn kho mới">Lưu tồn kho</button>
+                                </form>
                             </td>
                         </tr>
                     }

@@ -354,11 +354,8 @@
             <p class="small muted" style="margin: 2px 0 0 0;">Mã SKU chính: <code>@Model.ProductCode</code> &bull; ID: #@Model.ProductId</p>
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
-            <a asp-controller="AdminInventory" asp-action="Index" class="button button-outline small-btn">
-                ← Quản lý Tồn kho
-            </a>
             <a asp-controller="AdminProduct" asp-action="Index" class="button button-outline small-btn">
-                Danh sách sản phẩm
+                ← Quay lại Danh sách sản phẩm
             </a>
         </div>
     </div>
@@ -431,10 +428,10 @@
                 </div>
             </div>
 
-            <!-- Card 2: Quản lý Biến thể & Tồn kho -->
+            <!-- Card 2: Danh sách biến thể phân loại -->
             <div class="edit-card">
-                <h3 class="edit-card-title">🎨 Biến thể màu sắc &amp; Số lượng tồn kho</h3>
-                <p class="edit-card-desc">Cập nhật số lượng tồn kho từng màu của sản phẩm. Hệ thống sẽ tự động cập nhật cảnh báo khi hết hàng.</p>
+                <h3 class="edit-card-title">🎨 Phân loại biến thể (Màu sắc &amp; Kích cỡ)</h3>
+                <p class="edit-card-desc">Danh sách các màu sắc và kích cỡ của mẫu kính này. Để kiểm kê và cập nhật số lượng nhập/xuất kho chi tiết, vui lòng thao tác tại mục <strong>Quản lý Tồn kho</strong>.</p>
 
                 <table class="variant-table">
                     <thead>
@@ -442,7 +439,7 @@
                             <th>Mã SKU biến thể</th>
                             <th>Màu sắc</th>
                             <th>Kích cỡ (Size)</th>
-                            <th style="width: 170px;">Số lượng tồn kho</th>
+                            <th style="width: 140px;">Tồn kho hiện tại</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -458,15 +455,8 @@
                                     </td>
                                     <td><span class="badge" style="background:#f1f5f9; color:#334155;">Size @v.SizeLabel</span></td>
                                     <td>
-                                        <div style="display:flex; align-items:center; gap:8px;">
-                                            <input type="number" 
-                                                   name="variantStock[@v.VariantId]" 
-                                                   value="@v.StockQty" 
-                                                   min="0" 
-                                                   max="9999" 
-                                                   class="form-control stock-input" />
-                                            <span style="font-size:13px; color:#64748b;">chiếc</span>
-                                        </div>
+                                        <strong style="color: #0f172a;">@v.StockQty</strong> chiếc
+                                        <input type="hidden" name="variantStock[@v.VariantId]" value="@v.StockQty" />
                                     </td>
                                 </tr>
                             }
@@ -641,7 +631,7 @@
                 <button type="submit" class="button" style="width: 100%; padding: 12px 20px; font-weight: 700; font-size: 15px; margin-bottom: 10px;">
                     ✓ Lưu cập nhật sản phẩm
                 </button>
-                <a asp-controller="AdminInventory" asp-action="Index" class="button button-outline" style="width: 100%; text-align: center; box-sizing: border-box;">
+                <a asp-controller="AdminProduct" asp-action="Index" class="button button-outline" style="width: 100%; text-align: center; box-sizing: border-box;">
                     Hủy bỏ thay đổi
                 </a>
             </div>
