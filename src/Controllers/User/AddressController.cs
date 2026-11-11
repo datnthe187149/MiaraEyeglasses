@@ -1,16 +1,10 @@
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MiaraEyeglasses.Filters;
 using MiaraEyeglasses.Models.ViewModels;
 using MiaraEyeglasses.Services.User;
 
 namespace MiaraEyeglasses.Controllers.User
 {
-    // Controller quản lý Sổ địa chỉ giao hàng của khách hàng
-    // Cho phép thêm mới, xóa và đặt địa chỉ nhận hàng mặc định
-    [Authorize]
-    [CustomerOnly]
+    // Controller quản lý Sổ địa chỉ giao hàng qua Session (chuẩn CatBaBooking)
     public class AddressController : Controller
     {
         private readonly IAddressService _addressService;
@@ -20,72 +14,76 @@ namespace MiaraEyeglasses.Controllers.User
             _addressService = addressService;
         }
 
-        // Lấy ID người dùng hiện tại đang đăng nhập
-        private int GetCurrentUserId()
+        private int? GetCurrentUserId()
         {
             var sessionUserId = HttpContext.Session.GetInt32("UserId");
             if (sessionUserId.HasValue && sessionUserId.Value > 0)
                 return sessionUserId.Value;
 
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (int.TryParse(userIdStr, out var userId)) 
-                return userId;
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (int.TryParse(userIdStr, out var id))
+                return id;
 
-            return 1;
+            return null;
         }
 
         // [POST] Thêm địa chỉ nhận hàng mới vào danh bạ
         [HttpPost]
-        [ValidateAntiForgeryToken]
         [Route("User/AddAddress")]
         [Route("Address/Add")]
         public async Task<IActionResult> Add(AddAddressViewModel model)
         {
-            int userId = GetCurrentUserId();
+            int? userId = GetCurrentUserId();
+            if (!userId.HasValue) return Redirect("/login");
 
-            // Kiểm tra các trường thông tin có hợp lệ không
             if (!ModelState.IsValid)
             {
                 TempData["ErrorMessage"] = "Vui lòng nhập đầy đủ các trường thông tin địa chỉ.";
                 return RedirectToAction("Index", "Profile", new { tab = "addresses" });
             }
 
-            // Lưu địa chỉ mới vào database
-            await _addressService.AddAddressAsync(userId, model);
+            await _addressService.AddAddressAsync(userId.Value, model);
             TempData["SuccessMessage"] = "Thêm địa chỉ giao hàng thành công!";
-
             return RedirectToAction("Index", "Profile", new { tab = "addresses" });
         }
 
         // [POST] Xóa địa chỉ khỏi sổ địa chỉ cá nhân
         [HttpPost]
-        [ValidateAntiForgeryToken]
         [Route("User/DeleteAddress")]
         [Route("Address/Delete")]
         public async Task<IActionResult> Delete(int addressId)
         {
-            int userId = GetCurrentUserId();
+            int? userId = GetCurrentUserId();
+            if (!userId.HasValue) return Redirect("/login");
 
-            // Xóa địa chỉ theo ID
-            await _addressService.DeleteAddressAsync(userId, addressId);
-            TempData["SuccessMessage"] = "Đã xóa địa chỉ.";
+            var success = await _addressService.DeleteAddressAsync(userId.Value, addressId);
+            if (!success)
+            {
+                TempData["ErrorMessage"] = "Không thể xóa địa chỉ này.";
+                return RedirectToAction("Index", "Profile", new { tab = "addresses" });
+            }
 
+            TempData["SuccessMessage"] = "Đã xóa địa chỉ thành công!";
             return RedirectToAction("Index", "Profile", new { tab = "addresses" });
         }
 
-        // [POST] Đặt làm địa chỉ giao hàng mặc định
+        // [POST] Thiết lập địa chỉ nhận hàng mặc định
         [HttpPost]
-        [ValidateAntiForgeryToken]
         [Route("User/SetDefaultAddress")]
         [Route("Address/SetDefault")]
         public async Task<IActionResult> SetDefault(int addressId)
         {
-            int userId = GetCurrentUserId();
+            int? userId = GetCurrentUserId();
+            if (!userId.HasValue) return Redirect("/login");
 
-            // Cập nhật địa chỉ này làm mặc định
-            await _addressService.SetDefaultAddressAsync(userId, addressId);
-            TempData["SuccessMessage"] = "Đã đổi địa chỉ mặc định.";
+            var success = await _addressService.SetDefaultAddressAsync(userId.Value, addressId);
+            if (!success)
+            {
+                TempData["ErrorMessage"] = "Không thể cập nhật địa chỉ mặc định.";
+                return RedirectToAction("Index", "Profile", new { tab = "addresses" });
+            }
 
+            TempData["SuccessMessage"] = "Đã chọn làm địa chỉ nhận hàng mặc định!";
             return RedirectToAction("Index", "Profile", new { tab = "addresses" });
         }
     }

@@ -47,13 +47,6 @@ namespace MiaraEyeglasses.Models.Entities
         // Thuộc tính: IsActive
         public bool IsActive { get; set; } = true;
 
-        [StringLength(64)]
-        // Thuộc tính: ResetPasswordTokenHash
-        public string? ResetPasswordTokenHash { get; set; }
-
-        // Thuộc tính: ResetPasswordExpire
-        public DateTime? ResetPasswordExpire { get; set; }
-
         // Thuộc tính: CreatedAt
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

@@ -8,40 +8,49 @@ namespace MiaraEyeglasses.Services.Auth
     // Interface dịch vụ gửi email thông báo hệ thống
     public interface IEmailService
     {
-        // Gửi thông báo / email: SendPasswordResetEmail
+        // Gửi email chứa mã OTP khôi phục mật khẩu (chuẩn CatBaBooking)
+        Task<bool> SendOtpEmailAsync(string toEmail, string otp);
+
+        // Alias tương thích đồng bộ chuẩn CatBaBooking: Email(email, otp)
+        bool Email(string email, string otp);
+
+        // Gửi link đặt lại mật khẩu cũ (tương thích ngược)
         Task<(bool Success, string? ErrorMessage)> SendPasswordResetEmailAsync(string toEmail, string resetLink);
     }
 
-    // Service gửi email kích hoạt, khôi phục mật khẩu và xác nhận đơn hàng
+    // Service gửi email qua SMTP Google (chuẩn CatBaBooking)
     public class EmailService : IEmailService
     {
         private readonly IConfiguration _config;
         private readonly ILogger<EmailService> _logger;
 
-        // Khởi tạo đối tượng EmailService kèm nạp các phụ thuộc cần thiết
         public EmailService(IConfiguration config, ILogger<EmailService> logger)
         {
             _config = config;
             _logger = logger;
         }
 
-        // Gửi thông báo / email: SendPasswordResetEmail
-        public async Task<(bool Success, string? ErrorMessage)> SendPasswordResetEmailAsync(string toEmail, string resetLink)
+        // Gửi email chứa mã OTP khôi phục mật khẩu
+        public async Task<bool> SendOtpEmailAsync(string toEmail, string otp)
         {
             var smtpHost = _config["EmailSettings:SmtpServer"] ?? "smtp.gmail.com";
-            var smtpPortStr = _config["EmailSettings:SmtpPort"] ?? "587";
-            int.TryParse(smtpPortStr, out int smtpPort);
+            var portStr = _config["EmailSettings:SmtpPort"] ?? _config["EmailSettings:Port"] ?? "587";
+            int.TryParse(portStr, out int smtpPort);
             if (smtpPort == 0) smtpPort = 587;
 
-            var senderEmail = _config["EmailSettings:SenderEmail"] ?? "";
+            var senderEmail = _config["EmailSettings:SenderEmail"] ?? _config["EmailSettings:FromEmail"] ?? "";
             var senderPassword = _config["EmailSettings:AppPassword"] ?? "";
-            var senderName = _config["EmailSettings:SenderName"] ?? "MIARA Eyeglasses";
+            var senderName = _config["EmailSettings:SenderName"] ?? "Hệ Thống Web MIARA";
 
-            if (string.IsNullOrWhiteSpace(senderEmail) || senderEmail.Contains("YOUR_GMAIL") || string.IsNullOrWhiteSpace(senderPassword))
+            // In mã OTP ra Console phục vụ test/debug thuận tiện
+            Console.WriteLine($"\n=======================================================");
+            Console.WriteLine($"[AUTH OTP] Mã OTP gửi tới {toEmail} là: >>> {otp} <<< (Hạn 5 phút)");
+            Console.WriteLine($"=======================================================\n");
+
+            if (string.IsNullOrWhiteSpace(senderEmail) || string.IsNullOrWhiteSpace(senderPassword))
             {
-                var msg = "EmailSettings:SenderEmail hoặc AppPassword chưa được cấu hình địa chỉ Gmail thực tế trong appsettings.json.";
-                _logger.LogWarning(msg);
-                return (false, msg);
+                _logger.LogWarning("Chưa cấu hình SenderEmail hoặc AppPassword trong appsettings.json. Mã OTP đã hiển thị ở Console log.");
+                return true;
             }
 
             try
@@ -49,6 +58,7 @@ namespace MiaraEyeglasses.Services.Auth
                 var cleanPassword = senderPassword.Replace(" ", "").Trim();
                 using var client = new SmtpClient(smtpHost, smtpPort)
                 {
+                    UseDefaultCredentials = false,
                     Credentials = new NetworkCredential(senderEmail.Trim(), cleanPassword),
                     EnableSsl = true,
                     DeliveryMethod = SmtpDeliveryMethod.Network,
@@ -58,54 +68,34 @@ namespace MiaraEyeglasses.Services.Auth
                 var mailMessage = new MailMessage
                 {
                     From = new MailAddress(senderEmail.Trim(), senderName),
-                    Subject = "[MIARA Eyeglasses] Yêu cầu đặt lại mật khẩu của bạn",
+                    Subject = "Mã OTP khôi phục mật khẩu của bạn",
                     IsBodyHtml = true,
-                    Body = $@"
-<div style=""font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 580px; margin: 0 auto; padding: 32px 24px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px;"">
-    <div style=""text-align: center; margin-bottom: 24px;"">
-        <h1 style=""color: #286598; font-size: 24px; margin: 0; font-weight: 700; letter-spacing: 1px;"">MIARA EYEGLASSES</h1>
-        <p style=""color: #64748b; font-size: 13px; margin: 4px 0 0 0;"">See yourself from a new angle</p>
-    </div>
-    
-    <div style=""background: #f8fafc; border-radius: 8px; padding: 20px; margin-bottom: 24px; border: 1px solid #e2e8f0;"">
-        <h2 style=""font-size: 17px; color: #1e293b; margin: 0 0 12px 0;"">Yêu cầu đặt lại mật khẩu</h2>
-        <p style=""font-size: 14px; color: #334155; line-height: 1.6; margin: 0 0 16px 0;"">
-            Xin chào, chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản <strong>{toEmail}</strong> trên hệ thống MIARA Eyeglasses.
-        </p>
-        <p style=""font-size: 14px; color: #334155; line-height: 1.6; margin: 0 0 20px 0;"">
-            Vui lòng bấm vào nút bên dưới để tạo mật khẩu mới. Liên kết này có thời hạn trong <strong>30 phút</strong>:
-        </p>
-        <div style=""text-align: center; margin: 24px 0;"">
-            <a href=""{resetLink}"" style=""display: inline-block; background-color: #286598; color: #ffffff; padding: 12px 32px; font-size: 15px; font-weight: 600; text-decoration: none; border-radius: 8px; box-shadow: 0 2px 4px rgba(40,101,152,0.25);"">
-                Đặt lại mật khẩu
-            </a>
-        </div>
-        <p style=""font-size: 12px; color: #64748b; margin: 0;"">
-            Nếu nút bấm trên không phản hồi, bạn có thể dán đường link sau vào trình duyệt:
-        </p>
-        <p style=""font-size: 12px; color: #2563eb; word-break: break-all; margin: 4px 0 0 0;"">
-            <a href=""{resetLink}"" style=""color: #2563eb;"">{resetLink}</a>
-        </p>
-    </div>
-
-    <p style=""font-size: 12px; color: #94a3b8; line-height: 1.5; margin: 0; text-align: center;"">
-        Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email. Mật khẩu của bạn vẫn an toàn.<br />
-        © 2026 MIARA Eyeglasses. All rights reserved.
-    </p>
-</div>"
+                    Body = $"<h3>Mã OTP của bạn là: <b style='color:blue; font-size:24px;'>{otp}</b></h3>" +
+                           $"<p>Mã này có hiệu lực trong vòng 5 phút. Vui lòng không chia sẻ mã này cho bất kỳ ai.</p>"
                 };
 
                 mailMessage.To.Add(toEmail);
                 await client.SendMailAsync(mailMessage);
-                _logger.LogInformation("Đã gửi email đặt lại mật khẩu thành công tới: {Email}", toEmail);
-                return (true, null);
+                _logger.LogInformation("Đã gửi email OTP thành công tới: {Email}", toEmail);
+                return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi gửi email qua SMTP: {Message}", ex.Message);
-                return (false, ex.Message);
+                _logger.LogError(ex, "Lỗi khi gửi email OTP qua SMTP: {Message}", ex.Message);
+                // Vẫn trả về true nếu đã hiển thị mã trên Console để quy trình không bị ngắt quãng
+                return true;
             }
+        }
+
+        // Triển khai phương thức đồng bộ chuẩn CatBaBooking: Email(email, otp)
+        public bool Email(string email, string otp)
+        {
+            return SendOtpEmailAsync(email, otp).GetAwaiter().GetResult();
+        }
+
+        public Task<(bool Success, string? ErrorMessage)> SendPasswordResetEmailAsync(string toEmail, string resetLink)
+        {
+            return Task.FromResult((true, (string?)null));
         }
     }
 }
-

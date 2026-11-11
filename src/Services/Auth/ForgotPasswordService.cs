@@ -1,51 +1,80 @@
-using System.Security.Cryptography;
-using System.Text;
+using MiaraEyeglasses.Helpers;
 using MiaraEyeglasses.Repositories.Auth;
 
 namespace MiaraEyeglasses.Services.Auth
 {
-    // Interface dịch vụ quên mật khẩu
+    // Interface dịch vụ quên mật khẩu và đặt lại mật khẩu bằng Session + OTP (chuẩn CatBaBooking)
     public interface IForgotPasswordService
     {
-        // Thực thi tác vụ: GenerateResetToken
-        Task<(bool Success, string? ErrorMessage, string? ResetToken)> GenerateResetTokenAsync(string email);
+        // Sinh mã OTP và gửi qua email cho người dùng
+        Task<string?> SendOTPAsync(string email);
+
+        // Alias tương thích đồng bộ chuẩn CatBaBooking
+        string? SendOTP(string email);
+
+        // Đặt lại mật khẩu mới cho tài khoản
+        Task<bool> ResetPasswordAsync(string email, string newPassword);
+
+        // Alias tương thích đồng bộ chuẩn CatBaBooking
+        bool ResetPassword(string email, string newPassword);
     }
 
-    // Service sinh token an toàn và gửi liên kết đặt lại mật khẩu
+    // Triển khai dịch vụ Quên mật khẩu theo cơ chế Session + OTP
     public class ForgotPasswordService : IForgotPasswordService
     {
         private readonly IForgotPasswordRepository _forgotPasswordRepository;
+        private readonly IEmailService _emailService;
 
-        // Khởi tạo đối tượng ForgotPasswordService kèm nạp các phụ thuộc cần thiết
-        public ForgotPasswordService(IForgotPasswordRepository forgotPasswordRepository)
+        public ForgotPasswordService(
+            IForgotPasswordRepository forgotPasswordRepository,
+            IEmailService emailService)
         {
             _forgotPasswordRepository = forgotPasswordRepository;
+            _emailService = emailService;
         }
 
-        // Thực thi tác vụ: GenerateResetToken
-        public async Task<(bool Success, string? ErrorMessage, string? ResetToken)> GenerateResetTokenAsync(string email)
+        // Sinh mã OTP 6 số và gửi đến email của tài khoản
+        public async Task<string?> SendOTPAsync(string email)
         {
+            if (string.IsNullOrWhiteSpace(email)) return null;
+
+            var user = await _forgotPasswordRepository.GetActiveUserByEmailAsync(email);
+            if (user == null) return null;
+
+            // Sinh mã OTP ngẫu nhiên 6 chữ số
+            string otp = new Random().Next(100000, 999999).ToString();
+
+            // Gửi email chứa mã OTP
+            await _emailService.SendOtpEmailAsync(user.Email, otp);
+
+            return otp;
+        }
+
+        public string? SendOTP(string email)
+        {
+            return SendOTPAsync(email).GetAwaiter().GetResult();
+        }
+
+        // Cập nhật mật khẩu mới bằng cách băm qua PasswordHelper (BCrypt)
+        public async Task<bool> ResetPasswordAsync(string email, string newPassword)
+        {
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(newPassword))
+                return false;
+
             var user = await _forgotPasswordRepository.GetByEmailAsync(email);
-            if (user == null)
-                return (false, "Không tìm thấy tài khoản với email này.", null);
+            if (user == null) return false;
 
-            var rawToken = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
-            var tokenHash = ComputeSha256Hash(rawToken);
+            // Băm mật khẩu mới bằng BCrypt và lưu vào CSDL
+            user.PasswordHash = PasswordHelper.HashPassword(newPassword);
+            user.UpdatedAt = DateTime.UtcNow;
 
-            await _forgotPasswordRepository.UpdateResetTokenAsync(user, tokenHash, DateTime.UtcNow.AddMinutes(30));
-            return (true, null, rawToken);
+            await _forgotPasswordRepository.UpdateUserAsync(user);
+            return true;
         }
 
-        // Thực thi tác vụ: ComputeSha256Hash
-        private static string ComputeSha256Hash(string rawData)
+        public bool ResetPassword(string email, string newPassword)
         {
-            using var sha256 = SHA256.Create();
-            byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(rawData));
-            var builder = new StringBuilder();
-            foreach (var b in bytes)
-                builder.Append(b.ToString("x2"));
-            return builder.ToString();
+            return ResetPasswordAsync(email, newPassword).GetAwaiter().GetResult();
         }
     }
 }
-

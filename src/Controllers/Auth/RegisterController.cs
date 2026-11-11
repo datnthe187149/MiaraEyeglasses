@@ -4,7 +4,7 @@ using MiaraEyeglasses.Services.Auth;
 
 namespace MiaraEyeglasses.Controllers.Auth
 {
-    // Controller xử lý Đăng ký tài khoản mới cho Khách hàng
+    // Controller xử lý Đăng ký tài khoản khách hàng mới
     public class RegisterController : Controller
     {
         private readonly IRegisterService _registerService;
@@ -14,36 +14,52 @@ namespace MiaraEyeglasses.Controllers.Auth
             _registerService = registerService;
         }
 
-        // [GET] /Register: Hiển thị form đăng ký thành viên
-        [HttpGet]
-        [Route("Register")]
-        [Route("Auth/Register")]
+        // [GET] Hiển thị form đăng ký thành viên
+        [HttpGet("/register")]
+        [HttpGet("/register-customer")]
+        [HttpGet("/Auth/Register")]
         public IActionResult Index()
         {
             return View("~/Views/Auth/Register.cshtml", new RegisterViewModel());
         }
 
-        // [POST] /Register: Tiếp nhận thông tin đăng ký (Họ tên, Email, Mật khẩu, SĐT)
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Route("Register")]
-        [Route("Auth/Register")]
+        // [POST] Tiếp nhận thông tin đăng ký
+        [HttpPost("/register")]
+        [HttpPost("/register-customer")]
+        [HttpPost("/Auth/Register")]
         public async Task<IActionResult> Index(RegisterViewModel model)
         {
-            // Kiểm tra dữ liệu đầu vào
-            if (!ModelState.IsValid)
+            if (string.IsNullOrWhiteSpace(model.FullName) ||
+                string.IsNullOrWhiteSpace(model.Email) ||
+                string.IsNullOrWhiteSpace(model.Password) ||
+                string.IsNullOrWhiteSpace(model.ConfirmPassword))
+            {
+                ViewBag.Error = "Thông tin không được để trống.";
                 return View("~/Views/Auth/Register.cshtml", model);
+            }
 
-            // Gọi Service tạo tài khoản mới (băm mật khẩu BCrypt và gán quyền Customer)
+            if (!model.Password.Equals(model.ConfirmPassword))
+            {
+                ViewBag.Error = "Mật khẩu và xác nhận mật khẩu không khớp.";
+                return View("~/Views/Auth/Register.cshtml", model);
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View("~/Views/Auth/Register.cshtml", model);
+            }
+
+            // Gọi Service tạo tài khoản mới với quyền Customer (RoleId = 1)
             var (success, errorMessage, user) = await _registerService.RegisterAsync(model);
             if (!success || user == null)
             {
-                ModelState.AddModelError(string.Empty, errorMessage ?? "Đăng ký thất bại.");
+                ViewBag.Error = errorMessage ?? "Đăng ký thất bại. Email có thể đã được đăng ký.";
+                ModelState.AddModelError(string.Empty, ViewBag.Error);
                 return View("~/Views/Auth/Register.cshtml", model);
             }
 
             TempData["SuccessMessage"] = "Đăng ký tài khoản thành công! Vui lòng đăng nhập.";
-            return RedirectToAction("Index", "Login");
+            return Redirect("/login");
         }
     }
 }

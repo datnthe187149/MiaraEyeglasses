@@ -11,48 +11,51 @@
       <p>Lưu thông tin độ cận, sổ địa chỉ giao hàng và theo dõi đơn hàng dễ dàng.</p>
     </div>
 
-    <form class="customer-form" asp-controller="Register" asp-action="Index" method="post" data-reveal>
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger" style="max-width: 480px; margin: 0 auto 20px auto; padding: 12px 16px; background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; border-radius: 8px; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <span>@ViewBag.Error</span>
+        </div>
+    }
+
+    <form class="customer-form" action="/register" method="post" data-reveal>
       @Html.AntiForgeryToken()
       <div asp-validation-summary="ModelOnly" class="text-danger" style="color: #dc2626; font-size: 13px; margin-bottom: 12px;"></div>
 
       <label>
         Họ và tên *
-        <input asp-for="FullName" autocomplete="name" minlength="2" maxlength="80" required placeholder="Nguyễn Minh Anh" />
-        <span asp-validation-for="FullName" style="color: #dc2626; font-size: 12px;"></span>
+        <input name="FullName" autocomplete="name" minlength="2" maxlength="80" required placeholder="Nguyễn Minh Anh" value="@(Model?.FullName ?? "")" />
       </label>
 
       <label>
         Số điện thoại *
-        <input asp-for="Phone" type="tel" autocomplete="tel" required placeholder="0901234567" />
-        <span asp-validation-for="Phone" style="color: #dc2626; font-size: 12px;"></span>
+        <input name="Phone" type="tel" autocomplete="tel" required placeholder="0901234567" value="@(Model?.Phone ?? "")" />
       </label>
 
       <label>
         Email *
-        <input asp-for="Email" type="email" inputmode="email" autocomplete="email" maxlength="254" required placeholder="ban@email.com" />
-        <span asp-validation-for="Email" style="color: #dc2626; font-size: 12px;"></span>
+        <input name="Email" type="email" inputmode="email" autocomplete="email" maxlength="254" required placeholder="ban@email.com" value="@(Model?.Email ?? "")" />
       </label>
 
       <label>
         Mật khẩu *
-        <input asp-for="Password" type="password" autocomplete="new-password" minlength="6" required placeholder="Tối thiểu 6 ký tự" />
-        <span asp-validation-for="Password" style="color: #dc2626; font-size: 12px;"></span>
+        <input name="Password" type="password" autocomplete="new-password" minlength="6" required placeholder="Tối thiểu 6 ký tự" />
       </label>
 
       <label>
         Nhập lại mật khẩu *
-        <input asp-for="ConfirmPassword" type="password" autocomplete="new-password" minlength="6" required placeholder="Nhập lại mật khẩu" />
-        <span asp-validation-for="ConfirmPassword" style="color: #dc2626; font-size: 12px;"></span>
+        <input name="ConfirmPassword" type="password" autocomplete="new-password" minlength="6" required placeholder="Nhập lại mật khẩu" />
       </label>
 
-      <button class="button" type="submit">
+      <button class="button" type="submit" style="width: 100%;">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
         Tạo tài khoản
       </button>
 
       <p style="text-align: center; margin-top: 16px;">
         Đã có tài khoản?
-        <a asp-controller="Login" asp-action="Index" style="font-weight: 600; text-decoration: underline;">Đăng nhập</a>
+        <a href="/login" style="font-weight: 600; text-decoration: underline;">Đăng nhập</a>
       </p>
     </form>
   </section>

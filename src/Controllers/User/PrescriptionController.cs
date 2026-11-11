@@ -1,15 +1,10 @@
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MiaraEyeglasses.Filters;
 using MiaraEyeglasses.Models.ViewModels;
 using MiaraEyeglasses.Services.User;
 
 namespace MiaraEyeglasses.Controllers.User
 {
-    // Controller quản lý Sổ đơn đo khúc xạ mắt (Độ cận SPH, Độ loạn CYL, Trục AXIS, Khoảng cách đồng tử PD)
-    [Authorize]
-    [CustomerOnly]
+    // Controller quản lý Sổ độ cận (Prescription) qua Session (chuẩn CatBaBooking)
     public class PrescriptionController : Controller
     {
         private readonly IPrescriptionService _prescriptionService;
@@ -19,67 +14,76 @@ namespace MiaraEyeglasses.Controllers.User
             _prescriptionService = prescriptionService;
         }
 
-        // Lấy ID người dùng hiện tại
-        private int GetCurrentUserId()
+        private int? GetCurrentUserId()
         {
             var sessionUserId = HttpContext.Session.GetInt32("UserId");
             if (sessionUserId.HasValue && sessionUserId.Value > 0)
                 return sessionUserId.Value;
 
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (int.TryParse(userIdStr, out var userId)) return userId;
-            return 1;
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (int.TryParse(userIdStr, out var id))
+                return id;
+
+            return null;
         }
 
-        // [POST] Thêm hồ sơ đơn đo thị lực mới vào tài khoản
+        // [POST] Thêm hồ sơ độ cận mới
         [HttpPost]
-        [ValidateAntiForgeryToken]
         [Route("User/AddPrescription")]
         [Route("Prescription/Add")]
         public async Task<IActionResult> Add(AddPrescriptionViewModel model)
         {
-            int userId = GetCurrentUserId();
+            int? userId = GetCurrentUserId();
+            if (!userId.HasValue) return Redirect("/login");
 
-            // Kiểm tra các thông số độ cận, độ loạn có đúng định dạng không
             if (!ModelState.IsValid)
             {
-                TempData["ErrorMessage"] = "Vui lòng kiểm tra lại thông số độ cận.";
+                TempData["ErrorMessage"] = "Dữ liệu độ cận nhập vào chưa hợp lệ.";
                 return RedirectToAction("Index", "Profile", new { tab = "prescriptions" });
             }
 
-            // Lưu hồ sơ độ cận vào database
-            await _prescriptionService.AddPrescriptionAsync(userId, model);
-            TempData["SuccessMessage"] = "Lưu hồ sơ độ cận thành công!";
+            await _prescriptionService.AddPrescriptionAsync(userId.Value, model);
+            TempData["SuccessMessage"] = "Lưu thông tin độ cận thành công!";
             return RedirectToAction("Index", "Profile", new { tab = "prescriptions" });
         }
 
-        // [POST] Xóa hồ sơ độ cận khỏi tài khoản
+        // [POST] Xóa hồ sơ độ cận
         [HttpPost]
-        [ValidateAntiForgeryToken]
         [Route("User/DeletePrescription")]
         [Route("Prescription/Delete")]
         public async Task<IActionResult> Delete(int prescriptionId)
         {
-            int userId = GetCurrentUserId();
+            int? userId = GetCurrentUserId();
+            if (!userId.HasValue) return Redirect("/login");
 
-            // Xóa hồ sơ đo mắt theo ID
-            await _prescriptionService.DeletePrescriptionAsync(userId, prescriptionId);
-            TempData["SuccessMessage"] = "Đã xóa hồ sơ độ cận.";
+            var success = await _prescriptionService.DeletePrescriptionAsync(userId.Value, prescriptionId);
+            if (!success)
+            {
+                TempData["ErrorMessage"] = "Không thể xóa hồ sơ độ cận này.";
+                return RedirectToAction("Index", "Profile", new { tab = "prescriptions" });
+            }
+
+            TempData["SuccessMessage"] = "Đã xóa hồ sơ độ cận thành công!";
             return RedirectToAction("Index", "Profile", new { tab = "prescriptions" });
         }
 
-        // [POST] Đặt làm hồ sơ độ cận mặc định khi cắt kính
+        // [POST] Đặt làm độ cận mặc định
         [HttpPost]
-        [ValidateAntiForgeryToken]
         [Route("User/SetDefaultPrescription")]
         [Route("Prescription/SetDefault")]
         public async Task<IActionResult> SetDefault(int prescriptionId)
         {
-            int userId = GetCurrentUserId();
+            int? userId = GetCurrentUserId();
+            if (!userId.HasValue) return Redirect("/login");
 
-            // Cập nhật hồ sơ này thành mặc định
-            await _prescriptionService.SetDefaultPrescriptionAsync(userId, prescriptionId);
-            TempData["SuccessMessage"] = "Đã đặt làm hồ sơ độ cận mặc định.";
+            var success = await _prescriptionService.SetDefaultPrescriptionAsync(userId.Value, prescriptionId);
+            if (!success)
+            {
+                TempData["ErrorMessage"] = "Không thể cập nhật hồ sơ mặc định.";
+                return RedirectToAction("Index", "Profile", new { tab = "prescriptions" });
+            }
+
+            TempData["SuccessMessage"] = "Đã chọn làm hồ sơ độ cận mặc định!";
             return RedirectToAction("Index", "Profile", new { tab = "prescriptions" });
         }
     }

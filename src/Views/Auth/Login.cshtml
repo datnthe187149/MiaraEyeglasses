@@ -13,44 +13,50 @@
 
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success" style="max-width: 480px; margin: 0 auto 20px auto; padding: 12px 16px; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; border-radius: 8px;">
+        <div class="alert alert-success" style="max-width: 480px; margin: 0 auto 20px auto; padding: 12px 16px; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; border-radius: 8px; font-size: 14px;">
             @TempData["SuccessMessage"]
         </div>
     }
 
-    <form class="customer-form" asp-controller="Login" asp-action="Index" method="post" data-reveal>
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger" style="max-width: 480px; margin: 0 auto 20px auto; padding: 12px 16px; background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; border-radius: 8px; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <span>@ViewBag.Error</span>
+        </div>
+    }
+
+    <form class="customer-form" action="/login" method="post" data-reveal>
       @Html.AntiForgeryToken()
-      <input type="hidden" asp-for="ReturnUrl" />
+      <input type="hidden" name="ReturnUrl" value="@(Model?.ReturnUrl ?? ViewBag.ReturnUrl ?? "")" />
       <div asp-validation-summary="ModelOnly" class="text-danger" style="color: #dc2626; font-size: 13px; margin-bottom: 12px;"></div>
 
       <label>
         Email
-        <input asp-for="Email" type="email" inputmode="email" autocomplete="email" maxlength="254" required placeholder="ban@email.com" />
-        <span asp-validation-for="Email" style="color: #dc2626; font-size: 12px;"></span>
+        <input name="Email" type="email" inputmode="email" autocomplete="email" maxlength="254" required placeholder="ban@email.com" value="@(Model?.Email ?? "")" />
       </label>
 
       <label>
         Mật khẩu
-        <input asp-for="Password" type="password" autocomplete="current-password" required placeholder="••••••••" />
-        <span asp-validation-for="Password" style="color: #dc2626; font-size: 12px;"></span>
+        <input name="Password" type="password" autocomplete="current-password" required placeholder="••••••••" />
       </label>
 
       <div style="display: flex; justify-content: space-between; align-items: center; margin: 8px 0 16px 0; font-size: 14px;">
         <label style="display: flex; align-items: center; gap: 8px; margin: 0; cursor: pointer;">
-          <input asp-for="RememberMe" type="checkbox" style="width: auto; margin: 0;" />
+          <input name="RememberMe" type="checkbox" value="true" style="width: auto; margin: 0;" />
           <span>Ghi nhớ đăng nhập</span>
         </label>
-        <a class="text-link" asp-controller="ForgotPassword" asp-action="Index">Quên mật khẩu?</a>
+        <a class="text-link" href="/forgot-password">Quên mật khẩu?</a>
       </div>
 
-      <button class="button" type="submit">
+      <button class="button" type="submit" style="width: 100%;">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
         Đăng nhập
       </button>
 
       <p style="text-align: center; margin-top: 16px;">
         Bạn mới đến MIARA?
-        <a asp-controller="Register" asp-action="Index" style="font-weight: 600; text-decoration: underline;">Đăng ký ngay</a>
+        <a href="/register" style="font-weight: 600; text-decoration: underline;">Đăng ký ngay</a>
       </p>
     </form>
   </section>

@@ -1,15 +1,10 @@
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MiaraEyeglasses.Filters;
 using MiaraEyeglasses.Models.ViewModels;
 using MiaraEyeglasses.Services.User;
 
 namespace MiaraEyeglasses.Controllers.User
 {
-    // Controller quản lý Hồ sơ cá nhân của khách hàng (Thông tin, Sổ địa chỉ, Mật khẩu)
-    [Authorize]
-    [CustomerOnly]
+    // Controller quản lý Hồ sơ tài khoản khách hàng bằng Session (chuẩn CatBaBooking)
     public class ProfileController : Controller
     {
         private readonly IProfileService _profileService;
@@ -19,48 +14,56 @@ namespace MiaraEyeglasses.Controllers.User
             _profileService = profileService;
         }
 
-        // Lấy ID người dùng hiện tại đang đăng nhập
-        private int GetCurrentUserId()
+        // Lấy ID người dùng từ Session
+        private int? GetCurrentUserId()
         {
             var sessionUserId = HttpContext.Session.GetInt32("UserId");
             if (sessionUserId.HasValue && sessionUserId.Value > 0)
                 return sessionUserId.Value;
 
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (int.TryParse(userIdStr, out var userId)) 
-                return userId;
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (int.TryParse(userIdStr, out var id))
+                return id;
 
-            return 1;
+            return null;
         }
 
-        // [GET] Xem trang hồ sơ cá nhân và các tab thông tin
+        // [GET] Xem trang hồ sơ tài khoản và các tab thông tin
         [HttpGet]
         [Route("User/Account")]
         [Route("User/Profile")]
         [Route("Profile")]
         public async Task<IActionResult> Index(string? tab = null)
         {
-            int userId = GetCurrentUserId();
+            int? userId = GetCurrentUserId();
+            if (!userId.HasValue)
+            {
+                return Redirect("/login");
+            }
 
             // Lấy thông tin user kèm danh bạ địa chỉ và đơn kính cận
-            var user = await _profileService.GetUserProfileAsync(userId);
+            var user = await _profileService.GetUserProfileAsync(userId.Value);
             if (user == null)
             {
-                return RedirectToAction("Index", "Login");
+                HttpContext.Session.Clear();
+                return Redirect("/login");
             }
 
             ViewBag.ActiveTab = tab ?? "profile";
-            return View("~/Views/User/Profile.cshtml", user);
+            return View("~/Views/User/Account.cshtml", user);
         }
 
         // [POST] Cập nhật thông tin lý lịch cá nhân (Họ tên, SĐT, Giới tính, Ngày sinh)
         [HttpPost]
-        [ValidateAntiForgeryToken]
         [Route("User/UpdateProfile")]
         [Route("Profile/Update")]
         public async Task<IActionResult> Update(UpdateProfileViewModel model)
         {
-            int userId = GetCurrentUserId();
+            int? userId = GetCurrentUserId();
+            if (!userId.HasValue)
+            {
+                return Redirect("/login");
+            }
 
             if (!ModelState.IsValid)
             {
@@ -69,14 +72,14 @@ namespace MiaraEyeglasses.Controllers.User
             }
 
             // Lưu thông tin mới vào database
-            var (success, error) = await _profileService.UpdateProfileAsync(userId, model);
+            var (success, error) = await _profileService.UpdateProfileAsync(userId.Value, model);
             if (!success)
             {
                 TempData["ErrorMessage"] = error ?? "Cập nhật thông tin thất bại.";
                 return RedirectToAction("Index", new { tab = "profile" });
             }
 
-            // Đồng bộ lại tên mới vào Session
+            // Đồng bộ lại tên mới vào Session (chuẩn CatBaBooking)
             HttpContext.Session.SetString("UserName", model.FullName);
 
             TempData["SuccessMessage"] = "Cập nhật thông tin cá nhân thành công!";

@@ -13,7 +13,7 @@ namespace MiaraEyeglasses.Repositories.Auth
         Task UpdatePasswordAsync(UserEntity user, string newPasswordHash);
     }
 
-    // Lớp thực thi cập nhật mật khẩu mới qua token
+    // Lớp thực thi cập nhật mật khẩu mới (chuẩn CatBaBooking)
     public class ResetPasswordRepository : IResetPasswordRepository
     {
         private readonly EyeglassesDbContext _context;
@@ -34,8 +34,6 @@ namespace MiaraEyeglasses.Repositories.Auth
         public async Task UpdatePasswordAsync(UserEntity user, string newPasswordHash)
         {
             user.PasswordHash = newPasswordHash;
-            user.ResetPasswordTokenHash = null;
-            user.ResetPasswordExpire = null;
             user.UpdatedAt = DateTime.UtcNow;
             _context.Users.Update(user);
             await _context.SaveChangesAsync();

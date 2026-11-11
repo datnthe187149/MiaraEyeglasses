@@ -1,15 +1,9 @@
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MiaraEyeglasses.Filters;
 using MiaraEyeglasses.Services.User;
 
 namespace MiaraEyeglasses.Controllers.User
 {
-    // Controller quản lý Đơn hàng cá nhân của Khách hàng
-    // Cho phép khách xem lịch sử các đơn kính đã đặt và tự hủy đơn khi chưa giao
-    [Authorize]
-    [CustomerOnly]
+    // Controller xem danh sách đơn hàng của người dùng qua Session (chuẩn CatBaBooking)
     public class UserOrderController : Controller
     {
         private readonly IUserOrderService _userOrderService;
@@ -19,50 +13,45 @@ namespace MiaraEyeglasses.Controllers.User
             _userOrderService = userOrderService;
         }
 
-        // Lấy ID người dùng hiện tại đang đăng nhập (từ Session hoặc Cookie Claims)
-        private int GetCurrentUserId()
+        private int? GetCurrentUserId()
         {
-            // Kiểm tra UserId lưu trong Session
             var sessionUserId = HttpContext.Session.GetInt32("UserId");
             if (sessionUserId.HasValue && sessionUserId.Value > 0)
                 return sessionUserId.Value;
 
-            // Kiểm tra UserId từ Cookie Authentication
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (int.TryParse(userIdStr, out var userId)) 
-                return userId;
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (int.TryParse(userIdStr, out var id))
+                return id;
 
-            return 1;
+            return null;
         }
 
-        // [GET] Xem danh sách đơn hàng đã đặt của khách hàng
+        // [GET] Xem danh sách đơn hàng đã đặt
         [HttpGet]
         [Route("UserOrder")]
         [Route("User/Orders")]
         [Route("Orders")]
         public async Task<IActionResult> Index()
         {
-            int userId = GetCurrentUserId();
+            int? userId = GetCurrentUserId();
+            if (!userId.HasValue) return Redirect("/login");
 
-            // Lấy danh sách đơn hàng từ database qua Service
-            var orders = await _userOrderService.GetOrdersByUserAsync(userId);
-
+            var orders = await _userOrderService.GetOrdersByUserAsync(userId.Value);
             return View("~/Views/User/Orders.cshtml", orders);
         }
 
         // [POST] Khách hàng tự hủy đơn hàng
         [HttpPost]
-        [ValidateAntiForgeryToken]
         [Route("User/CancelOrder")]
         [Route("CancelOrder")]
         public async Task<IActionResult> CancelOrder(int orderId, string? reason)
         {
-            int userId = GetCurrentUserId();
+            int? userId = GetCurrentUserId();
+            if (!userId.HasValue) return Redirect("/login");
 
-            // Gọi Service hủy đơn và tự động hoàn lại số lượng tồn kho
             var (success, error) = await _userOrderService.CancelOrderAsync(
                 orderId, 
-                userId, 
+                userId.Value, 
                 reason ?? "Khách hàng tự hủy đơn"
             );
 

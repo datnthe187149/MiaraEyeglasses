@@ -1,0 +1,45 @@
+@{
+    ViewData["Title"] = "Xác thực OTP";
+    string? email = ViewBag.Email as string ?? Context.Session.GetString("EmailForgot");
+}
+
+<div class="view-section">
+  <section class="container section customer-page">
+    <div class="page-intro" data-reveal>
+      <span class="eyebrow">Bảo mật tài khoản</span>
+      <h1>Xác thực mã OTP</h1>
+      <p>
+        Mã OTP xác thực (6 chữ số) đã được gửi đến hòm thư:
+        <strong style="color: #286598;">@(string.IsNullOrEmpty(email) ? "email của bạn" : email)</strong>.
+        Mã có hiệu lực trong 5 phút.
+      </p>
+    </div>
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger" style="max-width: 480px; margin: 0 auto 20px auto; padding: 12px 16px; background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; border-radius: 8px; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <span>@ViewBag.Error</span>
+        </div>
+    }
+
+    <form class="customer-form" action="/verify-otp" method="post" data-reveal>
+      @Html.AntiForgeryToken()
+
+      <label>
+        Mã OTP (6 chữ số) *
+        <input name="otp" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required placeholder="Ví dụ: 123456" autofocus style="letter-spacing: 4px; font-size: 18px; text-align: center; font-weight: 700;" />
+      </label>
+
+      <button class="button" type="submit" style="margin-top: 14px; width: 100%;">
+        Xác nhận mã OTP
+      </button>
+
+      <p style="text-align: center; margin-top: 16px;">
+        Chưa nhận được mã?
+        <a href="/forgot-password" style="font-weight: 600; text-decoration: underline;">Gửi lại mã OTP</a>
+      </p>
+    </form>
+  </section>
+</div>
+

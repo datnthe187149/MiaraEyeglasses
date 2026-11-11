@@ -67,16 +67,11 @@ namespace MiaraEyeglasses.Models.ViewModels
         public string Email { get; set; } = string.Empty;
     }
 
-    // Model xác nhận đặt lại mật khẩu mới qua token bảo mật
+    // Model đặt lại mật khẩu mới thông qua Session (chuẩn CatBaBooking)
     public class ResetPasswordViewModel
     {
-        // Token bảo mật xác minh tính hợp lệ của đường link khôi phục
-        public string Token { get; set; } = string.Empty;
-
-        // Email của tài khoản đang cần đặt lại mật khẩu
-        [Required(ErrorMessage = "Vui lòng nhập Email")]
-        [EmailAddress]
-        public string Email { get; set; } = string.Empty;
+        // Email của tài khoản đang cần đặt lại mật khẩu (lưu trong Session)
+        public string? Email { get; set; }
 
         // Mật khẩu mới cần thiết lập
         [Required(ErrorMessage = "Vui lòng nhập Mật khẩu mới")]

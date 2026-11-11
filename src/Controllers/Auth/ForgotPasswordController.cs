@@ -1,66 +1,52 @@
 using Microsoft.AspNetCore.Mvc;
-using MiaraEyeglasses.Models.ViewModels;
 using MiaraEyeglasses.Services.Auth;
 
 namespace MiaraEyeglasses.Controllers.Auth
 {
-    // Controller xử lý Quên mật khẩu và gửi email liên kết đặt lại mật khẩu
+    // Controller xử lý Quên mật khẩu: gửi OTP và lưu phiên vào Session (chuẩn CatBaBooking)
     public class ForgotPasswordController : Controller
     {
         private readonly IForgotPasswordService _forgotPasswordService;
-        private readonly IEmailService _emailService;
 
-        public ForgotPasswordController(IForgotPasswordService forgotPasswordService, IEmailService emailService)
+        public ForgotPasswordController(IForgotPasswordService forgotPasswordService)
         {
             _forgotPasswordService = forgotPasswordService;
-            _emailService = emailService;
         }
 
-        // [GET] /ForgotPassword: Hiển thị form nhập email cần khôi phục mật khẩu
-        [HttpGet]
-        [Route("ForgotPassword")]
-        [Route("Auth/ForgotPassword")]
+        // [GET] Hiển thị giao diện nhập Email
+        [HttpGet("/forgot-password")]
+        [HttpGet("/Auth/ForgotPassword")]
         public IActionResult Index()
         {
             return View("~/Views/Auth/ForgotPassword.cshtml");
         }
 
-        // [POST] /ForgotPassword: Tiếp nhận email và gửi token xác thực qua hòm thư
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Route("ForgotPassword")]
-        [Route("Auth/ForgotPassword")]
-        public async Task<IActionResult> Index(ForgotPasswordViewModel model)
+        // [POST] Gửi mã OTP về email và lưu thông tin vào Session
+        [HttpPost("/forgot-password")]
+        [HttpPost("/Auth/ForgotPassword")]
+        public async Task<IActionResult> SendOtp(string email)
         {
-            if (!ModelState.IsValid)
-                return View("~/Views/Auth/ForgotPassword.cshtml", model);
-
-            // 1. Tạo token đặt lại mật khẩu ngẫu nhiên lưu vào database
-            var (success, errorMessage, token) = await _forgotPasswordService.GenerateResetTokenAsync(model.Email);
-            if (!success)
+            if (string.IsNullOrWhiteSpace(email))
             {
-                ModelState.AddModelError(string.Empty, errorMessage ?? "Không thể tạo mã đặt lại mật khẩu.");
-                return View("~/Views/Auth/ForgotPassword.cshtml", model);
+                ViewBag.Error = "Email không được để trống.";
+                return View("~/Views/Auth/ForgotPassword.cshtml");
             }
 
-            // 2. Tạo đường link khôi phục chứa email và token bảo mật
-            var resetLink = Url.Action("Index", "ResetPassword", new { email = model.Email, token = token }, Request.Scheme);
-
-            // 3. Gửi email chứa đường dẫn đặt lại mật khẩu qua SMTP
-            var (emailSent, emailError) = await _emailService.SendPasswordResetEmailAsync(model.Email, resetLink ?? "");
-
-            if (emailSent)
+            string cleanEmail = email.Trim();
+            string? otp = await _forgotPasswordService.SendOTPAsync(cleanEmail);
+            if (otp == null)
             {
-                TempData["SuccessMessage"] = $"Đã gửi email khôi phục mật khẩu đến {model.Email}. Vui lòng kiểm tra hộp thư đến (hoặc hòm thư Spam) để bấm vào liên kết!";
-            }
-            else
-            {
-                // Fallback khi chưa cấu hình SMTP: hiển thị link trực tiếp cho người dùng thử nghiệm
-                TempData["SuccessMessage"] = $"Đã tạo yêu cầu thành công. (Ghi chú: Email chưa gửi được do [{emailError}] hoặc cấu hình email chưa đầy đủ; bạn có thể dùng liên kết trực tiếp bên dưới để đổi mật khẩu).";
-                ViewBag.DirectResetLink = resetLink;
+                ViewBag.Error = "Email không tồn tại trên hệ thống hoặc tài khoản đang bị khóa.";
+                return View("~/Views/Auth/ForgotPassword.cshtml");
             }
 
-            return View("~/Views/Auth/ForgotPasswordConfirmation.cshtml", model.Email);
+            // Lưu thông tin vào Session (chuẩn CatBaBooking)
+            HttpContext.Session.SetString("EmailForgot", cleanEmail);
+            HttpContext.Session.SetString("OTP", otp);
+            HttpContext.Session.SetString("Timeout", DateTime.Now.AddMinutes(5).Ticks.ToString());
+
+            // Chuyển hướng sang trang nhập mã OTP
+            return Redirect("/verify-otp");
         }
     }
 }

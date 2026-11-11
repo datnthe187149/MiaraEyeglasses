@@ -152,6 +152,26 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseSession();
+
+// Tự động nhận diện danh tính và vai trò người dùng từ Session
+app.Use(async (context, next) =>
+{
+    var userId = context.Session.GetString("UserId");
+    var userName = context.Session.GetString("UserName");
+    var roleName = context.Session.GetString("RoleName");
+    if (!string.IsNullOrEmpty(userId))
+    {
+        var identity = new System.Security.Claims.ClaimsIdentity(new[]
+        {
+            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, userId),
+            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, userName ?? ""),
+            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, roleName ?? "Customer")
+        }, "SessionAuth");
+        context.User = new System.Security.Claims.ClaimsPrincipal(identity);
+    }
+    await next();
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 

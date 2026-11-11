@@ -1,14 +1,9 @@
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MiaraEyeglasses.Filters;
 using MiaraEyeglasses.Services.User;
 
 namespace MiaraEyeglasses.Controllers.User
 {
-    // Controller quản lý Danh sách yêu thích (Wishlist) của khách hàng
-    [Authorize]
-    [CustomerOnly]
+    // Controller quản lý Danh sách yêu thích (Wishlist) qua Session (chuẩn CatBaBooking)
     public class WishlistController : Controller
     {
         private readonly IWishlistService _wishlistService;
@@ -18,16 +13,17 @@ namespace MiaraEyeglasses.Controllers.User
             _wishlistService = wishlistService;
         }
 
-        // Lấy ID người dùng hiện tại
-        private int GetCurrentUserId()
+        private int? GetCurrentUserId()
         {
             var sessionUserId = HttpContext.Session.GetInt32("UserId");
             if (sessionUserId.HasValue && sessionUserId.Value > 0)
                 return sessionUserId.Value;
 
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (int.TryParse(userIdStr, out var userId)) return userId;
-            return 1;
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (int.TryParse(userIdStr, out var id))
+                return id;
+
+            return null;
         }
 
         // [GET] /Wishlist: Hiển thị danh sách các mẫu kính đã lưu yêu thích
@@ -36,28 +32,28 @@ namespace MiaraEyeglasses.Controllers.User
         [Route("Wishlist")]
         public async Task<IActionResult> Index()
         {
-            int userId = GetCurrentUserId();
-            var wishlist = await _wishlistService.GetUserWishlistAsync(userId);
+            int? userId = GetCurrentUserId();
+            if (!userId.HasValue) return Redirect("/login");
+
+            var wishlist = await _wishlistService.GetUserWishlistAsync(userId.Value);
             return View("~/Views/User/Wishlist.cshtml", wishlist);
         }
 
-        // [POST] Thêm hoặc Xóa một mẫu kính khỏi danh sách yêu thích (Toggle)
+        // [POST] Thêm hoặc Xóa một mẫu kính khỏi danh sách yêu thích
         [HttpPost]
-        [ValidateAntiForgeryToken]
         [Route("User/ToggleWishlist")]
         [Route("Wishlist/Toggle")]
         public async Task<IActionResult> Toggle(int productId, string? returnUrl = null)
         {
-            int userId = GetCurrentUserId();
+            int? userId = GetCurrentUserId();
+            if (!userId.HasValue) return Redirect("/login");
 
-            // Đảo trạng thái yêu thích của sản phẩm (nếu có rồi thì xóa, chưa có thì thêm)
-            var isWishlisted = await _wishlistService.ToggleWishlistAsync(userId, productId);
+            var isWishlisted = await _wishlistService.ToggleWishlistAsync(userId.Value, productId);
             if (isWishlisted)
                 TempData["SuccessMessage"] = "Đã thêm sản phẩm vào danh sách yêu thích!";
             else
                 TempData["SuccessMessage"] = "Đã xóa sản phẩm khỏi danh sách yêu thích.";
 
-            // Quay lại trang trước đó nếu hợp lệ
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 return Redirect(returnUrl);
 

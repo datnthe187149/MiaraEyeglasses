@@ -806,6 +806,7 @@ SET QUOTED_IDENTIFIER ON;
 GO
 
 IF NOT EXISTS (SELECT 1 FROM Users WHERE Email = 'admin@miara.vn')
+IF NOT EXISTS (SELECT 1 FROM Users WHERE Email = 'admin@miara.vn' OR Email = 'admin@miaraeyeglasses.com')
 BEGIN
     INSERT INTO Users (FullName, Email, Phone, PasswordHash, Gender, BirthDate, RoleId, IsActive, CreatedAt)
     VALUES
@@ -817,6 +818,13 @@ BEGIN
     (N'Kỹ thuật viên Cắt kính', 'staff@miara.vn', '0977777777', '$2b$12$YR7OGP1NVWuaCR3G1rjvK.i0w2Hme11isMNGmQnnI3eS7wdRYV4E2', N'Nam', '1998-05-15', 2, 1, SYSDATETIME()),
     (N'Nguyễn Thành Đạt', 'datnthe187149@fpt.edu.vn', '0901234567', '$2b$12$YR7OGP1NVWuaCR3G1rjvK.i0w2Hme11isMNGmQnnI3eS7wdRYV4E2', N'Nam', '2004-10-20', 1, 1, SYSDATETIME()),
     (N'Trần Thu Hà', 'khachhang@miara.vn', '0912345678', '$2b$12$YR7OGP1NVWuaCR3G1rjvK.i0w2Hme11isMNGmQnnI3eS7wdRYV4E2', N'Nữ', '2002-08-12', 1, 1, SYSDATETIME());
+    (N'Quản trị viên MIARA', 'admin@miara.vn', '0988888888', '$2a$10$bYvMS7JI7PnJAYVn4/W7IO94GKb7TiseNXc/M0uzyaHcZiZHIpo2m', N'Nam', '1995-01-01', 3, 1, SYSDATETIME()),
+    (N'Quản trị viên MIARA', 'admin@miaraeyeglasses.com', '0988888889', '$2a$10$bYvMS7JI7PnJAYVn4/W7IO94GKb7TiseNXc/M0uzyaHcZiZHIpo2m', N'Nam', '1995-01-01', 3, 1, SYSDATETIME()),
+    (N'Kỹ thuật viên Cắt kính', 'staff@miara.vn', '0977777777', '$2a$10$C9DI8zdqJEW9UoNXBgPIGOp7C2NO.64mgH5nZWugr7si5CTw.bZVO', N'Nam', '1998-05-15', 2, 1, SYSDATETIME()),
+    (N'Kỹ thuật viên Cắt kính', 'staff@miaraeyeglasses.com', '0977777778', '$2a$10$C9DI8zdqJEW9UoNXBgPIGOp7C2NO.64mgH5nZWugr7si5CTw.bZVO', N'Nam', '1998-05-15', 2, 1, SYSDATETIME()),
+    (N'Nguyễn Thành Đạt', 'datnthe187149@fpt.edu.vn', '0901234567', '$2a$10$lGzJnK9SGz7Ad7F2o0ZB/uDiYAXWDnkcfB1grSvbiw8fMG2jc0uCe', N'Nam', '2004-10-20', 1, 1, SYSDATETIME()),
+    (N'Trần Thu Hà', 'khachhang@miara.vn', '0912345678', '$2a$10$hGJaqlAAy3g4kNOJaTPXCuh5h5DTs9vPU4.YQuKR4ioRG/Tw8UkQK', N'Nữ', '2002-08-12', 1, 1, SYSDATETIME()),
+    (N'Khách hàng MIARA', 'customer@miaraeyeglasses.com', '0912345679', '$2a$10$hGJaqlAAy3g4kNOJaTPXCuh5h5DTs9vPU4.YQuKR4ioRG/Tw8UkQK', N'Nữ', '2002-08-12', 1, 1, SYSDATETIME());
 END
 GO
 
