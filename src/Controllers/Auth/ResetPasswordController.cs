@@ -4,6 +4,7 @@ using MiaraEyeglasses.Services.Auth;
 
 namespace MiaraEyeglasses.Controllers.Auth
 {
+    // Controller xử lý Đặt lại mật khẩu mới thông qua Token bảo mật
     public class ResetPasswordController : Controller
     {
         private readonly IResetPasswordService _resetPasswordService;
@@ -13,6 +14,7 @@ namespace MiaraEyeglasses.Controllers.Auth
             _resetPasswordService = resetPasswordService;
         }
 
+        // [GET] /ResetPassword: Màn hình nhập mật khẩu mới (nhận email và token từ liên kết email)
         [HttpGet]
         [Route("ResetPassword")]
         [Route("Auth/ResetPassword")]
@@ -22,6 +24,7 @@ namespace MiaraEyeglasses.Controllers.Auth
             return View("~/Views/Auth/ResetPassword.cshtml", model);
         }
 
+        // [POST] /ResetPassword: Lưu mật khẩu mới đã xác thực token
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Route("ResetPassword")]
@@ -31,6 +34,7 @@ namespace MiaraEyeglasses.Controllers.Auth
             if (!ModelState.IsValid)
                 return View("~/Views/Auth/ResetPassword.cshtml", model);
 
+            // Gọi Service xác thực token hợp lệ và băm mật khẩu mới bằng BCrypt
             var (success, errorMessage) = await _resetPasswordService.ResetPasswordAsync(model);
             if (!success)
             {
@@ -43,4 +47,3 @@ namespace MiaraEyeglasses.Controllers.Auth
         }
     }
 }
-

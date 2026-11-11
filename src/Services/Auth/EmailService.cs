@@ -5,22 +5,27 @@ using Microsoft.Extensions.Logging;
 
 namespace MiaraEyeglasses.Services.Auth
 {
+    // Interface dịch vụ gửi email thông báo hệ thống
     public interface IEmailService
     {
+        // Gửi thông báo / email: SendPasswordResetEmail
         Task<(bool Success, string? ErrorMessage)> SendPasswordResetEmailAsync(string toEmail, string resetLink);
     }
 
+    // Service gửi email kích hoạt, khôi phục mật khẩu và xác nhận đơn hàng
     public class EmailService : IEmailService
     {
         private readonly IConfiguration _config;
         private readonly ILogger<EmailService> _logger;
 
+        // Khởi tạo đối tượng EmailService kèm nạp các phụ thuộc cần thiết
         public EmailService(IConfiguration config, ILogger<EmailService> logger)
         {
             _config = config;
             _logger = logger;
         }
 
+        // Gửi thông báo / email: SendPasswordResetEmail
         public async Task<(bool Success, string? ErrorMessage)> SendPasswordResetEmailAsync(string toEmail, string resetLink)
         {
             var smtpHost = _config["EmailSettings:SmtpServer"] ?? "smtp.gmail.com";

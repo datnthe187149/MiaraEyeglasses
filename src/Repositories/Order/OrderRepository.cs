@@ -8,30 +8,42 @@ using MiaraEyeglasses.Repositories.Common;
 
 namespace MiaraEyeglasses.Repositories.Order
 {
+    // Interface kho dữ liệu đơn hàng và Stored Procedures
     public interface IOrderRepository : IBaseRepository<Models.Entities.Order>
     {
+        // Lấy dữ liệu: OrderWithDetails
         Task<Models.Entities.Order?> GetOrderWithDetailsAsync(int orderId);
+        // Lấy dữ liệu: OrderByCode
         Task<Models.Entities.Order?> GetOrderByCodeAsync(string orderCode);
         Task<IEnumerable<Models.Entities.Order>> GetOrdersByUserIdAsync(int userId);
         Task<IEnumerable<Models.Entities.Order>> GetAllOrdersForAdminAsync(byte? status = null);
         Task<(IEnumerable<Models.Entities.Order> Orders, int TotalCount)> GetOrdersPagedForAdminAsync(
             int page, int pageSize, byte? status = null, string? search = null);
+        // Thêm mới dữ liệu: CreateOrderViaProcedure
         Task<int> CreateOrderViaProcedureAsync(
             int userId, string recipientName, string phone, string address,
             string? note, string? couponCode, decimal shippingFee, int windowMinutes = 15);
+        // Thực thi tác vụ: ConfirmVnPayPaymentViaProcedure
         Task<string> ConfirmVnPayPaymentViaProcedureAsync(
             string txnRef, string responseCode, decimal amount,
             string? txnNo = null, string? bankCode = null, DateTime? payDate = null, string? rawResponse = null);
+        // Thực thi tác vụ: CancelOrderViaProcedure
         Task CancelOrderViaProcedureAsync(int orderId, int? userId, string reason);
+        // Thực thi tác vụ: RefundOrderViaProcedure
         Task RefundOrderViaProcedureAsync(int orderId, int adminId, string refundTxnNo, string reason, decimal? refundAmount = null);
+        // Cập nhật dữ liệu: UpdateOrderStatusViaProcedure
         Task UpdateOrderStatusViaProcedureAsync(int orderId, byte newStatus, int staffId);
+        // Thêm mới dữ liệu: AddPaymentRecord
         Task AddPaymentRecordAsync(int orderId, string method, decimal amount, byte status, string txnRef);
     }
 
+    // Lớp thực thi quản lý đơn hàng kết hợp EF Core và Dapper
     public class OrderRepository : BaseRepository<Models.Entities.Order>, IOrderRepository
     {
+        // Khởi tạo đối tượng OrderRepository kèm nạp các phụ thuộc cần thiết
         public OrderRepository(EyeglassesDbContext context) : base(context) { }
 
+        // Lấy dữ liệu: OrderWithDetails
         public async Task<Models.Entities.Order?> GetOrderWithDetailsAsync(int orderId)
         {
             return await _dbSet.Include(o => o.Items)
@@ -41,6 +53,7 @@ namespace MiaraEyeglasses.Repositories.Order
                                .FirstOrDefaultAsync(o => o.OrderId == orderId);
         }
 
+        // Lấy dữ liệu: OrderByCode
         public async Task<Models.Entities.Order?> GetOrderByCodeAsync(string orderCode)
         {
             return await _dbSet.Include(o => o.Items)
@@ -102,6 +115,7 @@ namespace MiaraEyeglasses.Repositories.Order
             return (orders, totalCount);
         }
 
+        // Thêm mới dữ liệu: CreateOrderViaProcedure
         public async Task<int> CreateOrderViaProcedureAsync(
             int userId, string recipientName, string phone, string address,
             string? note, string? couponCode, decimal shippingFee, int windowMinutes = 15)
@@ -122,6 +136,7 @@ namespace MiaraEyeglasses.Repositories.Order
             return parameters.Get<int>("@OrderId");
         }
 
+        // Thực thi tác vụ: ConfirmVnPayPaymentViaProcedure
         public async Task<string> ConfirmVnPayPaymentViaProcedureAsync(
             string txnRef, string responseCode, decimal amount,
             string? txnNo = null, string? bankCode = null, DateTime? payDate = null, string? rawResponse = null)
@@ -142,6 +157,7 @@ namespace MiaraEyeglasses.Repositories.Order
             return result ?? "NOT_FOUND";
         }
 
+        // Thực thi tác vụ: CancelOrderViaProcedure
         public async Task CancelOrderViaProcedureAsync(int orderId, int? userId, string reason)
         {
             using var connection = new SqlConnection(_context.Database.GetConnectionString());
@@ -153,6 +169,7 @@ namespace MiaraEyeglasses.Repositories.Order
             await connection.ExecuteAsync("dbo.sp_CancelOrder", parameters, commandType: CommandType.StoredProcedure);
         }
 
+        // Thực thi tác vụ: RefundOrderViaProcedure
         public async Task RefundOrderViaProcedureAsync(int orderId, int adminId, string refundTxnNo, string reason, decimal? refundAmount = null)
         {
             using var connection = new SqlConnection(_context.Database.GetConnectionString());
@@ -166,6 +183,7 @@ namespace MiaraEyeglasses.Repositories.Order
             await connection.ExecuteAsync("dbo.sp_RefundOrder", parameters, commandType: CommandType.StoredProcedure);
         }
 
+        // Cập nhật dữ liệu: UpdateOrderStatusViaProcedure
         public async Task UpdateOrderStatusViaProcedureAsync(int orderId, byte newStatus, int staffId)
         {
             using var connection = new SqlConnection(_context.Database.GetConnectionString());
@@ -177,6 +195,7 @@ namespace MiaraEyeglasses.Repositories.Order
             await connection.ExecuteAsync("dbo.sp_UpdateOrderStatus", parameters, commandType: CommandType.StoredProcedure);
         }
 
+        // Thêm mới dữ liệu: AddPaymentRecord
         public async Task AddPaymentRecordAsync(int orderId, string method, decimal amount, byte status, string txnRef)
         {
             var payment = new Payment

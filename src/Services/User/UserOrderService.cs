@@ -2,16 +2,20 @@ using MiaraEyeglasses.Repositories.User;
 
 namespace MiaraEyeglasses.Services.User
 {
+    // Interface dịch vụ quản lý đơn hàng của khách hàng
     public interface IUserOrderService
     {
         Task<IEnumerable<MiaraEyeglasses.Models.Entities.Order>> GetOrdersByUserAsync(int userId);
+        // Thực thi tác vụ: CancelOrder
         Task<(bool Success, string? ErrorMessage)> CancelOrderAsync(int orderId, int userId, string reason);
     }
 
+    // Service xử lý xem lịch sử và yêu cầu hủy đơn hàng
     public class UserOrderService : IUserOrderService
     {
         private readonly IUserOrderRepository _userOrderRepository;
 
+        // Khởi tạo đối tượng UserOrderService kèm nạp các phụ thuộc cần thiết
         public UserOrderService(IUserOrderRepository userOrderRepository)
         {
             _userOrderRepository = userOrderRepository;
@@ -22,6 +26,7 @@ namespace MiaraEyeglasses.Services.User
             return await _userOrderRepository.GetOrdersByUserAsync(userId);
         }
 
+        // Thực thi tác vụ: CancelOrder
         public async Task<(bool Success, string? ErrorMessage)> CancelOrderAsync(int orderId, int userId, string reason)
         {
             var order = await _userOrderRepository.GetOrderByIdAsync(orderId, userId);

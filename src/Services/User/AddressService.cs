@@ -4,18 +4,24 @@ using MiaraEyeglasses.Repositories.User;
 
 namespace MiaraEyeglasses.Services.User
 {
+    // Interface dịch vụ quản lý sổ địa chỉ giao hàng
     public interface IAddressService
     {
         Task<IEnumerable<UserAddress>> GetAddressesAsync(int userId);
+        // Thêm mới dữ liệu: AddAddress
         Task<bool> AddAddressAsync(int userId, AddAddressViewModel model);
+        // Xóa dữ liệu: DeleteAddress
         Task<bool> DeleteAddressAsync(int userId, int addressId);
+        // Thực thi tác vụ: SetDefaultAddress
         Task<bool> SetDefaultAddressAsync(int userId, int addressId);
     }
 
+    // Service triển khai các nghiệp vụ thêm, sửa, xóa địa chỉ nhận hàng
     public class AddressService : IAddressService
     {
         private readonly IAddressRepository _addressRepository;
 
+        // Khởi tạo đối tượng AddressService kèm nạp các phụ thuộc cần thiết
         public AddressService(IAddressRepository addressRepository)
         {
             _addressRepository = addressRepository;
@@ -26,6 +32,7 @@ namespace MiaraEyeglasses.Services.User
             return await _addressRepository.GetAddressesByUserIdAsync(userId);
         }
 
+        // Thêm mới dữ liệu: AddAddress
         public async Task<bool> AddAddressAsync(int userId, AddAddressViewModel model)
         {
             if (model.IsDefault)
@@ -55,6 +62,7 @@ namespace MiaraEyeglasses.Services.User
             return true;
         }
 
+        // Xóa dữ liệu: DeleteAddress
         public async Task<bool> DeleteAddressAsync(int userId, int addressId)
         {
             var addr = await _addressRepository.GetUserAddressByIdAsync(userId, addressId);
@@ -65,6 +73,7 @@ namespace MiaraEyeglasses.Services.User
             return true;
         }
 
+        // Thực thi tác vụ: SetDefaultAddress
         public async Task<bool> SetDefaultAddressAsync(int userId, int addressId)
         {
             var addresses = await _addressRepository.GetAddressesByUserIdAsync(userId);

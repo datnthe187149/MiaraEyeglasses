@@ -6,30 +6,38 @@ using MiaraEyeglasses.Repositories.Product;
 
 namespace MiaraEyeglasses.Services.Product
 {
+    // Interface dịch vụ tìm kiếm và hiển thị sản phẩm
     public interface IProductService
     {
+        // Thực thi tác vụ: FilterProducts
         Task<ProductFilterViewModel> FilterProductsAsync(ProductFilterViewModel filter);
+        // Lấy dữ liệu: ProductDetails
         Task<Models.Entities.Product?> GetProductDetailsAsync(int productId);
         Task<IEnumerable<Models.Entities.Product>> GetFeaturedProductsAsync(int count = 8);
         Task<IEnumerable<Models.Entities.Product>> GetSimilarProductsAsync(int currentProductId, int? categoryId, string? shape, int count = 4);
         Task<IEnumerable<Models.Entities.Product>> GetBestsellersAsync(int count = 4);
         Task<IEnumerable<LensOption>> GetLensOptionsAsync();
         Task<IEnumerable<Banner>> GetActiveBannersAsync();
+        // Thực thi tác vụ: CanUserReviewProduct
         Task<bool> CanUserReviewProductAsync(int userId, int productId);
+        // Thực thi tác vụ: SubmitReview
         Task<(bool Success, string? ErrorMessage)> SubmitReviewAsync(int userId, int productId, byte rating, string comment);
     }
 
+    // Service thực thi bộ lọc đa năng và lấy chi tiết sản phẩm
     public class ProductService : IProductService
     {
         private readonly IProductRepository _productRepository;
         private readonly EyeglassesDbContext _context;
 
+        // Khởi tạo đối tượng ProductService kèm nạp các phụ thuộc cần thiết
         public ProductService(IProductRepository productRepository, EyeglassesDbContext context)
         {
             _productRepository = productRepository;
             _context = context;
         }
 
+        // Thực thi tác vụ: FilterProducts
         public async Task<ProductFilterViewModel> FilterProductsAsync(ProductFilterViewModel filter)
         {
             var (products, totalCount) = await _productRepository.SearchProductsAsync(
@@ -44,6 +52,7 @@ namespace MiaraEyeglasses.Services.Product
             return filter;
         }
 
+        // Lấy dữ liệu: ProductDetails
         public async Task<Models.Entities.Product?> GetProductDetailsAsync(int productId)
         {
             return await _productRepository.GetProductWithVariantsAndImagesAsync(productId);
@@ -74,6 +83,7 @@ namespace MiaraEyeglasses.Services.Product
             return await _context.Banners.Where(b => b.IsActive).OrderBy(b => b.SortOrder).ToListAsync();
         }
 
+        // Thực thi tác vụ: CanUserReviewProduct
         public async Task<bool> CanUserReviewProductAsync(int userId, int productId)
         {
             if (userId <= 0) return false;
@@ -83,6 +93,7 @@ namespace MiaraEyeglasses.Services.Product
                 .AnyAsync(o => o.UserId == userId && o.Status == 4 && o.Items.Any(i => i.ProductId == productId));
         }
 
+        // Thực thi tác vụ: SubmitReview
         public async Task<(bool Success, string? ErrorMessage)> SubmitReviewAsync(int userId, int productId, byte rating, string comment)
         {
             if (rating < 1 || rating > 5)

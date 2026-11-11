@@ -5,16 +5,22 @@ using MiaraEyeglasses.Repositories.Common;
 
 namespace MiaraEyeglasses.Repositories.Admin
 {
+    // Interface định nghĩa: IAdminBrandRepository
     public interface IAdminBrandRepository : IBaseRepository<Brand>
     {
         Task<IEnumerable<Brand>> GetAllBrandsWithProductsAsync();
+        // Lấy dữ liệu: BrandById
         Task<Brand?> GetBrandByIdAsync(int brandId);
+        // Cập nhật dữ liệu: UpdateBrand
         Task UpdateBrandAsync(Brand brand);
+        // Đổi trạng thái kích hoạt: ToggleActive
         Task ToggleActiveAsync(int brandId);
     }
 
+    // Class định nghĩa: AdminBrandRepository
     public class AdminBrandRepository : BaseRepository<Brand>, IAdminBrandRepository
     {
+        // Khởi tạo đối tượng AdminBrandRepository kèm nạp các phụ thuộc cần thiết
         public AdminBrandRepository(EyeglassesDbContext context) : base(context) { }
 
         // Lấy danh sách thương hiệu kèm danh sách các sản phẩm thuộc thương hiệu đó

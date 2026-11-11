@@ -2,18 +2,22 @@ using MiaraEyeglasses.Repositories.Admin;
 
 namespace MiaraEyeglasses.Services.Admin
 {
+    // Interface dịch vụ quản lý đơn hàng cho Admin
     public interface IAdminOrderService
     {
         Task<IEnumerable<Models.Entities.Order>> GetAllOrdersAsync(byte? status = null);
         Task<(IEnumerable<Models.Entities.Order> Orders, int TotalCount, int TotalPages)> GetOrdersPagedAsync(
             int page, int pageSize, byte? status = null, string? search = null);
+        // Lấy dữ liệu: OrderDetails
         Task<Models.Entities.Order?> GetOrderDetailsAsync(int orderId);
     }
 
+    // Service xử lý quy trình phê duyệt và cập nhật đơn hàng
     public class AdminOrderService : IAdminOrderService
     {
         private readonly IAdminOrderRepository _adminOrderRepository;
 
+        // Khởi tạo đối tượng AdminOrderService kèm nạp các phụ thuộc cần thiết
         public AdminOrderService(IAdminOrderRepository adminOrderRepository)
         {
             _adminOrderRepository = adminOrderRepository;

@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MiaraEyeglasses.Models.ViewModels;
 using MiaraEyeglasses.Services.Staff;
 
 namespace MiaraEyeglasses.Controllers.Staff
 {
-    // Controller quản lý Tồn kho (Inventory) cho Nhân viên Kỹ thuật
+    // Controller quản lý Tồn kho (Inventory) cho Nhân viên Kỹ thuật (Staff)
     [Authorize(Roles = "Admin,Staff")]
     public class StaffInventoryController : Controller
     {
@@ -15,22 +16,47 @@ namespace MiaraEyeglasses.Controllers.Staff
             _inventoryService = inventoryService;
         }
 
-        // [GET] /Staff/Inventory: Hiển thị danh sách tồn kho từng biến thể gọng kính
+        // [GET] /Staff/Inventory: Hiển thị danh sách tồn kho có Tìm kiếm, Lọc và Phân trang
         [HttpGet]
         [Route("Staff/Inventory")]
         [Route("StaffInventory")]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int page = 1, int pageSize = 10, string? search = null, string? filter = null)
         {
             if (User.IsInRole("Admin") || HttpContext.Session.GetString("UserRole") == "Admin")
             {
                 return RedirectToAction("Index", "AdminInventory");
             }
 
-            var variants = await _inventoryService.GetInventoryVariantsAsync();
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
+
+            var (variants, totalCount, totalPages, lowCount, outCount, allCount) = 
+                await _inventoryService.GetInventoryPagedAsync(page, pageSize, search, filter);
+
+            var pagination = new PaginationModel
+            {
+                CurrentPage = page,
+                PageSize = pageSize,
+                TotalItems = totalCount,
+                TotalPages = totalPages,
+                Controller = "StaffInventory",
+                Action = "Index"
+            };
+
+            if (!string.IsNullOrWhiteSpace(search)) pagination.RouteValues["search"] = search;
+            if (!string.IsNullOrWhiteSpace(filter)) pagination.RouteValues["filter"] = filter;
+
+            ViewBag.Pagination = pagination;
+            ViewBag.Search = search;
+            ViewBag.Filter = filter;
+            ViewBag.AllCount = allCount;
+            ViewBag.LowCount = lowCount;
+            ViewBag.OutCount = outCount;
+
             return View("~/Views/Staff/Inventory.cshtml", variants);
         }
 
-        // [POST] Cập nhật số lượng tồn kho (Có validate số lượng không được âm)
+        // [POST] Cập nhật số lượng tồn kho (Validate không cho nhập số âm)
         [HttpPost]
         [Route("Staff/UpdateStock")]
         [Route("StaffInventory/UpdateStock")]

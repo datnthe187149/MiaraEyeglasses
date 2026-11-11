@@ -4,6 +4,7 @@ using MiaraEyeglasses.Models.Entities;
 
 namespace MiaraEyeglasses.Repositories.Admin
 {
+    // Interface kho dữ liệu báo cáo kinh doanh
     public interface IReportRepository
     {
         Task<IEnumerable<DailyRevenueReport>> GetDailyRevenueAsync(int days = 30);
@@ -11,10 +12,12 @@ namespace MiaraEyeglasses.Repositories.Admin
         Task<IEnumerable<LowStockReport>> GetLowStockVariantsAsync();
     }
 
+    // Lớp thực thi trích xuất báo cáo doanh thu và top bán chạy
     public class ReportRepository : IReportRepository
     {
         private readonly EyeglassesDbContext _context;
 
+        // Khởi tạo đối tượng ReportRepository kèm nạp các phụ thuộc cần thiết
         public ReportRepository(EyeglassesDbContext context)
         {
             _context = context;

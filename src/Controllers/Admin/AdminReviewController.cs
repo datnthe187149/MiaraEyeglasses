@@ -5,6 +5,8 @@ using MiaraEyeglasses.Services.Staff;
 
 namespace MiaraEyeglasses.Controllers.Admin
 {
+    // Controller Quản lý Đánh giá & Bình luận sản phẩm cho Quản trị viên
+    // Cho phép duyệt (duyệt hiển thị) hoặc ẩn các bình luận phản cảm/vi phạm
     [Authorize(Roles = "Admin")]
     public class AdminReviewController : Controller
     {
@@ -15,6 +17,7 @@ namespace MiaraEyeglasses.Controllers.Admin
             _reviewService = reviewService;
         }
 
+        // Lấy ID của Admin hiện tại từ Session hoặc Claims
         private int GetCurrentAdminId()
         {
             var sessionUserId = HttpContext.Session.GetInt32("UserId");
@@ -26,6 +29,8 @@ namespace MiaraEyeglasses.Controllers.Admin
             return 1;
         }
 
+        // [GET] /Admin/Reviews: Xem danh sách toàn bộ đánh giá sản phẩm của khách hàng
+        // Tham số status: null (tất cả), 0 (chờ duyệt), 1 (đã duyệt), 2 (từ chối/ẩn)
         [HttpGet]
         [Route("Admin/Reviews")]
         [Route("AdminReview")]
@@ -36,6 +41,7 @@ namespace MiaraEyeglasses.Controllers.Admin
             return View("~/Views/Admin/Reviews.cshtml", reviews);
         }
 
+        // [POST] Kiểm duyệt trạng thái hiển thị của đánh giá (Duyệt hoặc Ẩn)
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Route("Admin/ModerateReview")]
@@ -43,6 +49,8 @@ namespace MiaraEyeglasses.Controllers.Admin
         public async Task<IActionResult> ModerateReview(int reviewId, byte status)
         {
             int adminId = GetCurrentAdminId();
+
+            // Gọi Service cập nhật trạng thái kiểm duyệt đánh giá
             var (success, error) = await _reviewService.ModerateReviewAsync(reviewId, status, adminId);
             if (success)
                 TempData["SuccessMessage"] = "Cập nhật trạng thái đánh giá thành công!";
@@ -53,4 +61,3 @@ namespace MiaraEyeglasses.Controllers.Admin
         }
     }
 }
-

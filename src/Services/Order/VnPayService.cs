@@ -8,23 +8,29 @@ using MiaraEyeglasses.Repositories.Order;
 
 namespace MiaraEyeglasses.Services.Order
 {
+    // Interface dịch vụ cổng thanh toán trực tuyến VNPAY
     public interface IVnPayService
     {
+        // Thêm mới dữ liệu: CreatePaymentUrl
         string CreatePaymentUrl(Models.Entities.Order order, HttpContext context);
+        // Xử lý tiến trình: ProcessPaymentReturn
         Task<(string Result, string? Message)> ProcessPaymentReturnAsync(IQueryCollection query);
     }
 
+    // Service tạo URL thanh toán và xác minh chữ ký bảo mật VNPAY
     public class VnPayService : IVnPayService
     {
         private readonly IConfiguration _config;
         private readonly IOrderRepository _orderRepository;
 
+        // Khởi tạo đối tượng VnPayService kèm nạp các phụ thuộc cần thiết
         public VnPayService(IConfiguration config, IOrderRepository orderRepository)
         {
             _config = config;
             _orderRepository = orderRepository;
         }
 
+        // Thêm mới dữ liệu: CreatePaymentUrl
         public string CreatePaymentUrl(Models.Entities.Order order, HttpContext context)
         {
             var tmnCode = _config["VnPay:TmnCode"] ?? "TMNCODE_DEMO";
@@ -81,6 +87,7 @@ namespace MiaraEyeglasses.Services.Order
             return $"{baseUrl}?{queryString}&vnp_SecureHash={secureHash}";
         }
 
+        // Xử lý tiến trình: ProcessPaymentReturn
         public async Task<(string Result, string? Message)> ProcessPaymentReturnAsync(IQueryCollection query)
         {
             var hashSecret = _config["VnPay:HashSecret"] ?? "SECRET_DEMO";
@@ -163,6 +170,7 @@ namespace MiaraEyeglasses.Services.Order
             return (result, statusMessage);
         }
 
+        // Thực thi tác vụ: HmacSha512
         private static string HmacSha512(string key, string inputData)
         {
             var hash = new StringBuilder();
@@ -178,8 +186,10 @@ namespace MiaraEyeglasses.Services.Order
         }
     }
 
+    // Class định nghĩa: VnPayCompare
     public class VnPayCompare : IComparer<string>
     {
+        // Thực thi tác vụ: Compare
         public int Compare(string? x, string? y)
         {
             if (x == y) return 0;

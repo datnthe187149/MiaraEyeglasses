@@ -5,16 +5,20 @@ using MiaraEyeglasses.Repositories.Common;
 
 namespace MiaraEyeglasses.Repositories.Staff
 {
+    // Interface kho dữ liệu quản lý tồn kho
     public interface IStaffInventoryRepository : IBaseRepository<ProductVariant>
     {
         Task<IEnumerable<ProductVariant>> GetAllVariantsWithProductsAsync();
         Task<(IEnumerable<ProductVariant> Variants, int TotalCount, int LowStockCount, int OutOfStockCount, int AllCount)> GetInventoryPagedAsync(
             int page, int pageSize, string? search = null, string? filter = null);
+        // Cập nhật dữ liệu: UpdateStock
         Task<bool> UpdateStockAsync(int variantId, int newStock);
     }
 
+    // Lớp thực thi kiểm kê và cập nhật số lượng tồn kho theo biến thể
     public class StaffInventoryRepository : BaseRepository<ProductVariant>, IStaffInventoryRepository
     {
+        // Khởi tạo đối tượng StaffInventoryRepository kèm nạp các phụ thuộc cần thiết
         public StaffInventoryRepository(EyeglassesDbContext context) : base(context) { }
 
         public async Task<IEnumerable<ProductVariant>> GetAllVariantsWithProductsAsync()
@@ -78,6 +82,7 @@ namespace MiaraEyeglasses.Repositories.Staff
             return (variants, totalCount, lowStockCount, outOfStockCount, allCount);
         }
 
+        // Cập nhật dữ liệu: UpdateStock
         public async Task<bool> UpdateStockAsync(int variantId, int newStock)
         {
             var variant = await _dbSet.FindAsync(variantId);

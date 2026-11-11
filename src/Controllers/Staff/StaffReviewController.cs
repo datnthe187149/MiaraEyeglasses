@@ -5,6 +5,7 @@ using MiaraEyeglasses.Services.Staff;
 
 namespace MiaraEyeglasses.Controllers.Staff
 {
+    // Controller dành cho Nhân viên (Staff) kiểm duyệt đánh giá và phản hồi của khách hàng
     [Authorize(Roles = "Admin,Staff")]
     public class StaffReviewController : Controller
     {
@@ -15,6 +16,7 @@ namespace MiaraEyeglasses.Controllers.Staff
             _reviewService = reviewService;
         }
 
+        // Lấy ID nhân viên hiện tại đang thao tác
         private int GetCurrentStaffId()
         {
             var sessionUserId = HttpContext.Session.GetInt32("UserId");
@@ -26,11 +28,13 @@ namespace MiaraEyeglasses.Controllers.Staff
             return 2;
         }
 
+        // [GET] /Staff/Reviews: Hiển thị danh sách đánh giá chờ duyệt hoặc đã duyệt
         [HttpGet]
         [Route("Staff/Reviews")]
         [Route("StaffReview")]
         public async Task<IActionResult> Index(byte? status = null)
         {
+            // Nếu là Admin thì điều hướng sang trang quản trị của Admin
             if (User.IsInRole("Admin") || HttpContext.Session.GetString("UserRole") == "Admin")
             {
                 return RedirectToAction("Index", "AdminReview");
@@ -41,6 +45,7 @@ namespace MiaraEyeglasses.Controllers.Staff
             return View("~/Views/Staff/Reviews.cshtml", reviews);
         }
 
+        // [POST] Duyệt hoặc Ẩn đánh giá của khách hàng
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Route("Staff/ModerateReview")]
@@ -48,6 +53,7 @@ namespace MiaraEyeglasses.Controllers.Staff
         public async Task<IActionResult> ModerateReview(int reviewId, byte status)
         {
             int staffId = GetCurrentStaffId();
+
             var (success, error) = await _reviewService.ModerateReviewAsync(reviewId, status, staffId);
             if (success)
                 TempData["SuccessMessage"] = "Cập nhật trạng thái đánh giá thành công!";
@@ -58,4 +64,3 @@ namespace MiaraEyeglasses.Controllers.Staff
         }
     }
 }
-

@@ -4,6 +4,7 @@ using MiaraEyeglasses.Services.Auth;
 
 namespace MiaraEyeglasses.Controllers.Auth
 {
+    // Controller xử lý Quên mật khẩu và gửi email liên kết đặt lại mật khẩu
     public class ForgotPasswordController : Controller
     {
         private readonly IForgotPasswordService _forgotPasswordService;
@@ -15,6 +16,7 @@ namespace MiaraEyeglasses.Controllers.Auth
             _emailService = emailService;
         }
 
+        // [GET] /ForgotPassword: Hiển thị form nhập email cần khôi phục mật khẩu
         [HttpGet]
         [Route("ForgotPassword")]
         [Route("Auth/ForgotPassword")]
@@ -23,6 +25,7 @@ namespace MiaraEyeglasses.Controllers.Auth
             return View("~/Views/Auth/ForgotPassword.cshtml");
         }
 
+        // [POST] /ForgotPassword: Tiếp nhận email và gửi token xác thực qua hòm thư
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Route("ForgotPassword")]
@@ -32,6 +35,7 @@ namespace MiaraEyeglasses.Controllers.Auth
             if (!ModelState.IsValid)
                 return View("~/Views/Auth/ForgotPassword.cshtml", model);
 
+            // 1. Tạo token đặt lại mật khẩu ngẫu nhiên lưu vào database
             var (success, errorMessage, token) = await _forgotPasswordService.GenerateResetTokenAsync(model.Email);
             if (!success)
             {
@@ -39,7 +43,10 @@ namespace MiaraEyeglasses.Controllers.Auth
                 return View("~/Views/Auth/ForgotPassword.cshtml", model);
             }
 
+            // 2. Tạo đường link khôi phục chứa email và token bảo mật
             var resetLink = Url.Action("Index", "ResetPassword", new { email = model.Email, token = token }, Request.Scheme);
+
+            // 3. Gửi email chứa đường dẫn đặt lại mật khẩu qua SMTP
             var (emailSent, emailError) = await _emailService.SendPasswordResetEmailAsync(model.Email, resetLink ?? "");
 
             if (emailSent)
@@ -48,6 +55,7 @@ namespace MiaraEyeglasses.Controllers.Auth
             }
             else
             {
+                // Fallback khi chưa cấu hình SMTP: hiển thị link trực tiếp cho người dùng thử nghiệm
                 TempData["SuccessMessage"] = $"Đã tạo yêu cầu thành công. (Ghi chú: Email chưa gửi được do [{emailError}] hoặc cấu hình email chưa đầy đủ; bạn có thể dùng liên kết trực tiếp bên dưới để đổi mật khẩu).";
                 ViewBag.DirectResetLink = resetLink;
             }
@@ -56,4 +64,3 @@ namespace MiaraEyeglasses.Controllers.Auth
         }
     }
 }
-

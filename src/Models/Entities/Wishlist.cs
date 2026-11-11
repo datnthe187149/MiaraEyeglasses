@@ -2,15 +2,17 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MiaraEyeglasses.Models.Entities
 {
-    /// <summary>
-    /// Bảng Wishlists: Danh sách sản phẩm kính yêu thích của khách hàng
-    /// </summary>
+    // Bảng Wishlists: Danh sách sản phẩm kính yêu thích của khách hàng
     [Table("Wishlists")]
+    // Class định nghĩa: Wishlist
     public class Wishlist
     {
+        // Thuộc tính: UserId
         public int UserId { get; set; }
+        // Thuộc tính: ProductId
         public int ProductId { get; set; }
 
+        // Thuộc tính: CreatedAt
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigations

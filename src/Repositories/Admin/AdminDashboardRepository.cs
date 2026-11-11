@@ -4,23 +4,28 @@ using MiaraEyeglasses.Models.Entities;
 
 namespace MiaraEyeglasses.Repositories.Admin
 {
+    // Interface kho dữ liệu thống kê số liệu tổng quan hệ thống
     public interface IAdminDashboardRepository
     {
+        // Lấy dữ liệu: StatsSummary
         Task<(int TotalOrders, int TotalUsers, int TotalProducts, decimal TotalRevenue)> GetStatsSummaryAsync();
         Task<IEnumerable<DailyRevenueReport>> GetDailyRevenueAsync(int days = 30);
         Task<IEnumerable<BestSellerReport>> GetBestSellersAsync(int top = 10);
         Task<IEnumerable<LowStockReport>> GetLowStockVariantsAsync();
     }
 
+    // Lớp thực thi tổng hợp các chỉ số doanh thu và đơn hàng cho Dashboard
     public class AdminDashboardRepository : IAdminDashboardRepository
     {
         private readonly EyeglassesDbContext _context;
 
+        // Khởi tạo đối tượng AdminDashboardRepository kèm nạp các phụ thuộc cần thiết
         public AdminDashboardRepository(EyeglassesDbContext context)
         {
             _context = context;
         }
 
+        // Lấy dữ liệu: StatsSummary
         public async Task<(int TotalOrders, int TotalUsers, int TotalProducts, decimal TotalRevenue)> GetStatsSummaryAsync()
         {
             int totalOrders = await _context.Orders.CountAsync();

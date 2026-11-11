@@ -4,18 +4,24 @@ using MiaraEyeglasses.Repositories.User;
 
 namespace MiaraEyeglasses.Services.User
 {
+    // Interface dịch vụ quản lý hồ sơ độ đo thị lực
     public interface IPrescriptionService
     {
         Task<IEnumerable<CustomerPrescription>> GetPrescriptionsAsync(int userId);
+        // Thêm mới dữ liệu: AddPrescription
         Task<bool> AddPrescriptionAsync(int userId, AddPrescriptionViewModel model);
+        // Xóa dữ liệu: DeletePrescription
         Task<bool> DeletePrescriptionAsync(int userId, int prescriptionId);
+        // Thực thi tác vụ: SetDefaultPrescription
         Task<bool> SetDefaultPrescriptionAsync(int userId, int prescriptionId);
     }
 
+    // Service xử lý lưu trữ các thông số độ cận, viễn, loạn thị
     public class PrescriptionService : IPrescriptionService
     {
         private readonly IPrescriptionRepository _prescriptionRepository;
 
+        // Khởi tạo đối tượng PrescriptionService kèm nạp các phụ thuộc cần thiết
         public PrescriptionService(IPrescriptionRepository prescriptionRepository)
         {
             _prescriptionRepository = prescriptionRepository;
@@ -26,6 +32,7 @@ namespace MiaraEyeglasses.Services.User
             return await _prescriptionRepository.GetPrescriptionsByUserIdAsync(userId);
         }
 
+        // Thêm mới dữ liệu: AddPrescription
         public async Task<bool> AddPrescriptionAsync(int userId, AddPrescriptionViewModel model)
         {
             if (model.IsDefault)
@@ -59,6 +66,7 @@ namespace MiaraEyeglasses.Services.User
             return true;
         }
 
+        // Xóa dữ liệu: DeletePrescription
         public async Task<bool> DeletePrescriptionAsync(int userId, int prescriptionId)
         {
             var p = await _prescriptionRepository.GetPrescriptionByIdAsync(userId, prescriptionId);
@@ -69,6 +77,7 @@ namespace MiaraEyeglasses.Services.User
             return true;
         }
 
+        // Thực thi tác vụ: SetDefaultPrescription
         public async Task<bool> SetDefaultPrescriptionAsync(int userId, int prescriptionId)
         {
             var list = await _prescriptionRepository.GetPrescriptionsByUserIdAsync(userId);

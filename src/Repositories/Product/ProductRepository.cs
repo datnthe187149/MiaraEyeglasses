@@ -5,9 +5,11 @@ using MiaraEyeglasses.Repositories.Common;
 
 namespace MiaraEyeglasses.Repositories.Product
 {
+    // Interface kho dữ liệu sản phẩm kính mắt
     public interface IProductRepository : IBaseRepository<Models.Entities.Product>
     {
         Task<IEnumerable<Models.Entities.Product>> GetFeaturedProductsAsync(int count = 8);
+        // Lấy dữ liệu: ProductWithVariantsAndImages
         Task<Models.Entities.Product?> GetProductWithVariantsAndImagesAsync(int productId);
         Task<(IEnumerable<Models.Entities.Product> Products, int TotalCount)> SearchProductsAsync(
             string? searchTerm, int? categoryId, int? brandId, string? gender, string? shape, string? material,
@@ -17,8 +19,10 @@ namespace MiaraEyeglasses.Repositories.Product
         Task<IEnumerable<Models.Entities.Product>> GetBestsellerProductsAsync(int count = 4);
     }
 
+    // Lớp thực thi tìm kiếm, lọc động và phân trang sản phẩm
     public class ProductRepository : BaseRepository<Models.Entities.Product>, IProductRepository
     {
+        // Khởi tạo đối tượng ProductRepository kèm nạp các phụ thuộc cần thiết
         public ProductRepository(EyeglassesDbContext context) : base(context) { }
 
         public async Task<IEnumerable<Models.Entities.Product>> GetFeaturedProductsAsync(int count = 8)
@@ -34,6 +38,7 @@ namespace MiaraEyeglasses.Repositories.Product
                                .ToListAsync();
         }
 
+        // Lấy dữ liệu: ProductWithVariantsAndImages
         public async Task<Models.Entities.Product?> GetProductWithVariantsAndImagesAsync(int productId)
         {
             return await _dbSet.Include(p => p.Brand)

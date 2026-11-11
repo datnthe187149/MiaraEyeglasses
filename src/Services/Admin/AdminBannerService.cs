@@ -3,18 +3,23 @@ using MiaraEyeglasses.Repositories.Admin;
 
 namespace MiaraEyeglasses.Services.Admin
 {
+    // Interface dịch vụ quản lý banner quảng cáo cho Admin
     public interface IAdminBannerService
     {
         Task<IEnumerable<Banner>> GetAllBannersAsync();
+        // Thêm mới dữ liệu: CreateBanner
         Task<(bool Success, string? ErrorMessage)> CreateBannerAsync(
             string title, string imageUrl, string? linkUrl, int sortOrder);
+        // Đổi trạng thái kích hoạt: ToggleBannerActive
         Task ToggleBannerActiveAsync(int bannerId);
     }
 
+    // Service triển khai thêm, sửa, bật tắt banner
     public class AdminBannerService : IAdminBannerService
     {
         private readonly IAdminBannerRepository _bannerRepository;
 
+        // Khởi tạo đối tượng AdminBannerService kèm nạp các phụ thuộc cần thiết
         public AdminBannerService(IAdminBannerRepository bannerRepository)
         {
             _bannerRepository = bannerRepository;
@@ -25,6 +30,7 @@ namespace MiaraEyeglasses.Services.Admin
             return await _bannerRepository.GetAllBannersAsync();
         }
 
+        // Thêm mới dữ liệu: CreateBanner
         public async Task<(bool Success, string? ErrorMessage)> CreateBannerAsync(
             string title, string imageUrl, string? linkUrl, int sortOrder)
         {
@@ -43,6 +49,7 @@ namespace MiaraEyeglasses.Services.Admin
             return (true, null);
         }
 
+        // Đổi trạng thái kích hoạt: ToggleBannerActive
         public async Task ToggleBannerActiveAsync(int bannerId)
         {
             await _bannerRepository.ToggleActiveAsync(bannerId);

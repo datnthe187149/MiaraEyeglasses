@@ -3,22 +3,28 @@ using MiaraEyeglasses.Repositories.Admin;
 
 namespace MiaraEyeglasses.Services.Admin
 {
+    // Interface dịch vụ quản lý mã giảm giá cho Admin
     public interface IAdminCouponService
     {
         Task<IEnumerable<Coupon>> GetAllCouponsAsync();
+        // Thêm mới dữ liệu: CreateCoupon
         Task<(bool Success, string? ErrorMessage)> CreateCouponAsync(
             string code, decimal discountAmount, decimal minOrderAmount,
             DateTime startAt, DateTime expireAt, int usageLimit);
+        // Đổi trạng thái kích hoạt: ToggleCouponActive
         Task ToggleCouponActiveAsync(int couponId);
+        // Cập nhật dữ liệu: UpdateCoupon
         Task<(bool Success, string? ErrorMessage)> UpdateCouponAsync(
             int couponId, string code, string discountType, decimal discountValue, decimal minOrderAmount,
             DateTime expireAt, int? usageLimit);
     }
 
+    // Service tạo và quản lý thời hạn của mã khuyến mãi
     public class AdminCouponService : IAdminCouponService
     {
         private readonly IAdminCouponRepository _couponRepository;
 
+        // Khởi tạo đối tượng AdminCouponService kèm nạp các phụ thuộc cần thiết
         public AdminCouponService(IAdminCouponRepository couponRepository)
         {
             _couponRepository = couponRepository;
@@ -29,6 +35,7 @@ namespace MiaraEyeglasses.Services.Admin
             return await _couponRepository.GetAllCouponsAsync();
         }
 
+        // Thêm mới dữ liệu: CreateCoupon
         public async Task<(bool Success, string? ErrorMessage)> CreateCouponAsync(
             string code, decimal discountAmount, decimal minOrderAmount,
             DateTime startAt, DateTime expireAt, int usageLimit)
@@ -51,11 +58,13 @@ namespace MiaraEyeglasses.Services.Admin
             return (true, null);
         }
 
+        // Đổi trạng thái kích hoạt: ToggleCouponActive
         public async Task ToggleCouponActiveAsync(int couponId)
         {
             await _couponRepository.ToggleActiveAsync(couponId);
         }
 
+        // Cập nhật dữ liệu: UpdateCoupon
         public async Task<(bool Success, string? ErrorMessage)> UpdateCouponAsync(
             int couponId, string code, string discountType, decimal discountValue, decimal minOrderAmount,
             DateTime expireAt, int? usageLimit)

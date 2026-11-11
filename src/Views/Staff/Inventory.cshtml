@@ -1,24 +1,81 @@
 @model IEnumerable<MiaraEyeglasses.Models.Entities.ProductVariant>
 @{
-    ViewData["Title"] = "Quản lý tồn kho sản phẩm (Staff)";
+    ViewData["Title"] = "Quản lý Tồn kho (Staff) — MIARA";
+    var pagination = ViewBag.Pagination as MiaraEyeglasses.Models.ViewModels.PaginationModel;
+    string currentFilter = ViewBag.Filter as string ?? "all";
+    string searchKeyword = ViewBag.Search as string ?? "";
+    int allCount = ViewBag.AllCount as int? ?? Model?.Count() ?? 0;
+    int lowCount = ViewBag.LowCount as int? ?? 0;
+    int outCount = ViewBag.OutCount as int? ?? 0;
 }
 
-<div class="bo-main-wrap container" style="padding-top: 10px;">
+<div class="bo-main-wrap container" style="padding-top: 16px;">
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success" style="margin-bottom: 20px;">@TempData["SuccessMessage"]</div>
+        <div class="alert alert-success" style="margin-bottom: 20px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46;">
+            @TempData["SuccessMessage"]
+        </div>
     }
     @if (TempData["ErrorMessage"] != null)
     {
-        <div class="alert alert-danger" style="margin-bottom: 20px;">@TempData["ErrorMessage"]</div>
+        <div class="alert alert-danger" style="margin-bottom: 20px; padding: 12px 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; color: #991b1b;">
+            @TempData["ErrorMessage"]
+        </div>
     }
 
-    <div class="portal-card" style="background: #fff; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0;">
-        <div class="portal-card-head" style="margin-bottom: 20px;">
-            <span class="eyebrow" style="color: #2563eb; text-transform: uppercase; font-size: 13px; font-weight: 600;">Kho vận & Tồn kho · Nhân viên</span>
-            <h2 style="margin: 4px 0;">Cập nhật số lượng tồn kho sản phẩm</h2>
-            <p class="small muted" style="margin: 0;">Điều chỉnh nhanh số lượng tồn kho của các biến thể kính khi nhập hàng mới hoặc kiểm kê thực tế.</p>
+    <div class="portal-card" style="background: #fff; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0;">
+        <div class="portal-card-head" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <span class="eyebrow" style="color: #2563eb; text-transform: uppercase; font-size: 13px; font-weight: 600;">Kho vận &amp; Tồn kho · Nhân viên</span>
+                <h2 style="margin: 4px 0; font-size: 20px; font-weight: 700; color: #0f172a;">Cập nhật số lượng tồn kho sản phẩm</h2>
+                <p class="small muted" style="margin: 0; color: #64748b; font-size: 14px;">Điều chỉnh nhanh số lượng tồn kho của các biến thể kính khi nhập hàng mới hoặc kiểm kê thực tế.</p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <span class="badge" style="background: #f1f5f9; color: #334155; padding: 6px 12px; font-size: 13px; font-weight: 600; border-radius: 6px;">
+                    Tổng biến thể: @allCount
+                </span>
+                @if (lowCount > 0)
+                {
+                    <span class="badge" style="background: #fef3c7; color: #92400e; padding: 6px 12px; font-size: 13px; font-weight: 600; border-radius: 6px;">
+                        ⚠ Sắp hết: @lowCount
+                    </span>
+                }
+                @if (outCount > 0)
+                {
+                    <span class="badge" style="background: #fee2e2; color: #dc2626; padding: 6px 12px; font-size: 13px; font-weight: 600; border-radius: 6px;">
+                        ✕ Hết hàng: @outCount
+                    </span>
+                }
+            </div>
         </div>
+
+        <!-- THANH TÌM KIẾM & BỘ LỌC TỒN KHO -->
+        <form method="get" asp-controller="StaffInventory" asp-action="Index" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+            <div style="display: flex; gap: 8px; align-items: center; flex: 1; max-width: 420px;">
+                <input type="text" name="search" value="@searchKeyword" placeholder="Tìm theo tên mẫu kính, SKU, màu sắc..." style="width: 100%; height: 36px; padding: 0 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;" />
+                <input type="hidden" name="filter" value="@currentFilter" />
+                <button type="submit" class="button" style="height: 36px; padding: 0 16px; font-size: 13px;">Tìm kiếm</button>
+                @if (!string.IsNullOrEmpty(searchKeyword) || currentFilter != "all")
+                {
+                    <a asp-controller="StaffInventory" asp-action="Index" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; color: #475569; text-decoration: none;" title="Đặt lại bộ lọc">↺ Đặt lại</a>
+                }
+            </div>
+
+            <div style="display: flex; gap: 6px; align-items: center;">
+                <a asp-controller="StaffInventory" asp-action="Index" asp-route-search="@searchKeyword" asp-route-filter="all" 
+                   style="padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; @(currentFilter == "all" || string.IsNullOrEmpty(currentFilter) ? "background: #286598; color: #fff; font-weight: 600;" : "background: #f1f5f9; color: #475569;")">
+                    Tất cả (@allCount)
+                </a>
+                <a asp-controller="StaffInventory" asp-action="Index" asp-route-search="@searchKeyword" asp-route-filter="low" 
+                   style="padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; @(currentFilter == "low" ? "background: #286598; color: #fff; font-weight: 600;" : "background: #f1f5f9; color: #475569;")">
+                    Sắp hết hàng (&le; 3)
+                </a>
+                <a asp-controller="StaffInventory" asp-action="Index" asp-route-search="@searchKeyword" asp-route-filter="out" 
+                   style="padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; @(currentFilter == "out" ? "background: #286598; color: #fff; font-weight: 600;" : "background: #f1f5f9; color: #475569;")">
+                    Hết hàng (0)
+                </a>
+            </div>
+        </form>
 
         <div class="admin-table-wrap" style="overflow-x: auto;">
             <table class="table" style="width: 100%; border-collapse: collapse; font-size: 14px;">
@@ -26,7 +83,7 @@
                     <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left;">
                         <th style="padding: 12px;">Mẫu gọng kính</th>
                         <th style="padding: 12px;">Mã SKU</th>
-                        <th style="padding: 12px;">Màu sắc & Cỡ kính</th>
+                        <th style="padding: 12px;">Màu sắc &amp; Cỡ kính</th>
                         <th style="padding: 12px;">Giá niêm yết</th>
                         <th style="padding: 12px;">Tồn kho hiện tại</th>
                         <th style="padding: 12px;">Cập nhật tồn kho</th>
@@ -39,28 +96,36 @@
                         {
                             <tr style="border-bottom: 1px solid #f1f5f9;">
                                 <td style="padding: 12px;">
-                                    <strong>@v.Product.ProductName</strong><br />
-                                    <small class="muted">@v.Product.ProductCode</small>
+                                    <strong>@(v.Product?.Brand?.BrandName ?? "MIARA") - @(v.Product?.ProductName ?? v.Product?.ProductCode)</strong>
                                 </td>
                                 <td style="padding: 12px;"><code>@v.Sku</code></td>
                                 <td style="padding: 12px;">@v.ColorName · Size @v.SizeLabel</td>
-                                <td style="padding: 12px; font-weight: 500;">@v.Product.Price.ToString("N0") ₫</td>
+                                <td style="padding: 12px; font-weight: 600;">@((v.Product?.Price ?? 0).ToString("N0")) ₫</td>
                                 <td style="padding: 12px;">
-                                    @if (v.StockQty <= 3)
+                                    @if (v.StockQty == 0)
                                     {
-                                        <span class="badge" style="background: #ef4444; color: #fff; padding: 3px 8px; border-radius: 4px;">Sắp hết: @v.StockQty</span>
+                                        <span class="badge" style="background: #fee2e2; color: #dc2626; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Hết hàng</span>
+                                    }
+                                    else if (v.StockQty <= 3)
+                                    {
+                                        <span class="badge" style="background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Sắp hết: @v.StockQty</span>
                                     }
                                     else
                                     {
-                                        <span class="badge" style="background: #10b981; color: #fff; padding: 3px 8px; border-radius: 4px;">Còn hàng: @v.StockQty</span>
+                                        <span class="badge" style="background: #ecfdf5; color: #059669; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Còn hàng: @v.StockQty</span>
                                     }
                                 </td>
                                 <td style="padding: 12px;">
-                                    <form asp-action="UpdateStock" method="post" style="display: flex; gap: 8px; align-items: center; margin: 0;">
+                                    <form asp-controller="StaffInventory" asp-action="UpdateStock" method="post" style="display: flex; gap: 8px; align-items: center; margin: 0;">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="variantId" value="@v.VariantId" />
-                                        <input type="number" name="newStock" value="@v.StockQty" min="0" max="999" style="width: 80px; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px;" />
-                                        <button type="submit" class="button small-btn" style="padding: 6px 12px;">Lưu</button>
+                                        <input type="number" 
+                                               name="newStock" 
+                                               value="@v.StockQty" 
+                                               min="0" 
+                                               max="9999" 
+                                               style="width: 75px; height: 32px; padding: 0 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 700; font-size: 13px; text-align: center;" />
+                                        <button type="submit" class="button" style="padding: 4px 12px; font-size: 12px; height: 32px;">Lưu</button>
                                     </form>
                                 </td>
                             </tr>
@@ -69,14 +134,17 @@
                     else
                     {
                         <tr>
-                            <td colspan="6" style="text-align: center; padding: 32px; color: #64748b;">
-                                Không có biến thể sản phẩm nào.
-                            </td>
+                            <td colspan="6" style="padding: 24px; text-align: center; color: #64748b;">Không tìm thấy dữ liệu tồn kho nào phù hợp.</td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
+
+        <!-- TÁI SỬ DỤNG FILE PHÂN TRANG DÙNG CHUNG -->
+        @if (pagination != null)
+        {
+            @await Html.PartialAsync("_Pagination", pagination)
+        }
     </div>
 </div>
-

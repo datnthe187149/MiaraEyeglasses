@@ -6,22 +6,31 @@ using MiaraEyeglasses.Repositories.Order;
 
 namespace MiaraEyeglasses.Services.Order
 {
+    // Interface dịch vụ xử lý giỏ hàng
     public interface ICartService
     {
+        // Lấy dữ liệu: UserCart
         Task<CartViewModel> GetUserCartAsync(int userId);
+        // Thêm mới dữ liệu: AddToCart
         Task<bool> AddToCartAsync(int userId, AddToCartRequest request);
+        // Cập nhật dữ liệu: UpdateQuantity
         Task<bool> UpdateQuantityAsync(int userId, int cartItemId, int quantity);
+        // Đổi trạng thái kích hoạt: ToggleSelect
         Task<bool> ToggleSelectAsync(int userId, int cartItemId);
+        // Xóa dữ liệu: RemoveCartItem
         Task<bool> RemoveCartItemAsync(int userId, int cartItemId);
+        // Áp dụng: ApplyCoupon
         Task<decimal> ApplyCouponAsync(int userId, string couponCode);
     }
 
+    // Service tính toán giỏ hàng, cập nhật số lượng và áp dụng mã giảm giá
     public class CartService : ICartService
     {
         private readonly ICartRepository _cartRepository;
         private readonly ICouponRepository _couponRepository;
         private readonly EyeglassesDbContext _context;
 
+        // Khởi tạo đối tượng CartService kèm nạp các phụ thuộc cần thiết
         public CartService(ICartRepository cartRepository, ICouponRepository couponRepository, EyeglassesDbContext context)
         {
             _cartRepository = cartRepository;
@@ -29,6 +38,7 @@ namespace MiaraEyeglasses.Services.Order
             _context = context;
         }
 
+        // Lấy dữ liệu: UserCart
         public async Task<CartViewModel> GetUserCartAsync(int userId)
         {
             var cartItems = await _cartRepository.GetCartItemsByUserIdAsync(userId);
@@ -74,6 +84,7 @@ namespace MiaraEyeglasses.Services.Order
             return viewModel;
         }
 
+        // Thêm mới dữ liệu: AddToCart
         public async Task<bool> AddToCartAsync(int userId, AddToCartRequest request)
         {
             var variant = await _context.ProductVariants
@@ -127,6 +138,7 @@ namespace MiaraEyeglasses.Services.Order
             return true;
         }
 
+        // Cập nhật dữ liệu: UpdateQuantity
         public async Task<bool> UpdateQuantityAsync(int userId, int cartItemId, int quantity)
         {
             var item = await _cartRepository.GetByIdAsync(cartItemId);
@@ -147,6 +159,7 @@ namespace MiaraEyeglasses.Services.Order
             return true;
         }
 
+        // Đổi trạng thái kích hoạt: ToggleSelect
         public async Task<bool> ToggleSelectAsync(int userId, int cartItemId)
         {
             var item = await _cartRepository.GetByIdAsync(cartItemId);
@@ -159,6 +172,7 @@ namespace MiaraEyeglasses.Services.Order
             return true;
         }
 
+        // Xóa dữ liệu: RemoveCartItem
         public async Task<bool> RemoveCartItemAsync(int userId, int cartItemId)
         {
             var item = await _cartRepository.GetByIdAsync(cartItemId);
@@ -170,6 +184,7 @@ namespace MiaraEyeglasses.Services.Order
             return true;
         }
 
+        // Áp dụng: ApplyCoupon
         public async Task<decimal> ApplyCouponAsync(int userId, string couponCode)
         {
             if (string.IsNullOrWhiteSpace(couponCode))

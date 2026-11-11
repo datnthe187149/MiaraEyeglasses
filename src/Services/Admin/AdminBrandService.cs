@@ -3,18 +3,24 @@ using MiaraEyeglasses.Repositories.Admin;
 
 namespace MiaraEyeglasses.Services.Admin
 {
+    // Interface định nghĩa: IAdminBrandService
     public interface IAdminBrandService
     {
         Task<IEnumerable<Brand>> GetAllBrandsAsync();
+        // Thêm mới dữ liệu: CreateBrand
         Task<(bool Success, string? ErrorMessage)> CreateBrandAsync(string brandName, string? originCountry, string? description);
+        // Cập nhật dữ liệu: UpdateBrand
         Task<(bool Success, string? ErrorMessage)> UpdateBrandAsync(int brandId, string brandName, string? originCountry);
+        // Đổi trạng thái kích hoạt: ToggleBrandActive
         Task ToggleBrandActiveAsync(int brandId);
     }
 
+    // Class định nghĩa: AdminBrandService
     public class AdminBrandService : IAdminBrandService
     {
         private readonly IAdminBrandRepository _brandRepository;
 
+        // Khởi tạo đối tượng AdminBrandService kèm nạp các phụ thuộc cần thiết
         public AdminBrandService(IAdminBrandRepository brandRepository)
         {
             _brandRepository = brandRepository;

@@ -5,18 +5,23 @@ using MiaraEyeglasses.Repositories.Product;
 
 namespace MiaraEyeglasses.Services.Product
 {
+    // Interface dịch vụ đánh giá sản phẩm
     public interface IReviewService
     {
         Task<IEnumerable<Review>> GetApprovedReviewsByProductAsync(int productId);
+        // Thực thi tác vụ: CanUserReviewProduct
         Task<bool> CanUserReviewProductAsync(int userId, int productId);
+        // Thực thi tác vụ: SubmitReview
         Task<(bool Success, string? ErrorMessage)> SubmitReviewAsync(int userId, int productId, byte rating, string comment);
     }
 
+    // Service tiếp nhận và hiển thị đánh giá của khách hàng
     public class ReviewService : IReviewService
     {
         private readonly IReviewRepository _reviewRepository;
         private readonly EyeglassesDbContext _context;
 
+        // Khởi tạo đối tượng ReviewService kèm nạp các phụ thuộc cần thiết
         public ReviewService(IReviewRepository reviewRepository, EyeglassesDbContext context)
         {
             _reviewRepository = reviewRepository;
@@ -28,12 +33,14 @@ namespace MiaraEyeglasses.Services.Product
             return await _reviewRepository.GetApprovedReviewsByProductIdAsync(productId);
         }
 
+        // Thực thi tác vụ: CanUserReviewProduct
         public async Task<bool> CanUserReviewProductAsync(int userId, int productId)
         {
             if (userId <= 0) return false;
             return await _context.Orders.AnyAsync(o => o.UserId == userId && o.Status == 4 && o.Items.Any(i => i.ProductId == productId));
         }
 
+        // Thực thi tác vụ: SubmitReview
         public async Task<(bool Success, string? ErrorMessage)> SubmitReviewAsync(int userId, int productId, byte rating, string comment)
         {
             if (rating < 1 || rating > 5)
